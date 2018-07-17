@@ -7,3 +7,5 @@
 *.xccheckout
 *.xcscmblueprint
 
+**/project.xcworkspace
+**/xcuserdata

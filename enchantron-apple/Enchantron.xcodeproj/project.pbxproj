@@ -1,0 +1,708 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		63464A0020F14D6D007B1614 /* HandlerRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634649FF20F14D6D007B1614 /* HandlerRegistration.swift */; };
+		63464A0120F14D6D007B1614 /* HandlerRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634649FF20F14D6D007B1614 /* HandlerRegistration.swift */; };
+		63464A0220F14D6D007B1614 /* HandlerRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634649FF20F14D6D007B1614 /* HandlerRegistration.swift */; };
+		63464A0620F19218007B1614 /* Button.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63464A0520F19218007B1614 /* Button.swift */; };
+		63464A0720F19218007B1614 /* Button.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63464A0520F19218007B1614 /* Button.swift */; };
+		63464A0820F19218007B1614 /* Button.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63464A0520F19218007B1614 /* Button.swift */; };
+		63464A0A20F198E4007B1614 /* ClickHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63464A0920F198E4007B1614 /* ClickHandler.swift */; };
+		63464A0B20F198E4007B1614 /* ClickHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63464A0920F198E4007B1614 /* ClickHandler.swift */; };
+		63464A0C20F198E4007B1614 /* ClickHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63464A0920F198E4007B1614 /* ClickHandler.swift */; };
+		63689B1720EBBE380070D2D2 /* libenchantron.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63689B1620EBBE380070D2D2 /* libenchantron.a */; };
+		63689B1920EBBE550070D2D2 /* libenchantron.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63689B1820EBBE550070D2D2 /* libenchantron.a */; };
+		6388263120D06B850040425D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6388263020D06B850040425D /* AppDelegate.swift */; };
+		6388263320D06B850040425D /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6388263220D06B850040425D /* GameViewController.swift */; };
+		6388263620D06B850040425D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6388263420D06B850040425D /* Main.storyboard */; };
+		6388263920D06B850040425D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6388263720D06B850040425D /* LaunchScreen.storyboard */; };
+		6388265B20D06B860040425D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6388265A20D06B860040425D /* AppDelegate.swift */; };
+		6388265D20D06B860040425D /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6388265C20D06B860040425D /* GameViewController.swift */; };
+		6388266020D06B860040425D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6388265E20D06B860040425D /* Main.storyboard */; };
+		6388266920D06B860040425D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6388266820D06B860040425D /* AppDelegate.swift */; };
+		6388266B20D06B860040425D /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6388266A20D06B860040425D /* GameViewController.swift */; };
+		6388266E20D06B860040425D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6388266C20D06B860040425D /* Main.storyboard */; };
+		6388267020D06B860040425D /* Actions.sks in Resources */ = {isa = PBXBuildFile; fileRef = 6388262520D06B820040425D /* Actions.sks */; };
+		6388267120D06B860040425D /* Actions.sks in Resources */ = {isa = PBXBuildFile; fileRef = 6388262520D06B820040425D /* Actions.sks */; };
+		6388267220D06B860040425D /* Actions.sks in Resources */ = {isa = PBXBuildFile; fileRef = 6388262520D06B820040425D /* Actions.sks */; };
+		6388267320D06B860040425D /* MainMenuScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = 6388262620D06B820040425D /* MainMenuScene.sks */; };
+		6388267520D06B860040425D /* MainMenuScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = 6388262620D06B820040425D /* MainMenuScene.sks */; };
+		6388267620D06B860040425D /* MainMenuScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = 6388262620D06B820040425D /* MainMenuScene.sks */; };
+		6388267720D06B860040425D /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6388262720D06B820040425D /* GameScene.swift */; };
+		6388267920D06B860040425D /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6388262720D06B820040425D /* GameScene.swift */; };
+		6388267A20D06B860040425D /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6388262720D06B820040425D /* GameScene.swift */; };
+		6388267B20D06B860040425D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6388262820D06B850040425D /* Assets.xcassets */; };
+		6388267D20D06B860040425D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6388262820D06B850040425D /* Assets.xcassets */; };
+		6388267E20D06B860040425D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6388262820D06B850040425D /* Assets.xcassets */; };
+		6388269720D071E50040425D /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 6388269620D071E50040425D /* libresolv.tbd */; };
+		6388269F20D090C00040425D /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 6388269E20D090C00040425D /* libresolv.tbd */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		6388268820D06B860040425D /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		634649FF20F14D6D007B1614 /* HandlerRegistration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandlerRegistration.swift; sourceTree = "<group>"; };
+		63464A0520F19218007B1614 /* Button.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Button.swift; sourceTree = "<group>"; };
+		63464A0920F198E4007B1614 /* ClickHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClickHandler.swift; sourceTree = "<group>"; };
+		63689B1520EBBC5B0070D2D2 /* enchantron.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = enchantron.h; path = "../../enchantron-core/src/enchantron.h"; sourceTree = "<group>"; };
+		63689B1620EBBE380070D2D2 /* libenchantron.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libenchantron.a; path = "../enchantron-core/target/universal/debug/libenchantron.a"; sourceTree = "<group>"; };
+		63689B1820EBBE550070D2D2 /* libenchantron.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libenchantron.a; path = "../enchantron-core/target/debug/libenchantron.a"; sourceTree = "<group>"; };
+		6388262520D06B820040425D /* Actions.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Actions.sks; sourceTree = "<group>"; };
+		6388262620D06B820040425D /* MainMenuScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = MainMenuScene.sks; sourceTree = "<group>"; };
+		6388262720D06B820040425D /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
+		6388262820D06B850040425D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		6388262D20D06B850040425D /* Enchantron.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Enchantron.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6388263020D06B850040425D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		6388263220D06B850040425D /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
+		6388263520D06B850040425D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		6388263820D06B850040425D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		6388263A20D06B850040425D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6388265820D06B860040425D /* Enchantron.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Enchantron.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6388265A20D06B860040425D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		6388265C20D06B860040425D /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
+		6388265F20D06B860040425D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		6388266120D06B860040425D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6388266620D06B860040425D /* Enchantron.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Enchantron.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6388266820D06B860040425D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		6388266A20D06B860040425D /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
+		6388266D20D06B860040425D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		6388266F20D06B860040425D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6388269420D071D30040425D /* libenchanter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libenchanter.a; path = "../enchanter-core/target/debug/libenchanter.a"; sourceTree = "<group>"; };
+		6388269620D071E50040425D /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = usr/lib/libresolv.tbd; sourceTree = SDKROOT; };
+		6388269820D0722C0040425D /* Enchantron-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Enchantron-Bridging-Header.h"; sourceTree = "<group>"; };
+		6388269E20D090C00040425D /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS11.4.sdk/usr/lib/libresolv.tbd; sourceTree = DEVELOPER_DIR; };
+		638826A020D090DA0040425D /* libenchanter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libenchanter.a; path = "../enchanter-core/target/universal/debug/libenchanter.a"; sourceTree = "<group>"; };
+		638826A220D0945E0040425D /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS4.3.sdk/usr/lib/libresolv.tbd; sourceTree = DEVELOPER_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6388262A20D06B850040425D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63689B1720EBBE380070D2D2 /* libenchantron.a in Frameworks */,
+				6388269F20D090C00040425D /* libresolv.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6388265520D06B860040425D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6388266320D06B860040425D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63689B1920EBBE550070D2D2 /* libenchantron.a in Frameworks */,
+				6388269720D071E50040425D /* libresolv.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		6388261F20D06B820040425D = {
+			isa = PBXGroup;
+			children = (
+				6388262420D06B820040425D /* Enchantron Shared */,
+				6388262F20D06B850040425D /* Enchantron iOS */,
+				6388265920D06B860040425D /* Enchantron tvOS */,
+				6388266720D06B860040425D /* Enchantron macOS */,
+				6388262E20D06B850040425D /* Products */,
+				6388269320D071D20040425D /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		6388262420D06B820040425D /* Enchantron Shared */ = {
+			isa = PBXGroup;
+			children = (
+				63689B1520EBBC5B0070D2D2 /* enchantron.h */,
+				6388262520D06B820040425D /* Actions.sks */,
+				6388262620D06B820040425D /* MainMenuScene.sks */,
+				6388262720D06B820040425D /* GameScene.swift */,
+				6388262820D06B850040425D /* Assets.xcassets */,
+				6388269820D0722C0040425D /* Enchantron-Bridging-Header.h */,
+				634649FF20F14D6D007B1614 /* HandlerRegistration.swift */,
+				63464A0520F19218007B1614 /* Button.swift */,
+				63464A0920F198E4007B1614 /* ClickHandler.swift */,
+			);
+			path = "Enchantron Shared";
+			sourceTree = "<group>";
+		};
+		6388262E20D06B850040425D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6388262D20D06B850040425D /* Enchantron.app */,
+				6388265820D06B860040425D /* Enchantron.app */,
+				6388266620D06B860040425D /* Enchantron.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6388262F20D06B850040425D /* Enchantron iOS */ = {
+			isa = PBXGroup;
+			children = (
+				6388263020D06B850040425D /* AppDelegate.swift */,
+				6388263220D06B850040425D /* GameViewController.swift */,
+				6388263420D06B850040425D /* Main.storyboard */,
+				6388263720D06B850040425D /* LaunchScreen.storyboard */,
+				6388263A20D06B850040425D /* Info.plist */,
+			);
+			path = "Enchantron iOS";
+			sourceTree = "<group>";
+		};
+		6388265920D06B860040425D /* Enchantron tvOS */ = {
+			isa = PBXGroup;
+			children = (
+				6388265A20D06B860040425D /* AppDelegate.swift */,
+				6388265C20D06B860040425D /* GameViewController.swift */,
+				6388265E20D06B860040425D /* Main.storyboard */,
+				6388266120D06B860040425D /* Info.plist */,
+			);
+			path = "Enchantron tvOS";
+			sourceTree = "<group>";
+		};
+		6388266720D06B860040425D /* Enchantron macOS */ = {
+			isa = PBXGroup;
+			children = (
+				6388266820D06B860040425D /* AppDelegate.swift */,
+				6388266A20D06B860040425D /* GameViewController.swift */,
+				6388266C20D06B860040425D /* Main.storyboard */,
+				6388266F20D06B860040425D /* Info.plist */,
+			);
+			path = "Enchantron macOS";
+			sourceTree = "<group>";
+		};
+		6388269320D071D20040425D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				63689B1620EBBE380070D2D2 /* libenchantron.a */,
+				63689B1820EBBE550070D2D2 /* libenchantron.a */,
+				638826A220D0945E0040425D /* libresolv.tbd */,
+				638826A020D090DA0040425D /* libenchanter.a */,
+				6388269620D071E50040425D /* libresolv.tbd */,
+				6388269E20D090C00040425D /* libresolv.tbd */,
+				6388269420D071D30040425D /* libenchanter.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6388262C20D06B850040425D /* Enchantron iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6388268920D06B860040425D /* Build configuration list for PBXNativeTarget "Enchantron iOS" */;
+			buildPhases = (
+				6388262920D06B850040425D /* Sources */,
+				6388262A20D06B850040425D /* Frameworks */,
+				6388262B20D06B850040425D /* Resources */,
+				6388268820D06B860040425D /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Enchantron iOS";
+			productName = "Enchanter iOS";
+			productReference = 6388262D20D06B850040425D /* Enchantron.app */;
+			productType = "com.apple.product-type.application";
+		};
+		6388265720D06B860040425D /* Enchantron tvOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6388268C20D06B860040425D /* Build configuration list for PBXNativeTarget "Enchantron tvOS" */;
+			buildPhases = (
+				6388265420D06B860040425D /* Sources */,
+				6388265520D06B860040425D /* Frameworks */,
+				6388265620D06B860040425D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Enchantron tvOS";
+			productName = "Enchanter tvOS";
+			productReference = 6388265820D06B860040425D /* Enchantron.app */;
+			productType = "com.apple.product-type.application";
+		};
+		6388266520D06B860040425D /* Enchantron macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6388268F20D06B860040425D /* Build configuration list for PBXNativeTarget "Enchantron macOS" */;
+			buildPhases = (
+				6388266220D06B860040425D /* Sources */,
+				6388266320D06B860040425D /* Frameworks */,
+				6388266420D06B860040425D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Enchantron macOS";
+			productName = "Enchanter macOS";
+			productReference = 6388266620D06B860040425D /* Enchantron.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6388262020D06B820040425D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 0940;
+				LastUpgradeCheck = 0940;
+				ORGANIZATIONNAME = "Rook And Pawn Industries, Inc.";
+				TargetAttributes = {
+					6388262C20D06B850040425D = {
+						CreatedOnToolsVersion = 9.4;
+					};
+					6388265720D06B860040425D = {
+						CreatedOnToolsVersion = 9.4;
+					};
+					6388266520D06B860040425D = {
+						CreatedOnToolsVersion = 9.4;
+					};
+				};
+			};
+			buildConfigurationList = 6388262320D06B820040425D /* Build configuration list for PBXProject "Enchantron" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 6388261F20D06B820040425D;
+			productRefGroup = 6388262E20D06B850040425D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6388262C20D06B850040425D /* Enchantron iOS */,
+				6388265720D06B860040425D /* Enchantron tvOS */,
+				6388266520D06B860040425D /* Enchantron macOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		6388262B20D06B850040425D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6388267320D06B860040425D /* MainMenuScene.sks in Resources */,
+				6388263620D06B850040425D /* Main.storyboard in Resources */,
+				6388267020D06B860040425D /* Actions.sks in Resources */,
+				6388263920D06B850040425D /* LaunchScreen.storyboard in Resources */,
+				6388267B20D06B860040425D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6388265620D06B860040425D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6388266020D06B860040425D /* Main.storyboard in Resources */,
+				6388267520D06B860040425D /* MainMenuScene.sks in Resources */,
+				6388267D20D06B860040425D /* Assets.xcassets in Resources */,
+				6388267120D06B860040425D /* Actions.sks in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6388266420D06B860040425D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6388266E20D06B860040425D /* Main.storyboard in Resources */,
+				6388267620D06B860040425D /* MainMenuScene.sks in Resources */,
+				6388267E20D06B860040425D /* Assets.xcassets in Resources */,
+				6388267220D06B860040425D /* Actions.sks in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6388262920D06B850040425D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63464A0620F19218007B1614 /* Button.swift in Sources */,
+				6388267720D06B860040425D /* GameScene.swift in Sources */,
+				63464A0020F14D6D007B1614 /* HandlerRegistration.swift in Sources */,
+				63464A0A20F198E4007B1614 /* ClickHandler.swift in Sources */,
+				6388263320D06B850040425D /* GameViewController.swift in Sources */,
+				6388263120D06B850040425D /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6388265420D06B860040425D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63464A0720F19218007B1614 /* Button.swift in Sources */,
+				6388267920D06B860040425D /* GameScene.swift in Sources */,
+				63464A0120F14D6D007B1614 /* HandlerRegistration.swift in Sources */,
+				63464A0B20F198E4007B1614 /* ClickHandler.swift in Sources */,
+				6388265D20D06B860040425D /* GameViewController.swift in Sources */,
+				6388265B20D06B860040425D /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6388266220D06B860040425D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63464A0820F19218007B1614 /* Button.swift in Sources */,
+				6388267A20D06B860040425D /* GameScene.swift in Sources */,
+				63464A0220F14D6D007B1614 /* HandlerRegistration.swift in Sources */,
+				63464A0C20F198E4007B1614 /* ClickHandler.swift in Sources */,
+				6388266B20D06B860040425D /* GameViewController.swift in Sources */,
+				6388266920D06B860040425D /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		6388263420D06B850040425D /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6388263520D06B850040425D /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		6388263720D06B850040425D /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6388263820D06B850040425D /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		6388265E20D06B860040425D /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6388265F20D06B860040425D /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		6388266C20D06B860040425D /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6388266D20D06B860040425D /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		6388267F20D06B860040425D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		6388268020D06B860040425D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		6388268A20D06B860040425D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = N8F6RS8578;
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = "Enchantron iOS/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../enchantron-core/target/universal/debug";
+				PRODUCT_BUNDLE_IDENTIFIER = com.rookandpawn.Enchantron;
+				PRODUCT_NAME = Enchantron;
+				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/Enchantron Shared/Enchantron-Bridging-Header.h";
+				SWIFT_VERSION = 4.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		6388268B20D06B860040425D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = N8F6RS8578;
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = "Enchantron iOS/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../enchantron-core/target/universal/debug";
+				PRODUCT_BUNDLE_IDENTIFIER = com.rookandpawn.Enchantron;
+				PRODUCT_NAME = Enchantron;
+				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/Enchantron Shared/Enchantron-Bridging-Header.h";
+				SWIFT_VERSION = 4.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		6388268D20D06B860040425D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "tvOS App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "tvOS LaunchImage";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = N8F6RS8578;
+				INFOPLIST_FILE = "Enchantron tvOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rookandpawn.Enchantron;
+				PRODUCT_NAME = Enchantron;
+				SDKROOT = appletvos;
+				SWIFT_VERSION = 4.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		6388268E20D06B860040425D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "tvOS App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "tvOS LaunchImage";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = N8F6RS8578;
+				INFOPLIST_FILE = "Enchantron tvOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rookandpawn.Enchantron;
+				PRODUCT_NAME = Enchantron;
+				SDKROOT = appletvos;
+				SWIFT_VERSION = 4.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 10.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		6388269020D06B860040425D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = N8F6RS8578;
+				INFOPLIST_FILE = "Enchantron macOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../enchantron-core/target/debug";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rookandpawn.Enchantron;
+				PRODUCT_NAME = Enchantron;
+				SDKROOT = macosx;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/Enchantron Shared/Enchantron-Bridging-Header.h";
+				SWIFT_VERSION = 4.0;
+			};
+			name = Debug;
+		};
+		6388269120D06B860040425D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = N8F6RS8578;
+				INFOPLIST_FILE = "Enchantron macOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../enchantron-core/target/debug";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rookandpawn.Enchantron;
+				PRODUCT_NAME = Enchantron;
+				SDKROOT = macosx;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/Enchantron Shared/Enchantron-Bridging-Header.h";
+				SWIFT_VERSION = 4.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6388262320D06B820040425D /* Build configuration list for PBXProject "Enchantron" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6388267F20D06B860040425D /* Debug */,
+				6388268020D06B860040425D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6388268920D06B860040425D /* Build configuration list for PBXNativeTarget "Enchantron iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6388268A20D06B860040425D /* Debug */,
+				6388268B20D06B860040425D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6388268C20D06B860040425D /* Build configuration list for PBXNativeTarget "Enchantron tvOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6388268D20D06B860040425D /* Debug */,
+				6388268E20D06B860040425D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6388268F20D06B860040425D /* Build configuration list for PBXNativeTarget "Enchantron macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6388269020D06B860040425D /* Debug */,
+				6388269120D06B860040425D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6388262020D06B820040425D /* Project object */;
+}

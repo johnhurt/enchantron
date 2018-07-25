@@ -10,22 +10,26 @@ import Foundation
 
 public class HandlerRegistration {
   
+  public class func get_binding() -> ext_handler_registration {
+    return ext_handler_registration(
+      deregister: deregister_callback,
+      destroy: destroy
+    )
+  }
+  
   let deregister: () -> Void
   
   init(deregister: @escaping () -> Void) {
     self.deregister = deregister
-  }
-  
-  public func toExt() -> ext_handler_registration {
-    let ownedPointer = UnsafeMutableRawPointer(Unmanaged.passRetained(self).toOpaque())
-    return ext_handler_registration(
-        _self: ownedPointer,
-        deregister: deregister_callback 
-    )
   }
 }
 
 private func deregister_callback(registration: UnsafeMutableRawPointer?) {
   let obj: HandlerRegistration = Unmanaged.fromOpaque(UnsafeRawPointer(registration!)).takeUnretainedValue()
   (obj.deregister)()
+}
+
+private func destroy(ref: UnsafeMutableRawPointer?) {
+  let _ : HandlerRegistration
+      = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeRetainedValue()
 }

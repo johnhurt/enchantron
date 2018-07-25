@@ -11,6 +11,14 @@ import SpriteKit
 
 class Button : SKNode {
   
+  public class func get_binding() -> ext_button {
+    return ext_button(
+      add_click_handler: add_click_handler,
+      get_text: get_text,
+      set_text: set_text,
+      destroy: destroy)
+  }
+  
   var click_handlers: [ClickHandler] = []
   let shapeNode = SKShapeNode()
   let labelNode = SKLabelNode()
@@ -36,22 +44,6 @@ class Button : SKNode {
   
   public func setFillColor(fillColor: SKColor) {
     shapeNode.fillColor = fillColor
-  }
-  
-  public func toExt() -> ext_button {
-    let ownedPointer = UnsafeMutableRawPointer(Unmanaged.passRetained(self).toOpaque())
-    
-    return ext_button(
-      click_handlers: ext_has_click_handlers(
-        _self: ownedPointer,
-        add_handler: addClickHandler
-      ),
-      text: ext_has_text(
-        _self: ownedPointer
-        , get_text: getText
-        , set_text: setText
-      )
-    )
   }
   
   func removeHandler(handler: ClickHandler) {
@@ -83,27 +75,23 @@ extension Button {
   #endif
 }
 
-
-private func getText(ref: UnsafeMutableRawPointer?) -> ext_text {
+private func get_text(ref: UnsafeMutableRawPointer?) -> UnsafeMutableRawPointer? {
   let button : Button = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeUnretainedValue()
-  let data = button.labelNode.text?.data(using: String.Encoding.utf8, allowLossyConversion: false)!
-  let length = data!.count
-  let targetContent = allocate_string(Int32(length))!
-  data!.copyBytes(to: targetContent, count: length)
-  return ext_text(length: Int32(length), content: targetContent)
+  let result = RustString(source: button.labelNode.text!)
+  return result.rawPointer
 }
 
-private func setText(ref: UnsafeMutableRawPointer?, text: ext_text) {
+private func set_text(ref: UnsafeMutableRawPointer?, textPointer: UnsafeMutableRawPointer?) {
   let button : Button = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeUnretainedValue()
-  let data = Data(bytes: UnsafeRawPointer(text.content!), count: Int(text.length))
-  
+  let text = RustString(rawPointer: textPointer)
+  let content = text.toString()
   DispatchQueue.main.async {
-    button.labelNode.text = String(data: data, encoding: String.Encoding.utf8)
+    button.labelNode.text = content
   }
 }
 
-private func addClickHandler(ref: UnsafeMutableRawPointer?, extHandler: ext_click_handler)
-    -> ext_handler_registration {
+private func add_click_handler(ref: UnsafeMutableRawPointer?, extHandler: UnsafeMutableRawPointer?)
+    -> UnsafeMutableRawPointer? {
   let button : Button = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeUnretainedValue()
   let handler = ClickHandler(extHandler: extHandler)
   button.click_handlers.append(handler)
@@ -111,5 +99,12 @@ private func addClickHandler(ref: UnsafeMutableRawPointer?, extHandler: ext_clic
         () -> Void in button.removeHandler(handler: handler)
   })
       
-  return handlerRegistration.toExt()
+  return UnsafeMutableRawPointer(Unmanaged.passRetained(handlerRegistration).toOpaque())
 }
+
+
+private func destroy(ref: UnsafeMutableRawPointer?) {
+  let _ : Button
+      = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeRetainedValue()
+}
+

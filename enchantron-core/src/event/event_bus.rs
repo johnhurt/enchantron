@@ -5,8 +5,8 @@ extern crate crossbeam_channel;
 extern crate futures;
 extern crate trace_error;
 
-use enchantron::events::EnchantronEvent;
-use enchantron::event::{EventHandler, HandlerRegistration};
+use event::EnchantronEvent;
+use event::{EventListener, ListenerRegistration};
 
 use self::rayon::ThreadPoolBuilder;
 use self::crossbeam_channel::{Sender, Receiver};
@@ -56,9 +56,9 @@ impl EventBus {
   pub fn register<E, H>(
       &self, 
       event_type: EnchantronEvent, 
-      handler: &Arc<H>) -> HandlerRegistration 
+      handler: &Arc<H>) -> ListenerRegistration 
       where E : Send + Clone + Into<EnchantronEvent> + 'static,
-      H : EventHandler<E>
+      H : EventListener<E>
       {
     let weak_handler = Arc::downgrade(handler);
 
@@ -81,7 +81,7 @@ impl EventBus {
       listener_id = real_listener_id + 1;
     }
 
-    HandlerRegistration::new(Box::new( move || {
+    ListenerRegistration::new(Box::new( move || {
       println!("Deregistering {}", listener_id);
       let copied_event_type = borrowed_event_type.clone();
       if listener_id > 0 {

@@ -9,9 +9,7 @@
 import Foundation
 import SpriteKit
 
-class GameView : SKTexture {
-  
-  let origin : CGPoint = CGPoint(x: 0, y: 0)
+class GameView : SKNode {
   
   public class func get_binding() -> ext_game_view {
     return ext_game_view(
@@ -22,16 +20,38 @@ class GameView : SKTexture {
       destroy: destroy)
   }
   
+  let origin : CGPoint = CGPoint(x: 0, y: 0)
+  let size : CGSize = CGSize(width: 100, height: 100)
+  
+  let applicationContext : ext_application_context
+  let transitioner : TransitionService
+  
+  init(applictionContext : ext_application_context, transitioner : TransitionService) {
+    
+    self.applicationContext = applictionContext
+    self.transitioner = transitioner
+    
+    super.init()
+  }
+  
+  required init?(coder aDecoder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+  
+  deinit {
+    print("Dropping GameView")
+  }
+  
 }
 
 private func get_width(ref: UnsafeMutableRawPointer?) -> Int64 {
   let _self : GameView = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeUnretainedValue()
-  return Int64(_self.size().width)
+  return Int64(_self.size.width)
 }
 
 private func get_height(ref: UnsafeMutableRawPointer?) -> Int64 {
   let _self : GameView = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeUnretainedValue()
-  return Int64(_self.size().height)
+  return Int64(_self.size.height)
 }
 
 private func get_x(ref: UnsafeMutableRawPointer?) -> Int64 {

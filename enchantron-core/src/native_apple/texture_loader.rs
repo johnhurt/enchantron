@@ -23,9 +23,8 @@ impl native::TextureLoader for TextureLoader {
 
   fn load_texture(&self, resource_name: String) -> Self::Tex  {
     let text = RustString::new(resource_name);
-    
-    Texture::new((EXT_BINDING.load_texture)(
-        self.0, 
-        Box::into_raw(Box::new(text))))
+    let text_ptr = Box::into_raw(Box::new(text));
+
+    Texture::new((EXT_BINDING.load_texture)(self.0, text_ptr))
   }
 }

@@ -25,8 +25,11 @@ impl ui::MainMenuView for MainMenuView {
   fn get_start_game_button(&self) -> Self::B {
     Button::new((EXT_BINDING.get_start_game_button)(self.0))
   }
-}
 
+  fn transition_to_game_view(&self) {
+    (EXT_BINDING.transition_to_game_view)(self.0)
+  }
+}
 
 impl Drop for MainMenuView {
   fn drop(&mut self) {

@@ -32,7 +32,7 @@ class Button : SKNode {
     addChild(shapeNode)
     addChild(labelNode)
     
-    labelNode.fontSize = size.height / 2
+    labelNode.fontSize = size.height / 4
     labelNode.fontColor = SKColor.darkGray
     labelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.center
     labelNode.verticalAlignmentMode = SKLabelVerticalAlignmentMode.center
@@ -52,6 +52,10 @@ class Button : SKNode {
       click_handlers.remove(at: index)
     }
     objc_sync_exit(click_handlers)
+  }
+  
+  deinit {
+    print("Dropping Button")
   }
 }
 
@@ -77,8 +81,8 @@ extension Button {
 
 private func get_text(ref: UnsafeMutableRawPointer?) -> UnsafeMutableRawPointer? {
   let button : Button = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeUnretainedValue()
-  let result = RustString(source: button.labelNode.text!)
-  return result.rawPointer
+  let result = SwiftString(source: button.labelNode.text!)
+  return UnsafeMutableRawPointer(Unmanaged.passRetained(result).toOpaque())
 }
 
 private func set_text(ref: UnsafeMutableRawPointer?, textPointer: UnsafeMutableRawPointer?) {

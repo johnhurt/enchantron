@@ -7,8 +7,8 @@ use std::sync::{Arc,RwLock};
 use event::{EventBus};
 use native_impl::TextureLoader;
 use presenter::{GamePresenter, MainMenuPresenter};
-use ui_impl::{GameView, MainMenuView, ClickHandler, RustString, 
-    handle_click, drop_click_handler, rust_string_binding};
+use ui_impl::{GameView, MainMenuView, ClickHandler, RustString,
+    click_handler_binding, rust_string_binding};
 
 mod event;
 mod native;
@@ -35,7 +35,9 @@ lazy_static! {
 #[derive(Clone, Copy)]
 pub struct int_ui_binding {
   pub click_handler: ext_click_handler,
-  pub rust_string: ext_rust_string
+  pub rust_string: ext_rust_string,
+  pub main_menu_presenter: ext_main_menu_presenter,
+  pub game_presenter: ext_game_presenter
 }
 
 #[repr(C)]
@@ -45,7 +47,8 @@ pub struct ext_ui_binding {
   pub game_view: ext_game_view,
   pub button: ext_button,
   pub handler_registration: ext_handler_registration,
-  pub texture: ext_texture
+  pub texture: ext_texture,
+  pub swift_string: ext_swift_string
 }
 
 #[repr(C)]
@@ -87,9 +90,17 @@ pub struct ext_click_handler {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct ext_rust_string {
-  pub new: extern "C" fn(length: i64) -> *mut RustString,
   pub get_length: extern "C" fn(_self: *mut RustString) -> i64,
-  pub get_content: extern "C" fn(_self: *mut RustString) -> *mut u8
+  pub get_content: extern "C" fn(_self: *mut RustString) -> *mut u8,
+  pub drop: extern "C" fn(_self: *mut RustString)
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct ext_swift_string {
+  pub get_length: extern "C" fn(_self: *mut c_void) -> i64,
+  pub get_content: extern "C" fn(_self: *mut c_void) -> *mut u8,
+  pub destroy: extern "C" fn(_self: *mut c_void)
 }
 
 #[repr(C)]
@@ -100,7 +111,7 @@ pub struct ext_button {
           _self: *mut c_void, 
           click_handler: *mut ClickHandler) 
           -> *mut c_void,
-  pub get_text: extern "C" fn(_self: *mut c_void) -> *mut RustString,
+  pub get_text: extern "C" fn(_self: *mut c_void) -> *mut c_void,
   pub set_text: extern "C" fn(_self: *mut c_void, text: *mut RustString),
   pub destroy: extern "C" fn(_self: *mut c_void)
 }
@@ -138,13 +149,13 @@ pub struct ext_texture_loader {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct ext_main_menu_presenter {
-  pub destroy: extern "C" fn(_self: *mut c_void)
+  pub drop: extern "C" fn(_self: *mut Arc<MainMenuPresenter<MainMenuView>>)
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct ext_game_presenter {
-  pub destroy: extern "C" fn(_self: *mut c_void)
+  pub drop: extern "C" fn(_self: *mut Arc<GamePresenter<GameView>>)
 }
 
 #[no_mangle]
@@ -170,11 +181,14 @@ pub extern "C" fn create_application_context(
     event_bus: Box::into_raw(Box::new(event_bus)),
     texture_loader: Box::into_raw(Box::new(texture_loader)),
     internal_ui_binding: int_ui_binding {
-      click_handler: ext_click_handler {
-        on_click: handle_click,
-        drop: drop_click_handler
+      click_handler: click_handler_binding,
+      rust_string: rust_string_binding,
+      main_menu_presenter: ext_main_menu_presenter {
+        drop: drop_main_menu_presenter,
       },
-      rust_string: rust_string_binding
+      game_presenter: ext_game_presenter {
+        drop: drop_game_presenter,
+      }
     },
   };
 
@@ -208,6 +222,16 @@ pub extern "C" fn bind_game_view(
   let result = GamePresenter::new(game_view, event_bus);
 
   Box::into_raw(Box::new(result))
+}
+
+extern "C" fn drop_main_menu_presenter(
+    p: *mut Arc<MainMenuPresenter<MainMenuView>>) {
+  let _ = unsafe { Box::from_raw(p) };
+}
+
+extern "C" fn drop_game_presenter(
+    p: *mut Arc<GamePresenter<GameView>>) {
+  let _ = unsafe { Box::from_raw(p) };
 }
 
 pub(crate) fn get_ui_bindings() -> ext_ui_binding {

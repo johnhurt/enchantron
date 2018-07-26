@@ -6,7 +6,7 @@ use ui::{HasClickHandlers, HasText};
 
 use ::{ext_button, get_ui_bindings};
 
-use ui_apple::{HandlerRegistration, ClickHandler, RustString};
+use ui_apple::{HandlerRegistration, ClickHandler, RustString, SwiftString};
 
 lazy_static! {
   static ref EXT_BINDING : ext_button = get_ui_bindings().button;
@@ -38,9 +38,7 @@ impl HasClickHandlers for Button {
 impl HasText for Button {
 
   fn get_text(&self) -> String {
-    let text_ptr = (EXT_BINDING.get_text)(self.0);
-            
-    let text = unsafe { Box::from_raw(text_ptr) };
+    let text = SwiftString::new((EXT_BINDING.get_text)(self.0));
 
     text.to_string()
   }

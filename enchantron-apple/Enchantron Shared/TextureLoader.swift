@@ -20,6 +20,10 @@ class TextureLoader {
   func loadTexture(resource_name: String) -> Texture {
     return Texture(resourceName: resource_name)
   }
+  
+  deinit {
+    print("Dropping Texture Loader")
+  }
 }
 
 private func load_texture(

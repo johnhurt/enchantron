@@ -18,7 +18,8 @@ class GameScene: SKScene {
       game_view: GameView.get_binding(),
       button: Button.get_binding(),
       handler_registration: HandlerRegistration.get_binding(),
-      texture: Texture.get_binding())
+      texture: Texture.get_binding(),
+      swift_string: SwiftString.get_binding())
   }
   
   class func get_native_binding() -> ext_native_binding {
@@ -38,28 +39,41 @@ class GameScene: SKScene {
   
     return scene
   }
-
-  var applicationContext : ext_application_context?
+  
+  var viewCleanup : (() -> Void)?
   
   func setUpScene() {
     let textureLoader = TextureLoader()
     
-    self.applicationContext = create_application_context(
+    let applicationContext = create_application_context(
       UnsafeMutableRawPointer(Unmanaged.passRetained(textureLoader).toOpaque()),
       GameScene.get_ui_binding(),
       GameScene.get_native_binding())
     
     // Establish the bindings between rust types accessed by pointer
-    ClickHandler.set_binding(int_binding: applicationContext!.internal_ui_binding.click_handler)
-    RustString.set_binding(int_binding: applicationContext!.internal_ui_binding.rust_string)
+    ClickHandler.set_binding(int_binding: applicationContext.internal_ui_binding.click_handler)
+    RustString.set_binding(int_binding: applicationContext.internal_ui_binding.rust_string)
     
-    let mainMenuView = MainMenuView()
+    let transitioner = TransitionService(transitionClosure: { (view, cleanup) in
+      self.removeAllChildren()
+      
+      self.viewCleanup?()
+      
+      self.viewCleanup = cleanup
+      
+      self.addChild(view)
+    })
     
-    bind_main_menu_view(
-        applicationContext!,
+    let mainMenuView = MainMenuView(applictionContext: applicationContext,
+                                    transitioner: transitioner)
+    
+    let mainMenuPresenter = bind_main_menu_view(
+        applicationContext,
         UnsafeMutableRawPointer(Unmanaged.passRetained(mainMenuView).toOpaque()))
     
-    addChild(mainMenuView)
+    transitioner.transition(view: mainMenuView, viewCleanup: {
+      (applicationContext.internal_ui_binding.main_menu_presenter.drop)(mainMenuPresenter)
+    })
   }
   
   #if os(watchOS)

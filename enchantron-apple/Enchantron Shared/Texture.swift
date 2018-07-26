@@ -34,6 +34,10 @@ class Texture {
     let rect = CGRect(origin: CGPoint(x: Int(top), y: Int(left)), size: size)
     return Texture(texture: SKTexture(rect: rect, in: self.texture))
   }
+  
+  deinit {
+    print("Dropping Texture")
+  }
 }
 
 private func get_sub_texture(ref: UnsafeMutableRawPointer?, left: Int64, top: Int64, width: Int64, height: Int64)

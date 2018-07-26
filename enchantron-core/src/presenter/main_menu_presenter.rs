@@ -1,5 +1,4 @@
 use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicIsize, Ordering};
 
 use ui::{HasClickHandlers, HasText, MainMenuView, HandlerRegistration};
 
@@ -8,7 +7,6 @@ use event::{ListenerRegistration, EventBus, EventListener, EnchantronEvent, Star
 
 pub struct MainMenuPresenter<V : MainMenuView> {
   view: V,
-  counter: AtomicIsize,
   handler_registrations: Mutex<Vec<Box<HandlerRegistration>>>,
   listener_registrations: Mutex<Vec<ListenerRegistration>>,
   event_bus: Arc<EventBus>
@@ -16,9 +14,7 @@ pub struct MainMenuPresenter<V : MainMenuView> {
 
 impl <V: MainMenuView> EventListener<StartGame> for MainMenuPresenter<V> {
   fn on_event(&self, _: &StartGame) {
-    let new_count = self.counter.fetch_add(1, Ordering::SeqCst) + 1;
-    self.view.get_start_game_button().set_text(
-        format!("Click {}!", new_count));
+    self.view.transition_to_game_view()
   }
 }
 
@@ -42,7 +38,7 @@ impl <V: MainMenuView> MainMenuPresenter<V> {
     self.add_handler_registration(Box::new(self.view
         .get_start_game_button()
         .add_click_handler(Box::new(move || { 
-          copied_event_bus.post(StartGame{new: false})
+          copied_event_bus.post(StartGame{new: true})
         }))));
 
     let result = Arc::new(self);
@@ -51,7 +47,7 @@ impl <V: MainMenuView> MainMenuPresenter<V> {
         result.event_bus.register(EnchantronEvent::StartGame, &result));
 
     result.view.get_start_game_button().set_text(
-        format!("Click {}!", 0));
+        "Start New Game".to_string());
 
     result
   }
@@ -60,7 +56,6 @@ impl <V: MainMenuView> MainMenuPresenter<V> {
       -> Arc<MainMenuPresenter<V>> {
     let result = MainMenuPresenter {
       view: view,
-      counter: AtomicIsize::new(0),
       handler_registrations: Mutex::new(Vec::new()),
       listener_registrations: Mutex::new(Vec::new()),
       event_bus: event_bus,
@@ -69,4 +64,11 @@ impl <V: MainMenuView> MainMenuPresenter<V> {
     result.bind()
   }
 
+}
+
+
+impl <V: MainMenuView> Drop for MainMenuPresenter<V> {
+  fn drop(&mut self) {
+    println!("Dropping Main Menu Presenter")
+  }
 }

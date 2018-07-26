@@ -6,4 +6,6 @@ pub trait MainMenuView : 'static + Sized {
 
   fn get_start_game_button(&self) -> Self::B;
 
+  fn transition_to_game_view(&self);
+
 }

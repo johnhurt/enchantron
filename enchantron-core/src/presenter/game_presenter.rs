@@ -20,3 +20,9 @@ impl <V: GameView> GamePresenter<V> {
   }
 
 }
+
+impl <V: GameView> Drop for GamePresenter<V> {
+  fn drop(&mut self) {
+    println!("Dropping Game Presenter")
+  }
+}

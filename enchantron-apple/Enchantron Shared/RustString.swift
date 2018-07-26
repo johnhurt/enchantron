@@ -18,19 +18,6 @@ class RustString {
   
   public let rawPointer: UnsafeMutableRawPointer?
   
-  public convenience init (source: String) {
-    let sourceData = source.data(
-        using: String.Encoding.utf8,
-        allowLossyConversion: false)!
-    let length = sourceData.count
-    let result = RustString.binding!.new(Int64(length))
-    let content = RustString.binding!.get_content(result)
-    let writableContent = UnsafeMutablePointer.init(mutating: content)
-    sourceData.copyBytes(to: writableContent!, count: length)
-    
-    self.init(rawPointer: result)
-  }
-  
   public init(rawPointer: UnsafeMutableRawPointer?) {
     self.rawPointer = rawPointer
   }
@@ -41,5 +28,9 @@ class RustString {
     let data = Data(bytes: UnsafeRawPointer(content!), count: Int(length))
     
     return String(data: data, encoding: String.Encoding.utf8)!
+  }
+  
+  deinit {
+    (RustString.binding!.drop(rawPointer))
   }
 }

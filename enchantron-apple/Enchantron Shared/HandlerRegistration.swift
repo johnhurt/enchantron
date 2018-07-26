@@ -22,6 +22,10 @@ public class HandlerRegistration {
   init(deregister: @escaping () -> Void) {
     self.deregister = deregister
   }
+  
+  deinit {
+    print("Dropping Handler Registration")
+  }
 }
 
 private func deregister_callback(registration: UnsafeMutableRawPointer?) {

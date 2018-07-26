@@ -22,6 +22,12 @@
 		634BFD012108F0ED00BB835D /* RustString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634BFD002108F0ED00BB835D /* RustString.swift */; };
 		634BFD022108F0ED00BB835D /* RustString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634BFD002108F0ED00BB835D /* RustString.swift */; };
 		634BFD032108F0ED00BB835D /* RustString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634BFD002108F0ED00BB835D /* RustString.swift */; };
+		634BFD0521090CBF00BB835D /* TransitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634BFD0421090CBF00BB835D /* TransitionService.swift */; };
+		634BFD0621090CBF00BB835D /* TransitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634BFD0421090CBF00BB835D /* TransitionService.swift */; };
+		634BFD0721090CBF00BB835D /* TransitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634BFD0421090CBF00BB835D /* TransitionService.swift */; };
+		634BFD09210A480300BB835D /* SwiftString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634BFD08210A480300BB835D /* SwiftString.swift */; };
+		634BFD0A210A480300BB835D /* SwiftString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634BFD08210A480300BB835D /* SwiftString.swift */; };
+		634BFD0B210A480300BB835D /* SwiftString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634BFD08210A480300BB835D /* SwiftString.swift */; };
 		63689B1720EBBE380070D2D2 /* libenchantron.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63689B1620EBBE380070D2D2 /* libenchantron.a */; };
 		63689B1920EBBE550070D2D2 /* libenchantron.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63689B1820EBBE550070D2D2 /* libenchantron.a */; };
 		6388263120D06B850040425D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6388263020D06B850040425D /* AppDelegate.swift */; };
@@ -102,6 +108,8 @@
 		63464A0920F198E4007B1614 /* ClickHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClickHandler.swift; sourceTree = "<group>"; };
 		634BFCFC2107A2FE00BB835D /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		634BFD002108F0ED00BB835D /* RustString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RustString.swift; sourceTree = "<group>"; };
+		634BFD0421090CBF00BB835D /* TransitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitionService.swift; sourceTree = "<group>"; };
+		634BFD08210A480300BB835D /* SwiftString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftString.swift; sourceTree = "<group>"; };
 		63689B1620EBBE380070D2D2 /* libenchantron.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libenchantron.a; path = "../enchantron-core/target/universal/debug/libenchantron.a"; sourceTree = "<group>"; };
 		63689B1820EBBE550070D2D2 /* libenchantron.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libenchantron.a; path = "../enchantron-core/target/debug/libenchantron.a"; sourceTree = "<group>"; };
 		6388262520D06B820040425D /* Actions.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Actions.sks; sourceTree = "<group>"; };
@@ -193,6 +201,7 @@
 				6388262520D06B820040425D /* Actions.sks */,
 				6388262620D06B820040425D /* EmptyScene.sks */,
 				63E04B68210118C00041783D /* MainMenuView.swift */,
+				634BFCFC2107A2FE00BB835D /* GameView.swift */,
 				6388262720D06B820040425D /* GameScene.swift */,
 				6388262820D06B850040425D /* Assets.xcassets */,
 				6388269820D0722C0040425D /* Enchantron-Bridging-Header.h */,
@@ -201,8 +210,9 @@
 				63464A0920F198E4007B1614 /* ClickHandler.swift */,
 				63E04B7021011E9A0041783D /* TextureLoader.swift */,
 				63E04B962102332F0041783D /* Texture.swift */,
-				634BFCFC2107A2FE00BB835D /* GameView.swift */,
 				634BFD002108F0ED00BB835D /* RustString.swift */,
+				634BFD0421090CBF00BB835D /* TransitionService.swift */,
+				634BFD08210A480300BB835D /* SwiftString.swift */,
 			);
 			path = "Enchantron Shared";
 			sourceTree = "<group>";
@@ -452,6 +462,7 @@
 			files = (
 				634BFD012108F0ED00BB835D /* RustString.swift in Sources */,
 				63464A0620F19218007B1614 /* Button.swift in Sources */,
+				634BFD0521090CBF00BB835D /* TransitionService.swift in Sources */,
 				63E04B972102332F0041783D /* Texture.swift in Sources */,
 				6388267720D06B860040425D /* GameScene.swift in Sources */,
 				63E04B69210118C00041783D /* MainMenuView.swift in Sources */,
@@ -460,6 +471,7 @@
 				63E04B7121011E9A0041783D /* TextureLoader.swift in Sources */,
 				63464A0A20F198E4007B1614 /* ClickHandler.swift in Sources */,
 				6388263320D06B850040425D /* GameViewController.swift in Sources */,
+				634BFD09210A480300BB835D /* SwiftString.swift in Sources */,
 				6388263120D06B850040425D /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -470,6 +482,7 @@
 			files = (
 				634BFD022108F0ED00BB835D /* RustString.swift in Sources */,
 				63464A0720F19218007B1614 /* Button.swift in Sources */,
+				634BFD0621090CBF00BB835D /* TransitionService.swift in Sources */,
 				63E04B982102332F0041783D /* Texture.swift in Sources */,
 				6388267920D06B860040425D /* GameScene.swift in Sources */,
 				63E04B6A210118C00041783D /* MainMenuView.swift in Sources */,
@@ -478,6 +491,7 @@
 				63E04B7221011E9A0041783D /* TextureLoader.swift in Sources */,
 				63464A0B20F198E4007B1614 /* ClickHandler.swift in Sources */,
 				6388265D20D06B860040425D /* GameViewController.swift in Sources */,
+				634BFD0A210A480300BB835D /* SwiftString.swift in Sources */,
 				6388265B20D06B860040425D /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -488,6 +502,7 @@
 			files = (
 				634BFD032108F0ED00BB835D /* RustString.swift in Sources */,
 				63464A0820F19218007B1614 /* Button.swift in Sources */,
+				634BFD0721090CBF00BB835D /* TransitionService.swift in Sources */,
 				63E04B992102332F0041783D /* Texture.swift in Sources */,
 				6388267A20D06B860040425D /* GameScene.swift in Sources */,
 				63E04B6B210118C10041783D /* MainMenuView.swift in Sources */,
@@ -496,6 +511,7 @@
 				63E04B7321011E9A0041783D /* TextureLoader.swift in Sources */,
 				63464A0C20F198E4007B1614 /* ClickHandler.swift in Sources */,
 				6388266B20D06B860040425D /* GameViewController.swift in Sources */,
+				634BFD0B210A480300BB835D /* SwiftString.swift in Sources */,
 				6388266920D06B860040425D /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -9,36 +9,48 @@
 import Foundation
 import SpriteKit
 
-class MainMenuView : SKNode {
+class MainMenuView : BaseView {
+  private static let MAX_WIDTH_FRAC : CGFloat = 0.5
+  private static let HEIGHT_FRAC : CGFloat = 0.2
+  private static let BUTTON_ASPECT_RATIO : CGFloat = 1.618
   
-  public class func get_binding() -> ext_main_menu_view {
-    return ext_main_menu_view(
-      get_start_game_button: get_start_game_button,
-      transition_to_game_view: transition_to_game_view,
-      destroy: destroy)
-  }
   
-  let startGameButton : Button
-  let applicationContext : ext_application_context
-  let transitioner : TransitionService
+  let startNewGameButton : Button
   
-  init(applictionContext : ext_application_context, transitioner : TransitionService) {
+  
+  override init() {
     
-    let startGameButton = Button(size: CGSize(width: 400, height: 200))
-    startGameButton.setFillColor(fillColor: SKColor.cyan)
+    let startNewGameButton = Button()
+    startNewGameButton.setFillColor(fillColor: SKColor.cyan)
     
-    self.applicationContext = applictionContext
-    self.transitioner = transitioner
-    self.startGameButton = startGameButton
+    self.startNewGameButton = startNewGameButton
     
     super.init()
     
-    addChild(startGameButton)
-    
+    addChild(startNewGameButton)
   }
   
   required init?(coder aDecoder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
+  }
+  
+  func transitionToGameView() {
+    let gameView = GameView()
+    gameView.setPresenter(presenter: getContext().bindToGameView(view: gameView))
+    transitionTo(newView: gameView)
+  }
+  
+  override func layout(size: CGSize) {
+    let maxHeight = size.height * MainMenuView.HEIGHT_FRAC
+    let maxWidth = size.width * MainMenuView.MAX_WIDTH_FRAC
+    
+    let width = min(maxWidth, maxHeight * MainMenuView.BUTTON_ASPECT_RATIO)
+    let height = width / MainMenuView.BUTTON_ASPECT_RATIO
+    
+    startNewGameButton.setSize(size: CGSize(
+      width: width,
+      height: height))
+    startNewGameButton.position = CGPoint(x: size.width / 2.0, y: -size.height / 2.0)
   }
   
   deinit {
@@ -46,33 +58,3 @@ class MainMenuView : SKNode {
   }
 }
 
-private func transition_to_game_view(ref: UnsafeMutableRawPointer?) -> Void {
-  let _self : MainMenuView
-      = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeUnretainedValue()
-  
-  let applicationContext = _self.applicationContext
-  let transitioner = _self.transitioner
-  
-  let gameView = GameView(
-    applictionContext: applicationContext,
-    transitioner: transitioner)
-  
-  let gameViewPointer = UnsafeMutableRawPointer(Unmanaged.passRetained(gameView).toOpaque())
-  
-  let gamePresenter = bind_game_view(applicationContext, gameViewPointer)
-  
-  transitioner.transition(view: gameView, viewCleanup: {
-    (applicationContext.internal_ui_binding.game_presenter.drop)(gamePresenter)
-  })
-}
-
-private func get_start_game_button(ref: UnsafeMutableRawPointer?) -> UnsafeMutableRawPointer? {
-  let _self : MainMenuView
-      = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeUnretainedValue()
-  return UnsafeMutableRawPointer(Unmanaged.passRetained(_self.startGameButton).toOpaque())
-}
-
-private func destroy(ref: UnsafeMutableRawPointer?) {
-  let _ : MainMenuView
-      = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeRetainedValue()
-}

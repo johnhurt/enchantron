@@ -5,7 +5,7 @@ extern crate crossbeam_channel;
 extern crate futures;
 extern crate trace_error;
 
-use event::EnchantronEvent;
+use event::FourFoursEvent;
 use event::{EventListener, ListenerRegistration};
 
 use self::rayon::ThreadPoolBuilder;
@@ -21,14 +21,14 @@ type ConsumableFuture = Box<Future<Item = usize, Error = Trace<EventError>> + Se
 
 pub struct EventBus {
   sink: Sender<ConsumableFuture>,
-  emitter : Arc<Mutex<ParallelEventEmitter<EnchantronEvent>>>
+  emitter : Arc<Mutex<ParallelEventEmitter<FourFoursEvent>>>
 }
 
 impl EventBus {
 
   pub fn new() -> Arc<EventBus> {
 
-    let (sink, source) : (Sender<ConsumableFuture>, Receiver<ConsumableFuture>) 
+    let (sink, source) : (Sender<ConsumableFuture>, Receiver<ConsumableFuture>)
         = crossbeam_channel::unbounded();
 
     let worker_count = 8;
@@ -42,7 +42,12 @@ impl EventBus {
 
       pool.spawn(move || {
         loop {
-          let _ = copied_source.recv().unwrap().wait();
+          match copied_source.recv() {
+            Ok(future) => {
+              let _ = future.wait();
+            },
+            Err(e) => warn!("Receive from channel failed: {:?}", e)
+          };
         }
       })
     }
@@ -53,13 +58,23 @@ impl EventBus {
     })
   }
 
-  pub fn register<E, H>(
-      &self, 
-      event_type: EnchantronEvent, 
-      handler: &Arc<H>) -> ListenerRegistration 
-      where E : Send + Clone + Into<EnchantronEvent> + 'static,
-      H : EventListener<E>
-      {
+  pub fn register<E,H>(&self,
+      event_type: FourFoursEvent,
+      handler: &Arc<H>) -> ListenerRegistration
+          where
+              E : Send + Clone + Into<FourFoursEvent> + 'static,
+              H : EventListener<E> {
+    self.register_disambiguous(event_type, handler, None)
+  }
+
+  pub fn register_disambiguous<E, H>(
+      &self,
+      event_type: FourFoursEvent,
+      handler: &Arc<H>,
+      _: Option<E>) -> ListenerRegistration
+          where
+              E : Send + Clone + Into<FourFoursEvent> + 'static,
+              H : EventListener<E> {
     let weak_handler = Arc::downgrade(handler);
 
     let mut listener_id = 0u64;
@@ -69,7 +84,7 @@ impl EventBus {
     let mut locked_emitter = self.emitter.lock().unwrap();
 
     if let Ok(real_listener_id) = locked_emitter.add_listener_value(
-        event_type, 
+        event_type,
         move |arg_opt: Option<E>| {
           if let Some(handler) = weak_handler.upgrade() {
             if let Some(arg) = arg_opt {
@@ -88,16 +103,16 @@ impl EventBus {
         if let Some(emitter) = copied_emitter.upgrade() {
           let mut locked_emitter = emitter.lock().unwrap();
           let _ = locked_emitter.remove_listener(
-              copied_event_type, 
+              copied_event_type,
               listener_id - 1);
         }
       }
     } ))
   }
 
-  pub fn post<E>(&self, e: E) 
-      where E : Send + Clone + Into<EnchantronEvent> + 'static {
-    
+  pub fn post<E>(&self, e: E)
+      where E : Send + Clone + Into<FourFoursEvent> + 'static {
+
     let mut locked_emitter = self.emitter.lock().unwrap();
     let event_type = e.clone().into();
     let f = locked_emitter.emit_value(event_type, e.clone());

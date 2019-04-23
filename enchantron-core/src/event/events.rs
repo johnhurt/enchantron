@@ -1,4 +1,4 @@
-macro_rules! generate_events {
+macro_rules! define_events {
   ($events_name:ident, $($e:ident $body:tt ), *) => {
 
     #[derive(Debug, Hash, PartialEq, Eq, Clone)]
@@ -21,6 +21,14 @@ macro_rules! generate_events {
   }
 }
 
-generate_events!(EnchantronEvent, StartGame{ pub new: bool });
+define_events!(FourFoursEvent,
+    LoadResources{},
+    StartGame{ pub new: bool },
+    Layout{
+      pub width: i64,
+      pub height: i64,
+    },
+    Evaluate{}
+);
 
 

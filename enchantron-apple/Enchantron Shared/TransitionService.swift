@@ -11,14 +11,16 @@ import SpriteKit
 
 class TransitionService {
   
-  let transitionClosure: (SKNode, @escaping () -> Void) -> Void
+  typealias TransitionClosure = (BaseView) -> Void
   
-  init(transitionClosure: @escaping (SKNode, @escaping () -> Void) -> Void ) {
+  let transitionClosure : TransitionClosure
+  
+  init(transitionClosure: @escaping TransitionClosure ) {
     self.transitionClosure = transitionClosure
   }
   
-  func transition(view: SKNode, viewCleanup: @escaping () -> Void) {
-    transitionClosure(view, viewCleanup)
+  func transition(view: BaseView) {
+    self.transitionClosure(view)
   }
   
   deinit{

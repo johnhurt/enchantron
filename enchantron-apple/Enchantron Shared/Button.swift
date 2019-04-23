@@ -11,47 +11,72 @@ import SpriteKit
 
 class Button : SKNode {
   
-  public class func get_binding() -> ext_button {
-    return ext_button(
-      add_click_handler: add_click_handler,
-      get_text: get_text,
-      set_text: set_text,
-      destroy: destroy)
-  }
+  var clickHandlers: [ClickHandler] = []
   
-  var click_handlers: [ClickHandler] = []
+  private var size: CGSize?
+  
   let shapeNode = SKShapeNode()
   let labelNode = SKLabelNode()
   
-  init(size: CGSize) {
+  override init() {
     super.init()
-    shapeNode.path = CGPath(
-      rect: CGRect(origin: CGPoint(x: -size.width / 2, y: -size.height / 2), size: size),
-      transform: nil)
     self.isUserInteractionEnabled = true
     addChild(shapeNode)
     addChild(labelNode)
     
-    labelNode.fontSize = size.height / 4
-    labelNode.fontColor = SKColor.darkGray
-    labelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.center
-    labelNode.verticalAlignmentMode = SKLabelVerticalAlignmentMode.center
   }
   
   required init?(coder aDecoder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
   
+  func setSize(size: CGSize) {
+    
+    if self.size == size {
+      return
+    }
+    
+    self.size = size
+    shapeNode.path = CGPath(
+      rect: CGRect(origin: CGPoint(x: -size.width / 2, y: -size.height / 2), size: size),
+      transform: nil)
+    
+    labelNode.fontSize = size.height / 4
+    labelNode.fontColor = SKColor.darkGray
+    labelNode.fontName = "Indira K"
+    labelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.center
+    labelNode.verticalAlignmentMode = SKLabelVerticalAlignmentMode.center
+  }
+  
   public func setFillColor(fillColor: SKColor) {
     shapeNode.fillColor = fillColor
   }
   
-  func removeHandler(handler: ClickHandler) {
-    objc_sync_enter(click_handlers)
-    if let index = click_handlers.index(of: handler) {
-      click_handlers.remove(at: index)
+  func setText(_ newText: String) {
+    DispatchQueue.main.async {
+      self.labelNode.text = newText
     }
-    objc_sync_exit(click_handlers)
+  }
+  
+  func getText() -> String {
+    return self.labelNode.text!
+  }
+  
+  func addClickHandler(_ handler: ClickHandler) -> HandlerRegistration {
+    DispatchQueue.main.sync {
+      self.clickHandlers.append(handler)
+    }
+    return HandlerRegistration(deregister_callback: {
+      self.removeHandler(handler)
+    })
+  }
+  
+  func removeHandler(_ handler: ClickHandler) {
+    DispatchQueue.main.sync {
+      if let index = self.clickHandlers.index(of: handler) {
+        self.clickHandlers.remove(at: index)
+      }
+    }
   }
   
   deinit {
@@ -64,51 +89,22 @@ extension Button {
 
   #if os(iOS) || os(tvOS)
   override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-    click_handlers.forEach { (handler) in
-      handler.onClick()
+    DispatchQueue.main.async {
+      self.clickHandlers.forEach { (handler) in
+        handler.onClick()
+      }
     }
   }
   #endif
   
   #if os(OSX)
   override func mouseUp(with event: NSEvent) {
-    click_handlers.forEach { (handler) in
-      handler.onClick()
+    DispatchQueue.main.async {
+      self.clickHandlers.forEach { (handler) in
+        handler.onClick()
+      }
     }
   }
   #endif
-}
-
-private func get_text(ref: UnsafeMutableRawPointer?) -> UnsafeMutableRawPointer? {
-  let button : Button = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeUnretainedValue()
-  let result = SwiftString(source: button.labelNode.text!)
-  return UnsafeMutableRawPointer(Unmanaged.passRetained(result).toOpaque())
-}
-
-private func set_text(ref: UnsafeMutableRawPointer?, textPointer: UnsafeMutableRawPointer?) {
-  let button : Button = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeUnretainedValue()
-  let text = RustString(rawPointer: textPointer)
-  let content = text.toString()
-  DispatchQueue.main.async {
-    button.labelNode.text = content
-  }
-}
-
-private func add_click_handler(ref: UnsafeMutableRawPointer?, extHandler: UnsafeMutableRawPointer?)
-    -> UnsafeMutableRawPointer? {
-  let button : Button = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeUnretainedValue()
-  let handler = ClickHandler(extHandler: extHandler)
-  button.click_handlers.append(handler)
-  let handlerRegistration = HandlerRegistration(deregister: {
-        () -> Void in button.removeHandler(handler: handler)
-  })
-      
-  return UnsafeMutableRawPointer(Unmanaged.passRetained(handlerRegistration).toOpaque())
-}
-
-
-private func destroy(ref: UnsafeMutableRawPointer?) {
-  let _ : Button
-      = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeRetainedValue()
 }
 

@@ -1,36 +1,22 @@
 //
 //  GameView.swift
-//  Enchantron iOS
+//  FourFours
 //
-//  Created by Kevin Guthrie on 7/24/18.
+//  Created by Kevin Guthrie on 8/21/18.
 //  Copyright © 2018 Rook And Pawn Industries, Inc. All rights reserved.
 //
 
 import Foundation
 import SpriteKit
 
-class GameView : SKNode {
+class GameView : BaseView {
   
-  public class func get_binding() -> ext_game_view {
-    return ext_game_view(
-      get_width: get_width,
-      get_height: get_height,
-      get_x: get_x,
-      get_y: get_y,
-      destroy: destroy)
-  }
+  var dragHandlers: [DragHandler] = []
+  var layoutHandlers: [LayoutHandler] = []
   
-  let origin : CGPoint = CGPoint(x: 0, y: 0)
-  let size : CGSize = CGSize(width: 100, height: 100)
+  static var z = 1;
   
-  let applicationContext : ext_application_context
-  let transitioner : TransitionService
-  
-  init(applictionContext : ext_application_context, transitioner : TransitionService) {
-    
-    self.applicationContext = applictionContext
-    self.transitioner = transitioner
-    
+  override init() {
     super.init()
   }
   
@@ -38,33 +24,181 @@ class GameView : SKNode {
     fatalError("init(coder:) has not been implemented")
   }
   
+  func addLayoutHandler(_ handler: LayoutHandler) -> HandlerRegistration {
+    DispatchQueue.main.sync {
+      self.layoutHandlers.append(handler)
+    }
+    
+    return HandlerRegistration(deregister_callback: {
+      self.removeHandler(handler)
+    })
+      
+  }
+  
+  func removeHandler(_ handler: LayoutHandler) {
+    DispatchQueue.main.sync {
+      if let index = self.layoutHandlers.index(of: handler) {
+        self.layoutHandlers.remove(at: index)
+      }
+    }
+  }
+  
+  func addDragHandler(_ handler: DragHandler) -> HandlerRegistration {
+    DispatchQueue.main.sync {
+      self.isUserInteractionEnabled = true
+      self.dragHandlers.append(handler)
+    }
+    return HandlerRegistration(deregister_callback: {
+      self.removeHandler(handler)
+    })
+  }
+  
+  func removeHandler(_ handler: DragHandler) {
+    DispatchQueue.main.sync {
+      if let index = self.dragHandlers.index(of: handler) {
+        self.dragHandlers.remove(at: index)
+      }
+    }
+  }
+  
+  override func layout(size: CGSize) {
+    layoutHandlers.forEach { (handler) in
+      handler.onLayout(width: Int64(size.width), height: Int64(size.height))
+    }
+  }
+  
+  func createSprite() -> Sprite {
+    let result = Sprite()
+    
+    let onMain : () -> () = {
+      result.zPosition = CGFloat(GameView.z)
+      GameView.z += 1
+      self.addChild(result)
+    }
+    
+    if Thread.isMainThread {
+      onMain()
+    }
+    else {
+      DispatchQueue.main.sync { onMain() }
+    }
+    return result
+  }
+  
   deinit {
     print("Dropping GameView")
   }
+}
+
+
+extension GameView {
   
-}
-
-private func get_width(ref: UnsafeMutableRawPointer?) -> Int64 {
-  let _self : GameView = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeUnretainedValue()
-  return Int64(_self.size.width)
-}
-
-private func get_height(ref: UnsafeMutableRawPointer?) -> Int64 {
-  let _self : GameView = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeUnretainedValue()
-  return Int64(_self.size.height)
-}
-
-private func get_x(ref: UnsafeMutableRawPointer?) -> Int64 {
-  let _self : GameView = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeUnretainedValue()
-  return Int64(_self.origin.x)
-}
-
-private func get_y(ref: UnsafeMutableRawPointer?) -> Int64 {
-  let _self : GameView = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeUnretainedValue()
-  return Int64(_self.origin.y)
-}
-
-private func destroy(ref: UnsafeMutableRawPointer?) {
-  let _ : GameView
-      = Unmanaged.fromOpaque(UnsafeRawPointer(ref!)).takeRetainedValue()
+  #if os(iOS) || os(tvOS)
+  override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+    
+    DispatchQueue.main.async {
+      self.eventSink?.touchesBegan(touches, with: event)
+      
+      let firstTouch = touches.first!
+      
+      let localPoint = firstTouch.location(in: self)
+      let windowPoint = firstTouch.location(in: nil)
+      
+      self.dragHandlers.forEach { (handler) in
+        handler.onDragStart(
+          globalX: Float64(windowPoint.x),
+          globalY: Float64(windowPoint.y),
+          localX: Float64(localPoint.x),
+          localY: -Float64(localPoint.y))
+      }
+    }
+  }
+  
+  override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+    
+    DispatchQueue.main.async {
+      self.eventSink?.touchesMoved(touches, with: event)
+      
+      let firstTouch = touches.first!
+      
+      let localPoint = firstTouch.location(in: self)
+      let windowPoint = firstTouch.location(in: nil)
+      
+      self.dragHandlers.forEach { (handler) in
+        handler.onDragMove(
+          globalX: Float64(windowPoint.x),
+          globalY: Float64(windowPoint.y),
+          localX: Float64(localPoint.x),
+          localY: -Float64(localPoint.y))
+      }
+    }
+  }
+  
+  override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+    
+    DispatchQueue.main.async {
+      self.eventSink?.touchesEnded(touches, with: event)
+      
+      let firstTouch = touches.first!
+      
+      let localPoint = firstTouch.location(in: self)
+      let windowPoint = firstTouch.location(in: nil)
+      
+      self.dragHandlers.forEach { (handler) in
+        handler.onDragEnd(
+          globalX: Float64(windowPoint.x),
+          globalY: Float64(windowPoint.y),
+          localX: Float64(localPoint.x),
+          localY: -Float64(localPoint.y))
+      }
+    }
+  }
+  
+  #endif
+  
+  #if os(OSX)
+  
+  override func mouseDown(with event: NSEvent) {
+    DispatchQueue.main.async {
+      let localPoint = event.location(in: self)
+      
+      self.dragHandlers.forEach { (handler) in
+        handler.onDragStart(
+          globalX: Float64(event.locationInWindow.x),
+          globalY: Float64((event.window?.contentView?.bounds.size.height)!
+            - event.locationInWindow.y),
+          localX: Float64(localPoint.x),
+          localY: -Float64(localPoint.y))
+      }
+    }
+  }
+  
+  override func mouseDragged(with event: NSEvent) {
+    DispatchQueue.main.async {
+      let localPoint = event.location(in: self)
+      self.dragHandlers.forEach { (handler) in
+        handler.onDragMove(
+          globalX: Float64(event.locationInWindow.x),
+          globalY: Float64((event.window?.contentView?.bounds.size.height)!
+            - event.locationInWindow.y),
+          localX: Float64(localPoint.x),
+          localY: -Float64(localPoint.y))
+      }
+    }
+  }
+  
+  override func mouseUp(with event: NSEvent) {
+    DispatchQueue.main.async {
+      let localPoint = event.location(in: self)
+      self.dragHandlers.forEach { (handler) in
+        handler.onDragEnd(
+          globalX: Float64(event.locationInWindow.x),
+          globalY: Float64((event.window?.contentView?.bounds.size.height)!
+            - event.locationInWindow.y),
+          localX: Float64(localPoint.x),
+          localY: -Float64(localPoint.y))
+      }
+    }
+  }
+  #endif
 }

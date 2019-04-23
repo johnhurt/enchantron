@@ -1,8 +1,8 @@
 use std::sync::{Arc, Mutex};
 
-use ui::{HasClickHandlers, HasText, MainMenuView, HandlerRegistration};
+use ui::{ClickHandler, HasClickHandlers, HasText, MainMenuView, HandlerRegistration};
 
-use event::{ListenerRegistration, EventBus, EventListener, EnchantronEvent, StartGame};
+use event::{ListenerRegistration, EventBus, EventListener, FourFoursEvent, StartGame};
 
 
 pub struct MainMenuPresenter<V : MainMenuView> {
@@ -36,23 +36,23 @@ impl <V: MainMenuView> MainMenuPresenter<V> {
     let copied_event_bus = self.event_bus.clone();
 
     self.add_handler_registration(Box::new(self.view
-        .get_start_game_button()
-        .add_click_handler(Box::new(move || { 
-          copied_event_bus.post(StartGame{new: true})
+        .get_start_new_game_button()
+        .add_click_handler(create_click_handler!({
+            copied_event_bus.post(StartGame{new: true})
         }))));
 
     let result = Arc::new(self);
 
     result.add_listener_registration(
-        result.event_bus.register(EnchantronEvent::StartGame, &result));
+        result.event_bus.register(FourFoursEvent::StartGame, &result));
 
-    result.view.get_start_game_button().set_text(
-        "Start New Game".to_string());
+    result.view.get_start_new_game_button().set_text(
+        "New Game".to_string());
 
     result
   }
 
-  pub fn new(view: V, event_bus: Arc<EventBus>) 
+  pub fn new(view: V, event_bus: Arc<EventBus>)
       -> Arc<MainMenuPresenter<V>> {
     let result = MainMenuPresenter {
       view: view,
@@ -69,6 +69,6 @@ impl <V: MainMenuView> MainMenuPresenter<V> {
 
 impl <V: MainMenuView> Drop for MainMenuPresenter<V> {
   fn drop(&mut self) {
-    println!("Dropping Main Menu Presenter")
+    info!("Dropping Main Menu Presenter")
   }
 }

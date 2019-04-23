@@ -1,0 +1,114 @@
+
+// This is an automatically generated file that lets a swift application
+// bind to the rust library with a single method call
+
+import Foundation
+
+class RustBinder {
+  // Bind all the swift functions into rust
+  class func bindToRust(_ systemView: SystemView) -> ApplicationContext {
+
+    {{~#each types}}
+    {{~#unless rust_owned}}
+
+    // Type {{name}}
+    {{~#each impls}}
+
+    // Impl {{trait_name}}
+    {{~#each functions}}
+    set_{{name}}({{name}})
+    {{~/each}}
+    {{~/each}}
+    {{~/unless}}
+    {{~/each}}
+
+    return ApplicationContext(create_application(
+        OpaquePointer(Unmanaged.passRetained(systemView).toOpaque())))
+  }
+
+}
+
+// Wrapper classes for types owned by rust
+
+{{~#each types}}
+{{~#if rust_owned}}
+
+// Type {{name}}
+
+class {{name}} {
+
+  private let ref: OpaquePointer?
+
+  init(_ ref: OpaquePointer?) { self.ref = ref }
+{{~#each impls}}
+
+// Impl {{trait_name}}
+{{~#each functions}}
+{{~#if is_drop}}
+  deinit {
+    {{name}}(ref)
+  }
+{{else}}
+  func {{lower_camel impl_name}}(
+      {{#each arguments}}{{#unless @first}}, {{/unless}}{{lower_camel name}}: {{data_type.swift_name_internal}}{{/each}})
+          {{#if return_type}}-> {{return_type.swift_name_internal}}{{/if}} {
+    {{#if return_type}}return {{return_type.swift_type_coersion_prefix_incoming}}{{/if}}{{name}}(self.ref
+        {{#each arguments}}, {{data_type.swift_type_coersion_prefix_outgoing}}{{lower_camel name}}{{data_type.swift_type_coersion_postfix_outgoing}}{{/each}}){{#if return_type}}{{return_type.swift_type_coersion_postfix_incoming}}{{/if}}
+  }
+{{~/if}}
+{{~/each}}
+{{~/each}}
+}
+{{~/if}}
+{{~/each}}
+
+
+// Define the functions for types owned by swift that will be called
+// Externally by rust
+
+{{~#each types}}
+{{~#unless rust_owned}}
+
+// Type {{name}}
+{{~#each impls}}
+
+// Impl {{trait_name}}
+{{~#each functions}}
+{{~#if is_drop}}
+
+private func {{name}}(_self: OpaquePointer?) {
+  let _ : {{type_name}} = Unmanaged.fromOpaque(UnsafeMutableRawPointer(_self!)).takeRetainedValue()
+}
+{{else}}
+
+private func {{name}}(ref: OpaquePointer?
+    {{#each arguments}}, {{lower_camel name}}: {{data_type.swift_name_incoming}}{{/each}})
+        -> {{#if return_type}}{{return_type.swift_name_outgoing}}{{else}}Void{{/if}} {
+  let _self : {{type_name}} = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
+{{~#if is_getter}}
+  return  {{return_type.swift_type_coersion_prefix_outgoing}}_self.{{lower_camel field_name}}{{return_type.swift_type_coersion_postfix_outgoing}}
+{{~else}}
+{{~#if is_setter}}
+  _self.{{lower_camel field_name}} = {{#each arguments}}{{data_type.swift_type_coersion_prefix_incoming}}{{lower_camel name}}{{data_type.swift_type_coersion_postfix_incoming}}{{/each}}
+{{~else}}
+  {{#if return_type}}return {{return_type.swift_type_coersion_prefix_outgoing}}{{/if}}_self.{{lower_camel impl_name}}(
+      {{#each arguments}}{{#unless @first}}, {{/unless}}{{data_type.swift_type_coersion_prefix_incoming}}{{lower_camel name}}{{data_type.swift_type_coersion_postfix_incoming}}{{/each}}){{#if return_type}}{{return_type.swift_type_coersion_postfix_outgoing}}{{/if}}
+{{/if}}
+{{/if}}
+}
+{{~/if}}
+{{~/each}}
+{{~/each}}
+{{~/unless}}
+{{~/each}}
+
+
+// Stop-gap functions
+
+private func rustStringToString(_ rustString: RustString) -> String {
+    let length = rustString.getLength()
+    let content = rustString.getContent()
+    let data = Data(bytes: UnsafeRawPointer(content!), count: Int(length))
+
+    return String(data: data, encoding: String.Encoding.utf8)!
+}

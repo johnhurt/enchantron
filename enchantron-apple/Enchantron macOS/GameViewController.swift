@@ -1,8 +1,8 @@
 //
 //  GameViewController.swift
-//  Enchanter macOS
+//  FourFours macOS
 //
-//  Created by Kevin Guthrie on 6/12/18.
+//  Created by Kevin Guthrie on 8/9/18.
 //  Copyright © 2018 Rook And Pawn Industries, Inc. All rights reserved.
 //
 
@@ -10,22 +10,42 @@ import Cocoa
 import SpriteKit
 import GameplayKit
 
-class GameViewController: NSViewController {
+class GameViewController: NSViewController, NSWindowDelegate {
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        let scene = GameScene.newGameScene()
-        
-        // Present the scene
-        let skView = self.view as! SKView
-        skView.presentScene(scene)
-        
-        skView.ignoresSiblingOrder = true
-        
-        skView.showsFPS = true
-        skView.showsNodeCount = true
+  var skView : SKView?
+  var scene : GameScene?
+  var screenScale : CGFloat?
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    
+    // Present the scene
+    self.skView = self.view as? SKView
+    
+    self.scene = GameScene.newGameScene(size: (self.skView?.bounds.size)!)
+    self.skView!.presentScene(self.scene)
+  
+    self.skView!.ignoresSiblingOrder = true
+  
+    self.skView!.showsFPS = true
+    self.skView!.showsNodeCount = true
+  }
+  
+  override func viewDidAppear() {
+    self.view.window?.delegate = self
+    handleLayout()
+  }
+  
+  func windowDidResize(_ notification: Notification) {
+    handleLayout()
+  }
+  
+  func handleLayout() {
+    let size = self.view.window?.contentView?.bounds.size;
+    if (size != nil) {
+      self.scene?.setSize(size: size!)
     }
-
+    
+  }
 }
 

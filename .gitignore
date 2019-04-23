@@ -10,3 +10,5 @@
 **/project.xcworkspace
 **/xcuserdata
 enchantron.h
+enchantron_build.log
+lib_gen.rs

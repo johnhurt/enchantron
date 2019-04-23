@@ -1,0 +1,194 @@
+
+use ApplicationContext;
+use std::sync::RwLock;
+{{#each rust_imports}}
+use {{this}};
+{{~/each}}
+
+lazy_static! {
+  static ref BINDINGS : RwLock<Bindings> = RwLock::new(Bindings::default());
+}
+
+fn with_mutable_bindings(to_call: Box<Fn(&mut Bindings)>) {
+  if let Ok(mut bindings) = BINDINGS.write() {
+    to_call(&mut *bindings)
+  }
+  else {
+    panic!("Failed to acquire write lock on bindings object")
+  }
+}
+
+#[no_mangle]
+pub extern "C" fn create_application(system_view: *mut Opaque_SystemView)
+    -> *mut ApplicationContext {
+  Box::into_raw(Box::new(ApplicationContext::new(
+      SystemView(system_view))))
+}
+
+// Rust structure containing all the methods bound to non-rust-owned types
+#[derive(Default)]
+#[allow(non_snake_case)]
+struct Bindings {
+
+{{~#each types}}
+{{~#each impls}}
+{{~#each functions}}
+{{~#unless rust_owned}}
+
+  {{name}}: Option<extern "C" fn(_self: *mut Opaque_{{type_name}}
+      {{#each arguments}}, {{snake_case name}}: {{data_type.rust_name_outgoing}}{{/each}})
+          {{#if return_type}}-> {{return_type.rust_name_incoming}}{{/if}}>,
+
+{{~/unless}}
+{{~/each}}
+{{~/each}}
+{{~/each}}
+}
+
+// All the wrapped types
+
+{{~#each wrapped_types}}
+pub struct {{wrapper_name}}({{wrapped_type_name}});
+
+impl {{wrapper_name}} {
+  pub fn new(_self: {{wrapped_type_name}}) -> {{wrapper_name}} {
+    {{wrapper_name}}(_self)
+  }
+}
+
+{{/each}}
+
+// All the functions for types owned by rust
+
+{{~#each types}}
+{{~#if rust_owned}}
+// Type {{name}}
+{{#each impls}}
+// Impl {{trait_name}}
+{{~#each functions}}
+
+{{~#unless is_drop}}
+
+#[no_mangle]
+#[allow(non_snake_case)]
+pub extern "C" fn {{name}}
+(_self: *mut {{type_name}}
+    {{#each arguments}}, {{snake_case name}}: {{data_type.rust_name_incoming}}
+    {{/each}}    ){{#if return_type}} -> {{return_type.rust_name_outgoing}}{{/if}} {
+  let s = unsafe { &*_self };
+  {{#if return_type}}{{return_type.rust_type_coersion_prefix_outgoing}}{{/if}}s.{{impl_name~}} ( {{~#each arguments}}
+      {{data_type.rust_type_coersion_prefix_incoming}}{{snake_case name}}{{data_type.rust_type_coersion_postfix_incoming}},{{/each}}){{#if return_type}}{{return_type.rust_type_coersion_postfix_outgoing}}{{/if}}
+}
+
+{{~/unless}}
+
+{{~#if is_drop}}
+
+#[no_mangle]
+#[allow(non_snake_case)]
+pub extern "C" fn {{name}}
+(_self: *mut {{type_name}}
+    {{#each arguments}}, {{snake_case name}}: {{data_type.rust_name_incoming}}
+    {{/each}}    ){{#if return_type}} -> {{return_type.rust_name_outgoing}}{{/if}} {
+  let _ = unsafe { Box::from_raw(_self) };
+}
+
+{{~/if}}
+
+{{~/each}}
+{{~/each}}
+
+{{~/if}}
+{{~/each}}
+
+// All the structs and impls for types not owned by rust
+
+{{~#each types}}
+{{~#unless rust_owned}}
+
+// Type {{name}}
+
+#[allow(non_camel_case_types)]
+pub enum Opaque_{{name}}{}
+
+pub struct {{name}}(*mut Opaque_{{name}});
+
+{{~#each impls}}
+#[allow(non_snake_case)]
+impl {{#if trait_name}}{{trait_name}} for {{/if}}{{../name}} {
+  {{~#each generics}}
+  type {{symbol}} = {{bound_type}};
+  {{~/each}}
+
+  {{~#each functions}}
+  {{#unless ../trait_name}}pub {{/unless}}fn {{#if impl_name}}{{impl_name}}{{else}}{{name}}{{/if}}(
+      &{{#if require_mutable_self}}mut{{/if}} self
+      {{#each arguments}}, {{snake_case name}}: {{#if data_type.borrow_outgoing}}&{{/if}}{{data_type.rust_name_internal}}
+      {{~/each}})
+          {{#if return_type}}-> {{return_type.rust_name_internal}}{{/if}} {
+    {{#if custom_rust_code}}{{custom_rust_code}}{{/if}}
+    {{#if return_type}}{{return_type.rust_type_coersion_prefix_incoming}}{{/if}}({{upper_case name}})(self.0
+        {{#each arguments}}, {{data_type.rust_type_coersion_prefix_outgoing}}{{snake_case name}}{{data_type.rust_type_coersion_postfix_outgoing}}
+        {{~/each}}){{#if return_type}}{{return_type.rust_type_coersion_postfix_incoming}}{{/if}}
+  }
+  {{~/each}}
+}
+{{/each}}
+
+{{~/unless}}
+{{~/each}}
+
+// All the externalized methods for all types plus their binding code
+
+{{~#each types}}
+// {{name}}
+{{~#each impls}}
+// {{trait_name}}
+{{~#each functions}}
+{{~#unless rust_owned}}
+
+#[allow(non_snake_case)]
+lazy_static!{
+  static ref {{upper_case name}} : extern "C" fn(_self: *mut Opaque_{{type_name}}
+      {{#each arguments}}, {{snake_case name}}: {{data_type.rust_name_outgoing}}{{/each}})
+          {{#if return_type}}-> {{return_type.rust_name_incoming}}{{/if}}
+            = BINDINGS.read()
+                .expect("unable to read from external bindings")
+                .{{name}}
+                .expect("{{name}} has not been set");
+}
+
+#[no_mangle]
+#[allow(non_snake_case)]
+pub extern "C" fn set_{{name}}(binding_fn: extern "C" fn(_self: *mut Opaque_{{type_name}}
+    {{#each arguments}}, {{snake_case name}}: {{data_type.rust_name_outgoing}}{{/each}})
+        {{#if return_type}}-> {{return_type.rust_name_incoming}}{{/if}}) {
+  with_mutable_bindings(Box::new(move |bindings| {
+    if let Some(_) = bindings.{{name}} {
+      panic!("{{name}} is already bound")
+    }
+    bindings.{{name}} = Some(binding_fn);
+  }));
+}
+
+{{~/unless}}
+{{~/each}}
+{{~/each}}
+{{~/each}}
+
+// Additional stop-gap code
+
+impl ToString for SwiftString {
+  fn to_string(&self) -> String {
+    let length = self.get_length() as usize;
+    let mut vec_data : Vec<u8> = Vec::with_capacity(length);
+    unsafe {
+      vec_data.set_len(length);
+      self.get_content().copy_to_nonoverlapping(
+          vec_data.as_mut_ptr(),
+          length);
+    }
+
+    String::from_utf8(vec_data).unwrap()
+  }
+}

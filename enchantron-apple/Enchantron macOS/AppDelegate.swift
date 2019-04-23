@@ -1,8 +1,8 @@
 //
 //  AppDelegate.swift
-//  Enchanter macOS
+//  FourFours macOS
 //
-//  Created by Kevin Guthrie on 6/12/18.
+//  Created by Kevin Guthrie on 8/9/18.
 //  Copyright © 2018 Rook And Pawn Industries, Inc. All rights reserved.
 //
 

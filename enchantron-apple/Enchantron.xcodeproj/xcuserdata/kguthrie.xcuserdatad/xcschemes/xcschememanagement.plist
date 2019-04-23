@@ -4,37 +4,22 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>Enchanter iOS.xcscheme</key>
+		<key>FourFours iOS.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
-		<key>Enchanter macOS.xcscheme</key>
+		<key>FourFours iOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>2</integer>
+			<integer>0</integer>
 		</dict>
-		<key>Enchanter tvOS.xcscheme</key>
+		<key>FourFours macOS.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>1</integer>
 		</dict>
-		<key>Enchanter watchOS App.xcscheme</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>2</integer>
-		</dict>
-		<key>Enchantron iOS.xcscheme</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>0</integer>
-		</dict>
-		<key>Enchantron macOS.xcscheme</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>2</integer>
-		</dict>
-		<key>Enchantron tvOS.xcscheme</key>
+		<key>FourFours macOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>1</integer>

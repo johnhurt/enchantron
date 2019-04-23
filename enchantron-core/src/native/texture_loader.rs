@@ -1,7 +1,7 @@
-use ui::Texture;
+use native::Texture;
 
-pub trait TextureLoader {
-  type Tex : Texture;
+pub trait TextureLoader: 'static {
+  type T : Texture;
 
-  fn load_texture(&self, name: String) -> Self::Tex;
+  fn load_texture(&self, name: String) -> Self::T;
 }

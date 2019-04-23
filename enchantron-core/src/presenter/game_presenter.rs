@@ -11,12 +11,21 @@ pub struct GamePresenter<V: GameView> {
 
 impl <V: GameView> GamePresenter<V> {
 
+  fn bind(self) -> Arc<GamePresenter<V>> {
+
+    let result = Arc::new(self);
+
+    result
+  }
+
   pub fn new(view: V, event_bus: Arc<EventBus>) -> Arc<GamePresenter<V>> {
-    Arc::new(GamePresenter{
+    let result = GamePresenter{
       view: view,
       event_bus: event_bus,
       handler_registrations: Mutex::new(Vec::new())
-    })
+    };
+
+    result.bind()
   }
 
 }

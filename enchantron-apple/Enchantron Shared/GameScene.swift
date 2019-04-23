@@ -11,21 +11,21 @@ import SpriteKit
 class GameScene: SKScene {
   
   var activeView: SKNode?
-  
-  class func get_ui_binding() -> ext_ui_binding {
-    return ext_ui_binding(
-      main_menu_view: MainMenuView.get_binding(),
-      game_view: GameView.get_binding(),
-      button: Button.get_binding(),
-      handler_registration: HandlerRegistration.get_binding(),
-      texture: Texture.get_binding(),
-      swift_string: SwiftString.get_binding())
-  }
-  
-  class func get_native_binding() -> ext_native_binding {
-    return ext_native_binding(
-      texture_loader: TextureLoader.get_binding())
-  }
+//
+//  class func get_ui_binding() -> ext_ui_binding {
+//    return ext_ui_binding(
+//      main_menu_view: MainMenuView.get_binding(),
+//      game_view: GameView.get_binding(),
+//      button: Button.get_binding(),
+//      handler_registration: HandlerRegistration.get_binding(),
+//      texture: Texture.get_binding(),
+//      swift_string: SwiftString.get_binding())
+//  }
+//
+//  class func get_native_binding() -> ext_native_binding {
+//    return ext_native_binding(
+//      texture_loader: TextureLoader.get_binding())
+//  }
   
   class func newGameScene() -> GameScene {
     // Load 'GameScene.sks' as an SKScene.
@@ -43,37 +43,40 @@ class GameScene: SKScene {
   var viewCleanup : (() -> Void)?
   
   func setUpScene() {
-    let textureLoader = TextureLoader()
+    let ctx = RustBinder.bindToRust()
     
-    let applicationContext = create_application_context(
-      UnsafeMutableRawPointer(Unmanaged.passRetained(textureLoader).toOpaque()),
-      GameScene.get_ui_binding(),
-      GameScene.get_native_binding())
     
-    // Establish the bindings between rust types accessed by pointer
-    ClickHandler.set_binding(int_binding: applicationContext.internal_ui_binding.click_handler)
-    RustString.set_binding(int_binding: applicationContext.internal_ui_binding.rust_string)
-    
-    let transitioner = TransitionService(transitionClosure: { (view, cleanup) in
-      self.removeAllChildren()
-      
-      self.viewCleanup?()
-      
-      self.viewCleanup = cleanup
-      
-      self.addChild(view)
-    })
-    
-    let mainMenuView = MainMenuView(applictionContext: applicationContext,
-                                    transitioner: transitioner)
-    
-    let mainMenuPresenter = bind_main_menu_view(
-        applicationContext,
-        UnsafeMutableRawPointer(Unmanaged.passRetained(mainMenuView).toOpaque()))
-    
-    transitioner.transition(view: mainMenuView, viewCleanup: {
-      (applicationContext.internal_ui_binding.main_menu_presenter.drop)(mainMenuPresenter)
-    })
+//    let textureLoader = TextureLoader()
+//    
+//    let applicationContext = create_application_context(
+//      UnsafeMutableRawPointer(Unmanaged.passRetained(textureLoader).toOpaque()),
+//      GameScene.get_ui_binding(),
+//      GameScene.get_native_binding())
+//    
+//    // Establish the bindings between rust types accessed by pointer
+//    ClickHandler.set_binding(int_binding: applicationContext.internal_ui_binding.click_handler)
+//    RustString.set_binding(int_binding: applicationContext.internal_ui_binding.rust_string)
+//    
+//    let transitioner = TransitionService(transitionClosure: { (view, cleanup) in
+//      self.removeAllChildren()
+//      
+//      self.viewCleanup?()
+//      
+//      self.viewCleanup = cleanup
+//      
+//      self.addChild(view)
+//    })
+//    
+//    let mainMenuView = MainMenuView(applictionContext: applicationContext,
+//                                    transitioner: transitioner)
+//    
+//    let mainMenuPresenter = bind_main_menu_view(
+//        applicationContext,
+//        UnsafeMutableRawPointer(Unmanaged.passRetained(mainMenuView).toOpaque()))
+//    
+//    transitioner.transition(view: mainMenuView, viewCleanup: {
+//      (applicationContext.internal_ui_binding.main_menu_presenter.drop)(mainMenuPresenter)
+//    })
   }
   
   #if os(watchOS)

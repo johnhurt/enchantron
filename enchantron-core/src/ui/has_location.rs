@@ -1,4 +1,4 @@
 pub trait HasLocation {
-  fn get_x(&self) -> i64;
-  fn get_y(&self) -> i64;
+  fn get_left(&self) -> i64;
+  fn get_top(&self) -> i64;
 }

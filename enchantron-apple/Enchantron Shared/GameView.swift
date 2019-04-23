@@ -11,25 +11,13 @@ import SpriteKit
 
 class GameView : SKNode {
   
-  public class func get_binding() -> ext_game_view {
-    return ext_game_view(
-      get_width: get_width,
-      get_height: get_height,
-      get_x: get_x,
-      get_y: get_y,
-      destroy: destroy)
-  }
-  
   let origin : CGPoint = CGPoint(x: 0, y: 0)
   let size : CGSize = CGSize(width: 100, height: 100)
   
-  let applicationContext : ext_application_context
   let transitioner : TransitionService
   
-  init(applictionContext : ext_application_context, transitioner : TransitionService) {
-    
-    self.applicationContext = applictionContext
-    self.transitioner = transitioner
+  init(transitioner : TransitionService) {
+        self.transitioner = transitioner
     
     super.init()
   }

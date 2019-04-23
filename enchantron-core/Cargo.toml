@@ -2,6 +2,7 @@
 name = "enchantron-core"
 version = "0.1.0"
 authors = ["Kevin Guthrie <kevin.guthrie@gmail.com>"]
+build = "build/build.rs"
 
 [dependencies]
 parallel-event-emitter = "0.2.4"
@@ -14,12 +15,16 @@ lazy_static = "1.0"
 [build-dependencies]
 cbindgen = "0.6.0"
 regex = "1.0.2"
+lazy_static = "1.0"
+handlebars = "1.0.0"
+serde = "1.0.21"
+serde_json = "1.0.21"
+heck = "0.3.0"
+derive_builder = "0.5.1"
+itertools = "0.7.8"
 
 [lib]
 name = "enchantron"
-path = "src/lib_apple.rs"
+path = "src/lib_swift.rs"
 crate-type = ["staticlib"]
 
-[[bin]]
-name = "enchantron-rust"
-path = "src/main.rs"

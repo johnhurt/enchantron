@@ -28,7 +28,7 @@ impl EventBus {
 
   pub fn new() -> Arc<EventBus> {
 
-    let (sink, source) : (Sender<ConsumableFuture>, Receiver<ConsumableFuture>) 
+    let (sink, source) : (Sender<ConsumableFuture>, Receiver<ConsumableFuture>)
         = crossbeam_channel::unbounded();
 
     let worker_count = 8;
@@ -42,7 +42,9 @@ impl EventBus {
 
       pool.spawn(move || {
         loop {
-          let _ = copied_source.recv().unwrap().wait();
+          if let Some(future) = copied_source.recv() {
+            let _ = future.wait();
+          }
         }
       })
     }
@@ -54,9 +56,9 @@ impl EventBus {
   }
 
   pub fn register<E, H>(
-      &self, 
-      event_type: EnchantronEvent, 
-      handler: &Arc<H>) -> ListenerRegistration 
+      &self,
+      event_type: EnchantronEvent,
+      handler: &Arc<H>) -> ListenerRegistration
       where E : Send + Clone + Into<EnchantronEvent> + 'static,
       H : EventListener<E>
       {
@@ -69,7 +71,7 @@ impl EventBus {
     let mut locked_emitter = self.emitter.lock().unwrap();
 
     if let Ok(real_listener_id) = locked_emitter.add_listener_value(
-        event_type, 
+        event_type,
         move |arg_opt: Option<E>| {
           if let Some(handler) = weak_handler.upgrade() {
             if let Some(arg) = arg_opt {
@@ -88,16 +90,16 @@ impl EventBus {
         if let Some(emitter) = copied_emitter.upgrade() {
           let mut locked_emitter = emitter.lock().unwrap();
           let _ = locked_emitter.remove_listener(
-              copied_event_type, 
+              copied_event_type,
               listener_id - 1);
         }
       }
     } ))
   }
 
-  pub fn post<E>(&self, e: E) 
+  pub fn post<E>(&self, e: E)
       where E : Send + Clone + Into<EnchantronEvent> + 'static {
-    
+
     let mut locked_emitter = self.emitter.lock().unwrap();
     let event_type = e.clone().into();
     let f = locked_emitter.emit_value(event_type, e.clone());

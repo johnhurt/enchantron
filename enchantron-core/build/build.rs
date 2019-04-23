@@ -1,5 +1,13 @@
+#[macro_use] extern crate lazy_static;
+#[macro_use] extern crate handlebars;
+#[macro_use] extern crate serde_json;
+#[macro_use] extern crate serde;
+#[macro_use] extern crate derive_builder;
+
 extern crate cbindgen;
 extern crate regex;
+extern crate heck;
+extern crate itertools;
 
 use std::env;
 use std::fs::{File, OpenOptions, remove_file};
@@ -9,10 +17,15 @@ use std::path::Path;
 
 use regex::Regex;
 
+use gen::*;
+
+mod gen;
+
 fn main() {
 
-  let result = panic::catch_unwind(|| {
+  //let result = panic::catch_unwind(|| {
 
+    generate_swift_bindings();
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
 
     let header_file_name = "enchantron.h";
@@ -23,14 +36,14 @@ fn main() {
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(header_file_name);
-
+/*
     let mut f = File::open(header_file_name).expect("Header file not found");
 
     let mut contents = String::new();
     f.read_to_string(&mut contents)
         .expect("Failed to read from header file");
-    
-    let ignored_type_pattern 
+
+    let ignored_type_pattern
         = Regex::new(r"^typedef struct (\S+) (\S+);$").unwrap();
 
     let contents_str = contents.into_boxed_str();
@@ -82,8 +95,9 @@ fn main() {
       let _ = writer.write_all(line.as_bytes());
       let _ = writer.write_all("\n".as_bytes());
     }
-  });
-
+    */
+  //});
+/*
   if let Err(e) = result {
     if let Some(e) = e.downcast_ref::<&'static str>() {
       println!("Got an error: {}", e);
@@ -91,5 +105,6 @@ fn main() {
       println!("Got an unknown error: {:?}", e);
     }
   }
-  
+  */
+
 }

@@ -10,22 +10,19 @@ import Foundation
 
 class SwiftString {
   
-  public class func get_binding() -> ext_swift_string {
-    return ext_swift_string(
-      get_length: getLength,
-      get_content: getContent,
-      destroy: destroy)
-  }
-  
   let length: Int64
   let data: NSData
   
-  init(source: String) {
+  init(_ source: String) {
     let sourceData = source.data(
       using: String.Encoding.utf8,
       allowLossyConversion: false)!
     self.length = Int64(sourceData.count)
     self.data = sourceData as NSData
+  }
+  
+  func getContent() -> UnsafeMutablePointer<UInt8> {
+    return UnsafeMutablePointer.init(mutating: self.data.bytes.assumingMemoryBound(to: UInt8.self))
   }
   
   deinit {

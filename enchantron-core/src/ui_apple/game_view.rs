@@ -28,11 +28,11 @@ impl HasSize for GameView {
 }
 
 impl HasLocation for GameView {
-  fn get_x(&self) -> i64 {
+  fn get_left(&self) -> i64 {
     (EXT_BINDING.get_x)(self.0)
   }
 
-  fn get_y(&self) -> i64 {
+  fn get_top(&self) -> i64 {
     (EXT_BINDING.get_y)(self.0)
   }
 }

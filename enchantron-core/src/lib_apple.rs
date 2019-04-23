@@ -6,9 +6,12 @@ use std::sync::{Arc,RwLock};
 
 use event::{EventBus};
 use native_impl::TextureLoader;
-use presenter::{GamePresenter, MainMenuPresenter};
-use ui_impl::{GameView, MainMenuView, ClickHandler, RustString,
+use presenter::{ LoadingPresenter, MainMenuPresenter, GamePresenter };
+use ui_impl::{ LoadingView, MainMenuView, GameView, ClickHandler, RustString,
     click_handler_binding, rust_string_binding};
+
+pub mod impl_swift;
+pub use impl_swift::*;
 
 mod event;
 mod native;
@@ -17,6 +20,7 @@ mod ui;
 
 mod native_apple;
 mod ui_apple;
+
 
 mod ui_impl {
   pub use super::ui_apple::*;
@@ -43,9 +47,11 @@ pub struct int_ui_binding {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct ext_ui_binding {
+  pub loading_view: ext_loading_view,
   pub main_menu_view: ext_main_menu_view,
   pub game_view: ext_game_view,
   pub button: ext_button,
+  pub progress_bar: ext_progress_bar,
   pub handler_registration: ext_handler_registration,
   pub texture: ext_texture,
   pub swift_string: ext_swift_string
@@ -63,6 +69,13 @@ pub struct ext_application_context {
   event_bus: *mut Arc<EventBus>,
   texture_loader: *mut Arc<TextureLoader>,
   internal_ui_binding: int_ui_binding,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct ext_loading_view {
+  pub get_progress_indicator: extern "C" fn(_self: *mut c_void) -> *mut c_void,
+  pub destroy: extern "C" fn(_self: *mut c_void)
 }
 
 #[repr(C)]
@@ -111,6 +124,16 @@ pub struct ext_button {
           _self: *mut c_void, 
           click_handler: *mut ClickHandler) 
           -> *mut c_void,
+  pub get_text: extern "C" fn(_self: *mut c_void) -> *mut c_void,
+  pub set_text: extern "C" fn(_self: *mut c_void, text: *mut RustString),
+  pub destroy: extern "C" fn(_self: *mut c_void)
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct ext_progress_bar {
+  pub get_int_value: extern "C" fn(_self: *mut c_void) -> i64,
+  pub set_int_value: extern "C" fn(_self: *mut c_void, value: i64),
   pub get_text: extern "C" fn(_self: *mut c_void) -> *mut c_void,
   pub set_text: extern "C" fn(_self: *mut c_void, text: *mut RustString),
   pub destroy: extern "C" fn(_self: *mut c_void)
@@ -196,6 +219,21 @@ pub extern "C" fn create_application_context(
 }
 
 #[no_mangle]
+pub extern "C" fn bind_loading_view(
+    application_context: ext_application_context,
+    ext_view: *mut c_void) 
+      -> *mut Arc<LoadingPresenter<LoadingView>> {
+  
+  let event_bus = unsafe { &*(application_context.event_bus) }.clone();
+
+  let view = LoadingView::new(ext_view);
+
+  let result = LoadingPresenter::new(view, event_bus);
+
+  Box::into_raw(Box::new(result))
+}
+
+#[no_mangle]
 pub extern "C" fn bind_main_menu_view(
     application_context: ext_application_context,
     ext_view: *mut c_void) 
@@ -262,4 +300,9 @@ pub(crate) fn get_native_bindings() -> ext_native_binding {
   else {
     panic!("Failed to acquire read lock on external native bindings")
   }
+}
+
+#[no_mangle]
+pub extern "C" fn bind(in_bindings: bin_shared_binding) -> rust_shared_binding {
+  panic!("blah")
 }

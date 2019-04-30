@@ -1,17 +1,22 @@
-#[macro_use] extern crate lazy_static;
-#[macro_use] extern crate log;
-#[macro_use] extern crate getset;
-#[macro_use] extern crate nom;
-#[macro_use] extern crate cached;
+#[macro_use]
+extern crate lazy_static;
+#[macro_use]
+extern crate log;
+#[macro_use]
+extern crate getset;
+#[macro_use]
+extern crate nom;
+#[macro_use]
+extern crate cached;
 
-extern crate statrs;
 extern crate num;
+extern crate statrs;
 
-extern crate simplelog;
 extern crate itertools;
+extern crate simplelog;
 
-pub use self::lib_gen::*;
 pub use self::application_context::ApplicationContext;
+pub use self::lib_gen::*;
 
 #[macro_use]
 pub(crate) mod ui;

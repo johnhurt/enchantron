@@ -1,4 +1,3 @@
-
-pub trait HandlerRegistration : 'static {
-  fn deregister(&self);
+pub trait HandlerRegistration: 'static {
+    fn deregister(&self);
 }

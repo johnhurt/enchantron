@@ -1,4 +1,3 @@
-
 pub trait HasMutableVisibility {
-  fn set_visible(&self, visible: bool);
+    fn set_visible(&self, visible: bool);
 }

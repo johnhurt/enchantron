@@ -1,8 +1,7 @@
-
 macro_rules! required_number_card {
-  ($num:expr) => {
-    Card::Number(Card::verify_number($num), true);
-  };
+    ($num:expr) => {
+        Card::Number(Card::verify_number($num), true);
+    };
 }
 
 macro_rules! define_cards {
@@ -33,31 +32,22 @@ macro_rules! define_cards {
 }
 
 define_cards!(
-  Plus,
-  Minus,
-  Times,
-  Divide,
-  ParenL,
-  ParenR,
-  Decimal,
-  Power,
-  Radical,
-  Inverse,
-  Factorial
+    Plus, Minus, Times, Divide, ParenL, ParenR, Decimal, Power, Radical,
+    Inverse, Factorial
 );
 
 impl Card {
-  pub fn verify_number(num: i64) -> i64 {
-    if num > 9 || num < 0 {
-      panic!("Number cards can only have a value between 1 and 9 (inclusive)");
+    pub fn verify_number(num: i64) -> i64 {
+        if num > 9 || num < 0 {
+            panic!("Number cards can only have a value between 1 and 9 (inclusive)");
+        }
+        num
     }
-    num
-  }
 
-  pub fn is_required_in_play(&self) -> bool {
-    match self {
-      Card::Number(_, required) => required.clone(),
-      _ => false
+    pub fn is_required_in_play(&self) -> bool {
+        match self {
+            Card::Number(_, required) => required.clone(),
+            _ => false,
+        }
     }
-  }
 }

@@ -1,5 +1,3 @@
-use ui::{ HasIntValue, HasText };
+use ui::{HasIntValue, HasText};
 
-pub trait ProgressBar : HasIntValue + HasText {
-
-}
+pub trait ProgressBar: HasIntValue + HasText {}

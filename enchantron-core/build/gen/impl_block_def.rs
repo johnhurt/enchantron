@@ -1,9 +1,8 @@
-
-#[derive(Serialize,Builder,Clone,Default)]
+#[derive(Serialize, Builder, Clone, Default)]
 #[builder(public)]
 #[builder(default)]
 #[builder(pattern = "owned")]
 pub struct ImplBlockDef {
-  pub trait_name: &'static str,
-  pub impl_method_name: Option<&'static str>,
+    pub trait_name: &'static str,
+    pub impl_method_name: Option<&'static str>,
 }

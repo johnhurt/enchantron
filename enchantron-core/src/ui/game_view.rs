@@ -1,14 +1,6 @@
+use ui::{HasDragHandlers, HasLayoutHandlers, SpriteSource};
 
-use ui::{
-  HasDragHandlers,
-  HasLayoutHandlers,
-  SpriteSource
-};
-
-pub trait GameView
-    : SpriteSource
-    + HasLayoutHandlers
-    + HasDragHandlers
-    + 'static {
-
+pub trait GameView:
+    SpriteSource + HasLayoutHandlers + HasDragHandlers + 'static
+{
 }

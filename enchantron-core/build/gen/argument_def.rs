@@ -5,6 +5,6 @@ use gen::DataType;
 #[builder(pattern = "owned")]
 #[builder(default)]
 pub struct ArgumentDef {
-  pub name: &'static str,
-  pub data_type: DataType
+    pub name: &'static str,
+    pub data_type: DataType,
 }

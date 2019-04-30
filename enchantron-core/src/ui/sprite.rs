@@ -1,23 +1,21 @@
 use native::Texture;
 
 use ui::{
-  HasMutableSize,
-  HasMutableLocation,
-  HasMutableVisibility,
-  HasDragHandlers
+    HasDragHandlers, HasMutableLocation, HasMutableSize, HasMutableVisibility,
 };
 
-pub trait Sprite
-    : HasMutableSize
+pub trait Sprite:
+    HasMutableSize
     + HasMutableLocation
     + HasMutableVisibility
     + HasDragHandlers
-    + 'static {
-  type T : Texture;
+    + 'static
+{
+    type T: Texture;
 
-  fn set_texture(&self, texture: &Self::T);
+    fn set_texture(&self, texture: &Self::T);
 
-  fn propagate_events_to(&self, &Self);
+    fn propagate_events_to(&self, &Self);
 
-  fn remove_from_parent(&self);
+    fn remove_from_parent(&self);
 }

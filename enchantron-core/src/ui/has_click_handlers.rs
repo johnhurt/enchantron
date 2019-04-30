@@ -1,7 +1,7 @@
-use ui::{ HandlerRegistration, ClickHandler };
+use ui::{ClickHandler, HandlerRegistration};
 
-pub trait HasClickHandlers : 'static {
-  type R : HandlerRegistration;
+pub trait HasClickHandlers: 'static {
+    type R: HandlerRegistration;
 
-  fn add_click_handler(&self, handler: ClickHandler ) -> Self::R;
+    fn add_click_handler(&self, handler: ClickHandler) -> Self::R;
 }

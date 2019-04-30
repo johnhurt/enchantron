@@ -1,22 +1,23 @@
 use std::collections::BTreeSet;
-use std::path::Path;
-use std::fs::{OpenOptions, File};
 use std::fs;
+use std::fs::{File, OpenOptions};
+use std::path::Path;
 
-use heck::{ SnakeCase, MixedCase };
+use heck::{MixedCase, SnakeCase};
 
 use handlebars::Handlebars;
 
 use itertools::Itertools;
 
-use gen::{TypeDef, TypeDefBuilder, FieldDefBuilder,
-        RenderableType, RenderableContext, MethodDefBuilder,
-        ImplBlockDefBuilder, ImplDefBuilder, GenericDefBuilder,
-        ArgumentDefBuilder, WrappedTypeDef, WrappedTypeDefBuilder,
-        RenderableWrappedType };
 use gen::data_type::*;
+use gen::{
+    ArgumentDefBuilder, FieldDefBuilder, GenericDefBuilder,
+    ImplBlockDefBuilder, ImplDefBuilder, MethodDefBuilder, RenderableContext,
+    RenderableType, RenderableWrappedType, TypeDef, TypeDefBuilder,
+    WrappedTypeDef, WrappedTypeDefBuilder,
+};
 
-lazy_static!{
+lazy_static! {
   static ref WRAPPED_TYPES : Vec<WrappedTypeDef> = vec![
     WrappedTypeDefBuilder::default()
         .wrapper_name("WrappedMainMenuPresenter")
@@ -887,96 +888,112 @@ handlebars_helper!(lower_camel: |to_convert: str| {
 });
 
 pub fn generate() {
+    let mut hb = Handlebars::new();
 
-  let mut hb = Handlebars::new();
+    hb.register_escape_fn(|data| String::from(data));
 
-  hb.register_escape_fn(|data| {String::from(data) });
+    hb.register_helper("snake_case", Box::new(snake_case));
+    hb.register_helper("upper_case", Box::new(upper_case));
+    hb.register_helper("lower_camel", Box::new(lower_camel));
 
-  hb.register_helper("snake_case", Box::new(snake_case));
-  hb.register_helper("upper_case", Box::new(upper_case));
-  hb.register_helper("lower_camel", Box::new(lower_camel));
+    hb.register_template_file(
+        "rust_to_swift_binding",
+        "build/templates/rust_to_swift_binding.handlebars",
+    )
+    .expect("Failed to load rust template");
 
-  hb.register_template_file("rust_to_swift_binding",
-      "build/templates/rust_to_swift_binding.handlebars")
-          .expect("Failed to load rust template");
+    hb.register_template_file(
+        "swift_to_rust_binding",
+        "build/templates/swift_to_rust_binding.handlebars",
+    )
+    .expect("Failed to load swift template");
 
-  hb.register_template_file("swift_to_rust_binding",
-      "build/templates/swift_to_rust_binding.handlebars")
-          .expect("Failed to load swift template");
+    let mut rust_imports_set: BTreeSet<String> = BTreeSet::new();
 
-  let mut rust_imports_set : BTreeSet<String> = BTreeSet::new();
-
-  let mut renderable_types : Vec<RenderableType>
-      = TYPES.iter()
+    let mut renderable_types: Vec<RenderableType> = TYPES
+        .iter()
         .map(|type_def| {
-          for import in type_def.get_all_imports() {
-            rust_imports_set.insert(import);
-          }
-          type_def
+            for import in type_def.get_all_imports() {
+                rust_imports_set.insert(import);
+            }
+            type_def
         })
-        .map(|type_def| { RenderableType::from_def(&type_def) })
+        .map(|type_def| RenderableType::from_def(&type_def))
         .collect();
 
-  WRAPPED_TYPES.iter()
-      .flat_map(|t| { t.wrapped_type_imports.clone() })
-      .map(String::from)
-      .for_each(|i| { rust_imports_set.insert(i); });
+    WRAPPED_TYPES
+        .iter()
+        .flat_map(|t| t.wrapped_type_imports.clone())
+        .map(String::from)
+        .for_each(|i| {
+            rust_imports_set.insert(i);
+        });
 
-  let mut rust_imports : Vec<String> = Vec::new();
+    let mut rust_imports: Vec<String> = Vec::new();
 
-  for import in rust_imports_set {
-    rust_imports.push(import);
-  }
+    for import in rust_imports_set {
+        rust_imports.push(import);
+    }
 
+    let wrapped_types: Vec<RenderableWrappedType> = WRAPPED_TYPES
+        .iter()
+        .map(RenderableWrappedType::from_def)
+        .collect();
 
-  let wrapped_types : Vec<RenderableWrappedType> = WRAPPED_TYPES.iter()
-      .map(RenderableWrappedType::from_def)
-      .collect();
+    renderable_types.append(
+        &mut wrapped_types
+            .iter()
+            .map(RenderableType::from_wrapped)
+            .collect(),
+    );
 
-  renderable_types.append(&mut wrapped_types.iter()
-      .map(RenderableType::from_wrapped)
-      .collect());
+    let renderable_context = RenderableContext {
+        types: renderable_types,
+        rust_imports: rust_imports,
+        wrapped_types: wrapped_types,
+    };
 
-  let renderable_context = RenderableContext {
-    types: renderable_types,
-    rust_imports: rust_imports,
-    wrapped_types: wrapped_types
-  };
+    {
+        // Render rust file
+        let gen_path = Path::new("src");
 
-  { // Render rust file
-    let gen_path = Path::new("src");
+        let rust_binding_file = gen_path.join(Path::new("lib_gen.rs"));
 
-    let rust_binding_file = gen_path.join(Path::new("lib_gen.rs"));
+        let _ = fs::remove_file(&rust_binding_file);
+        File::create(&rust_binding_file)
+            .expect("Failed to create lib_swift_gen file");
 
-    let _ = fs::remove_file(&rust_binding_file);
-    File::create(&rust_binding_file).expect(
-        "Failed to create lib_swift_gen file");
+        let mut options = OpenOptions::new();
+        options.write(true);
+        let writer: File = options.open(&rust_binding_file).unwrap();
 
-    let mut options = OpenOptions::new();
-    options.write(true);
-    let writer : File = options.open(&rust_binding_file).unwrap();
-
-
-    hb.render_to_write("rust_to_swift_binding", &renderable_context, writer)
+        hb.render_to_write(
+            "rust_to_swift_binding",
+            &renderable_context,
+            writer,
+        )
         .expect("Failed to render swift_lib");
+    }
 
-  }
+    {
+        // Render swift file
+        let gen_path = Path::new("../four-fours-apple/FourFours Shared");
 
-  { // Render swift file
-    let gen_path = Path::new("../four-fours-apple/FourFours Shared");
+        let rust_binding_file = gen_path.join(Path::new("RustBinder.swift"));
 
-    let rust_binding_file = gen_path.join(Path::new("RustBinder.swift"));
+        let _ = fs::remove_file(&rust_binding_file);
+        File::create(&rust_binding_file)
+            .expect("Failed to create lib_swift file");
 
-    let _ = fs::remove_file(&rust_binding_file);
-    File::create(&rust_binding_file).expect("Failed to create lib_swift file");
+        let mut options = OpenOptions::new();
+        options.write(true);
+        let writer: File = options.open(&rust_binding_file).unwrap();
 
-    let mut options = OpenOptions::new();
-    options.write(true);
-    let writer : File = options.open(&rust_binding_file).unwrap();
-
-
-    hb.render_to_write("swift_to_rust_binding", &renderable_context, writer)
+        hb.render_to_write(
+            "swift_to_rust_binding",
+            &renderable_context,
+            writer,
+        )
         .expect("Failed to render RustBinder");
-
-  }
+    }
 }

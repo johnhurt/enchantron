@@ -30,5 +30,3 @@ define_events!(FourFoursEvent,
     },
     Evaluate{}
 );
-
-

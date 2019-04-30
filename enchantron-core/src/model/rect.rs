@@ -1,77 +1,68 @@
-
-use model::{
-  Point,
-  Size
-};
+use model::{Point, Size};
 
 #[derive(Default, Debug, Clone)]
 pub struct Rect {
-  pub top_left: Point,
-  pub size: Size
+    pub top_left: Point,
+    pub size: Size,
 }
 
 impl Rect {
-
-  pub fn new(left: f64, top: f64, width: f64, height: f64) -> Rect {
-    Rect { top_left: Point::new(left, top), size: Size::new(width, height) }
-  }
-
-  pub fn center(&self) -> Point {
-    Point {
-      x: self.top_left.x + self.size.width / 2.,
-      y: self.top_left.y + self.size.height / 2.
-    }
-  }
-
-  /// Get the minimum distance from this rect to the given point.  If the given
-  /// point is within this rectangle then 0 is returned
-  pub fn distance_to(&self, point: &Point) -> f64 {
-    if self.contains(point) {
-      return 0.
+    pub fn new(left: f64, top: f64, width: f64, height: f64) -> Rect {
+        Rect {
+            top_left: Point::new(left, top),
+            size: Size::new(width, height),
+        }
     }
 
-    let right = self.top_left.x + self.size.width;
-    let bottom = self.top_left.y + self.size.height;
+    pub fn center(&self) -> Point {
+        Point {
+            x: self.top_left.x + self.size.width / 2.,
+            y: self.top_left.y + self.size.height / 2.,
+        }
+    }
 
-    if point.x < self.top_left.x {
-      if point.y < self.top_left.y {
-        point.distance_to(&self.top_left)
-      }
-      else if point.y > bottom {
-        point.distance_to(&Point::new(self.top_left.x, bottom))
-      }
-      else {
-        self.top_left.x - point.x
-      }
-    }
-    else if point.x > right {
-      if point.y < self.top_left.y {
-        point.distance_to(&Point::new(right, self.top_left.y))
-      }
-      else if point.y > bottom {
-        point.distance_to(&Point::new(right, bottom))
-      }
-      else {
-        point.x - right
-      }
-    }
-    else {
-      if point.y < self.top_left.y {
-        self.top_left.y - point.y
-      }
-      else{
-        point.y - bottom
-      }
-    }
-  }
+    /// Get the minimum distance from this rect to the given point.  If the given
+    /// point is within this rectangle then 0 is returned
+    pub fn distance_to(&self, point: &Point) -> f64 {
+        if self.contains(point) {
+            return 0.;
+        }
 
-  /// Return whether or not the given point is within the given rectangle
-  pub fn contains(&self, point: &Point) -> bool {
-    !( point.x < self.top_left.x
-        || point.x > self.top_left.x + self.size.width
-        || point.y < self.top_left.y
-        || point.y > self.top_left.y + self.size.height )
-  }
+        let right = self.top_left.x + self.size.width;
+        let bottom = self.top_left.y + self.size.height;
+
+        if point.x < self.top_left.x {
+            if point.y < self.top_left.y {
+                point.distance_to(&self.top_left)
+            } else if point.y > bottom {
+                point.distance_to(&Point::new(self.top_left.x, bottom))
+            } else {
+                self.top_left.x - point.x
+            }
+        } else if point.x > right {
+            if point.y < self.top_left.y {
+                point.distance_to(&Point::new(right, self.top_left.y))
+            } else if point.y > bottom {
+                point.distance_to(&Point::new(right, bottom))
+            } else {
+                point.x - right
+            }
+        } else {
+            if point.y < self.top_left.y {
+                self.top_left.y - point.y
+            } else {
+                point.y - bottom
+            }
+        }
+    }
+
+    /// Return whether or not the given point is within the given rectangle
+    pub fn contains(&self, point: &Point) -> bool {
+        !(point.x < self.top_left.x
+            || point.x > self.top_left.x + self.size.width
+            || point.y < self.top_left.y
+            || point.y > self.top_left.y + self.size.height)
+    }
 }
 
 #[test]
@@ -100,5 +91,4 @@ fn test_distance() {
     assert_eq!(r.distance_to(&Point::new(-5., 5.)), 5.); // over left
     assert_eq!(r.distance_to(&Point::new(5., 6.)), 5.); // over right
     assert_eq!(r.distance_to(&Point::new(6., 5.)), 5.); // over right
-
 }

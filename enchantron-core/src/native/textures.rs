@@ -1,4 +1,3 @@
-
 use native::{Texture, TextureLoader};
 
 macro_rules! count {
@@ -97,32 +96,35 @@ define_texture_atlas!(Symbols (x_tile_count: 6, y_tile_count: 6) {
 });
 
 pub struct Textures<T: Texture> {
-  card: T,
-  symbols: Symbols<T>
+    card: T,
+    symbols: Symbols<T>,
 }
 
-impl <T: Texture> Textures<T> {
+impl<T: Texture> Textures<T> {
+    pub fn new(
+        texture_loader: &TextureLoader<T = T>,
+        progress_callback: &Fn(f64),
+    ) -> Textures<T> {
+        let card_atlas = Card::new(
+            texture_loader.load_texture(String::from("Card.png")),
+            |p| progress_callback(p / 2.),
+        );
+        let symbols_atlas = Symbols::new(
+            texture_loader.load_texture(String::from("Symbols.png")),
+            |p| progress_callback(0.5 + p / 2.),
+        );
 
-  pub fn new(texture_loader: &TextureLoader<T = T>, progress_callback: &Fn(f64))
-      -> Textures<T> {
-
-    let card_atlas = Card::new(texture_loader.load_texture(
-        String::from("Card.png")), |p| progress_callback(p / 2.));
-    let symbols_atlas = Symbols::new(texture_loader.load_texture(
-        String::from("Symbols.png")), |p| progress_callback(0.5 + p / 2.));
-
-    Textures{
-      card: card_atlas.card,
-      symbols: symbols_atlas
+        Textures {
+            card: card_atlas.card,
+            symbols: symbols_atlas,
+        }
     }
-  }
 
-  pub fn card(&self) -> &T {
-    &self.card
-  }
+    pub fn card(&self) -> &T {
+        &self.card
+    }
 
-  pub fn symbols(&self) -> &Symbols<T> {
-    &self.symbols
-  }
-
+    pub fn symbols(&self) -> &Symbols<T> {
+        &self.symbols
+    }
 }

@@ -32,6 +32,8 @@
 		6346A2632138921200481721 /* RookAndPawn White.png in Resources */ = {isa = PBXBuildFile; fileRef = 6346A2612138921200481721 /* RookAndPawn White.png */; };
 		6346A2652139D1E900481721 /* DragHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6346A2642139D1E900481721 /* DragHandler.swift */; };
 		6346A2662139D1E900481721 /* DragHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6346A2642139D1E900481721 /* DragHandler.swift */; };
+		63531FC32278BD850060D9AD /* libenchantron.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63531FC22278BD850060D9AD /* libenchantron.a */; };
+		63531FC52278BD9E0060D9AD /* libenchantron.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63531FC42278BD9E0060D9AD /* libenchantron.a */; };
 		6395650821264645006F2A71 /* ProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6395650721264645006F2A71 /* ProgressBar.swift */; };
 		6395650921264645006F2A71 /* ProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6395650721264645006F2A71 /* ProgressBar.swift */; };
 		6395650B2126469C006F2A71 /* Texture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6395650A2126469C006F2A71 /* Texture.swift */; };
@@ -67,9 +69,7 @@
 		63F97B10211CCB0400784701 /* SwiftString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F97B03211CCB0400784701 /* SwiftString.swift */; };
 		63F97B11211CCB0400784701 /* SwiftString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F97B03211CCB0400784701 /* SwiftString.swift */; };
 		63F97B15211CCCCA00784701 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 63F97B14211CCCCA00784701 /* libresolv.tbd */; };
-		63F97B17211CCE6000784701 /* libfourfours.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63F97B16211CCE6000784701 /* libfourfours.a */; };
 		63F97B19211CCE6E00784701 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 63F97B18211CCE6E00784701 /* libresolv.tbd */; };
-		63F97B1B211CCE7D00784701 /* libfourfours.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63F97B1A211CCE7D00784701 /* libfourfours.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -93,6 +93,8 @@
 		634589FD212645B400D81EAD /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		6346A2612138921200481721 /* RookAndPawn White.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "RookAndPawn White.png"; sourceTree = "<group>"; };
 		6346A2642139D1E900481721 /* DragHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragHandler.swift; sourceTree = "<group>"; };
+		63531FC22278BD850060D9AD /* libenchantron.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libenchantron.a; path = "../enchantron-core/target/universal/debug/libenchantron.a"; sourceTree = "<group>"; };
+		63531FC42278BD9E0060D9AD /* libenchantron.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libenchantron.a; path = "../enchantron-core/target/debug/libenchantron.a"; sourceTree = "<group>"; };
 		6395650721264645006F2A71 /* ProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBar.swift; sourceTree = "<group>"; };
 		6395650A2126469C006F2A71 /* Texture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Texture.swift; sourceTree = "<group>"; };
 		6395650D212646BD006F2A71 /* TextureLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureLoader.swift; sourceTree = "<group>"; };
@@ -123,7 +125,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63F97B17211CCE6000784701 /* libfourfours.a in Frameworks */,
+				63531FC32278BD850060D9AD /* libenchantron.a in Frameworks */,
 				63F97B15211CCCCA00784701 /* libresolv.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -132,7 +134,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63F97B1B211CCE7D00784701 /* libfourfours.a in Frameworks */,
+				63531FC52278BD9E0060D9AD /* libenchantron.a in Frameworks */,
 				63F97B19211CCE6E00784701 /* libresolv.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -245,6 +247,8 @@
 		63F97B13211CCCC900784701 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				63531FC22278BD850060D9AD /* libenchantron.a */,
+				63531FC42278BD9E0060D9AD /* libenchantron.a */,
 				63F97B1A211CCE7D00784701 /* libfourfours.a */,
 				63F97B18211CCE6E00784701 /* libresolv.tbd */,
 				63F97B16211CCE6000784701 /* libfourfours.a */,
@@ -569,7 +573,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../four-fours-core/target/universal/debug";
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../enchantron-core/target/universal/debug";
 				PRODUCT_BUNDLE_IDENTIFIER = com.rookandpawn.Enchantron;
 				PRODUCT_NAME = Enchantron;
 				SDKROOT = iphoneos;
@@ -593,7 +597,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../four-fours-core/target/universal/debug";
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../enchantron-core/target/universal/debug";
 				PRODUCT_BUNDLE_IDENTIFIER = com.rookandpawn.Enchantron;
 				PRODUCT_NAME = Enchantron;
 				SDKROOT = iphoneos;
@@ -612,14 +616,14 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = N8F6RS8578;
-				INFOPLIST_FILE = "FourFours macOS/Info.plist";
+				INFOPLIST_FILE = "Enchantron macOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../four-fours-core/target/debug";
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../enchantron-core/target/debug";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rookandpawn.FourFours;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rookandpawn.Enchantron;
 				PRODUCT_NAME = Enchantron;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
@@ -636,14 +640,14 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = N8F6RS8578;
-				INFOPLIST_FILE = "FourFours macOS/Info.plist";
+				INFOPLIST_FILE = "Enchantron macOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../four-fours-core/target/debug";
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../enchantron-core/target/debug";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rookandpawn.FourFours;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rookandpawn.Enchantron;
 				PRODUCT_NAME = Enchantron;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;

@@ -1,21 +1,11 @@
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
-extern crate handlebars;
-#[macro_use]
-extern crate serde_json;
-#[macro_use]
 extern crate serde;
 #[macro_use]
 extern crate derive_builder;
 #[macro_use]
 extern crate log;
-
-extern crate cbindgen;
-extern crate heck;
-extern crate itertools;
-extern crate regex;
-extern crate simplelog;
 
 use regex::Regex;
 use serde_json::from_str;
@@ -41,28 +31,37 @@ fn main() {
     ])
     .expect("Umm logger?");
 
-    let result = panic::catch_unwind(|| {
-        generate_swift_bindings();
-        let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    info!("Running build script");
 
-        let header_file_name = "enchantron.h";
+    //let result = panic::catch_unwind(|| {
+    info!("Running build script");
 
-        let config = cbindgen::Config::from_file("cbindgen.toml")
-            .unwrap_or_else(|_| panic!("No toml"));
+    generate_swift_bindings();
+    let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
 
-        cbindgen::Builder::new()
-            .with_crate(crate_dir)
-            .with_config(config)
-            .generate()
-            .expect("Unable to generate bindings")
-            .write_to_file(header_file_name);
-    });
+    let header_file_name = "enchantron.h";
 
-    if let Err(e) = result {
+    let config = cbindgen::Config::from_file("cbindgen.toml")
+        .unwrap_or_else(|_| panic!("No toml"));
+
+    cbindgen::Builder::new()
+        .with_crate(crate_dir)
+        .with_config(config)
+        .generate()
+        .unwrap_or_else(|err| {
+            error!("Unable to generate bindings {:?}", err);
+            panic!("Failed to generate bindings")
+        })
+        .write_to_file(header_file_name);
+    //});
+
+    /*if let Err(e) = result {
         if let Some(e) = e.downcast_ref::<&'static str>() {
             error!("Got an error: {}", e);
         } else {
             error!("Got an unknown error: {:?}", e);
         }
-    }
+    }*/
+
+    info!("build.rs done");
 }

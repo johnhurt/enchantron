@@ -4,7 +4,7 @@ use heck::SnakeCase;
 
 use itertools::Itertools;
 
-use gen::{
+use super::{
     FieldDef, ImplDef, MethodDef, RenderableArgument, RenderableDataType,
     RenderableFunctionBuilder, RenderableImplBlock, RenderableImplBlockBuilder,
 };

@@ -1,6 +1,6 @@
-use native::Texture;
+use crate::native::Texture;
 
-use ui::{
+use super::{
     HasDragHandlers, HasMutableLocation, HasMutableSize, HasMutableVisibility,
 };
 
@@ -15,7 +15,7 @@ pub trait Sprite:
 
     fn set_texture(&self, texture: &Self::T);
 
-    fn propagate_events_to(&self, &Self);
+    fn propagate_events_to(&self, event_target: &Self);
 
     fn remove_from_parent(&self);
 }

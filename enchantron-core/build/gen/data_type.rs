@@ -105,7 +105,7 @@ impl DataType {
     pub fn get_imports(&self) -> Vec<String> {
         match &self {
             DataType::Nil => Vec::new(),
-            DataType::Stringy => vec![String::from("util::RustString")],
+            DataType::Stringy => vec![String::from("crate::util::RustString")],
             DataType::Primitive(_) => Vec::new(),
             DataType::RustGeneric(generic_type) => generic_type
                 .bound_type

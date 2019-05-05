@@ -1,4 +1,4 @@
-use native::{Texture, TextureLoader};
+use super::{Texture, TextureLoader};
 
 pub trait SystemView: 'static + Sized {
     type T: Texture;

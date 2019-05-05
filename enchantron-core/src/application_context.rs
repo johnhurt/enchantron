@@ -1,17 +1,17 @@
-use event::EventBus;
+use crate::event::EventBus;
 use log::SetLoggerError;
 use simplelog::{CombinedLogger, Config, LevelFilter, SimpleLogger};
 use std::ops::Deref;
 use std::sync::{Arc, RwLock};
 
-use {
+use crate::{
     GameView, LoadingView, MainMenuView, SystemView, WrappedGamePresenter,
     WrappedLoadingPresenter, WrappedMainMenuPresenter,
 };
 
-use native::RuntimeResources;
+use crate::native::RuntimeResources;
 
-use presenter::{GamePresenter, LoadingPresenter, MainMenuPresenter};
+use crate::presenter::{GamePresenter, LoadingPresenter, MainMenuPresenter};
 
 lazy_static! {
     static ref LOGGER_RESULT: Result<(), SetLoggerError> = CombinedLogger::init(

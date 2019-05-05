@@ -1,4 +1,4 @@
-use native::{SystemView, Textures};
+use super::{SystemView, Textures};
 
 pub struct RuntimeResources<S: SystemView> {
     textures: Textures<S::T>,

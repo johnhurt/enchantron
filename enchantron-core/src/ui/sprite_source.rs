@@ -1,5 +1,5 @@
-use native::Texture;
-use ui::Sprite;
+use super::Sprite;
+use crate::native::Texture;
 
 pub trait SpriteSource {
     type T: Texture;

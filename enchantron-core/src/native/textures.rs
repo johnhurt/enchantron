@@ -1,4 +1,4 @@
-use native::{Texture, TextureLoader};
+use super::{Texture, TextureLoader};
 
 macro_rules! count {
     ($h:expr) => (1);

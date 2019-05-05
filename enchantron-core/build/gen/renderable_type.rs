@@ -1,6 +1,6 @@
 use heck::SnakeCase;
 
-use gen::{
+use super::{
     RenderableFunctionBuilder, RenderableImplBlock, RenderableImplBlockBuilder,
     RenderableWrappedType, TypeDef,
 };

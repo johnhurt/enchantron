@@ -21,12 +21,11 @@ macro_rules! define_events {
   }
 }
 
-define_events!(FourFoursEvent,
+define_events!(EnchantronEvent,
     LoadResources{},
-    StartGame{ pub new: bool },
+    StartGame{ new: bool },
     Layout{
-      pub width: i64,
-      pub height: i64,
-    },
-    Evaluate{}
+      width: i64,
+      height: i64,
+    }
 );

@@ -1,12 +1,13 @@
-use event::{
+use crate::event::{
     EventBus, EventListener, FourFoursEvent, ListenerRegistration,
     LoadResources,
 };
+
 use std::sync::{Arc, Mutex};
 
-use native::{RuntimeResources, SystemView, Textures};
+use crate::native::{RuntimeResources, SystemView, Textures};
 
-use ui::{HasIntValue, HasText, LoadingView};
+use crate::ui::{HasIntValue, HasText, LoadingView};
 
 pub struct LoadingPresenter<V, S>
 where

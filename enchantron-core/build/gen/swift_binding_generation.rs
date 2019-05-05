@@ -5,12 +5,12 @@ use std::path::Path;
 
 use heck::{MixedCase, SnakeCase};
 
-use handlebars::Handlebars;
+use handlebars::{handlebars_helper, Handlebars};
 
 use itertools::Itertools;
 
-use gen::data_type::*;
-use gen::{
+use super::data_type::*;
+use super::{
     ArgumentDefBuilder, FieldDefBuilder, GenericDefBuilder,
     ImplBlockDefBuilder, ImplDefBuilder, MethodDefBuilder, RenderableContext,
     RenderableType, RenderableWrappedType, TypeDef, TypeDefBuilder,
@@ -24,7 +24,7 @@ lazy_static! {
         .wrapped_type_name("Arc<MainMenuPresenter<MainMenuView>>")
         .wrapped_type_imports(vec![
             "std::sync::Arc",
-            "presenter::MainMenuPresenter"
+            "crate::presenter::MainMenuPresenter"
         ])
         .build().unwrap(),
 
@@ -33,7 +33,7 @@ lazy_static! {
         .wrapped_type_name("Arc<LoadingPresenter<LoadingView,SystemView>>")
         .wrapped_type_imports(vec![
             "std::sync::Arc",
-            "presenter::LoadingPresenter"
+            "crate::presenter::LoadingPresenter"
         ])
         .build().unwrap(),
 
@@ -42,7 +42,7 @@ lazy_static! {
         .wrapped_type_name("Arc<GamePresenter<GameView,SystemView>>")
         .wrapped_type_imports(vec![
             "std::sync::Arc",
-            "presenter::GamePresenter"
+            "crate::presenter::GamePresenter"
         ])
         .build().unwrap(),
   ];
@@ -55,7 +55,7 @@ lazy_static! {
     TypeDefBuilder::default()
         .name("RustString")
         .rust_owned(true)
-        .rust_import(Some("util::RustString"))
+        .rust_import(Some("crate::util::RustString"))
         .methods(vec![
 
             MethodDefBuilder::default()
@@ -143,7 +143,7 @@ lazy_static! {
         .impls(vec![
             ImplDefBuilder::default()
                 .trait_name("ui::HandlerRegistration")
-                .trait_import(Some("ui"))
+                .trait_import(Some("crate::ui"))
                 .build().unwrap()
         ])
         .methods(vec![
@@ -160,7 +160,7 @@ lazy_static! {
 
     TypeDefBuilder::default()
         .name("ClickHandler")
-        .rust_import(Some("ui::ClickHandler"))
+        .rust_import(Some("crate::ui::ClickHandler"))
         .rust_owned(true)
         .methods(vec![
             MethodDefBuilder::default()
@@ -171,7 +171,7 @@ lazy_static! {
 
     TypeDefBuilder::default()
         .name("DragHandler")
-        .rust_import(Some("ui::DragHandler"))
+        .rust_import(Some("crate::ui::DragHandler"))
         .rust_owned(true)
         .methods(vec![
             MethodDefBuilder::default()
@@ -253,7 +253,7 @@ lazy_static! {
 
     TypeDefBuilder::default()
         .name("LayoutHandler")
-        .rust_import(Some("ui::LayoutHandler"))
+        .rust_import(Some("crate::ui::LayoutHandler"))
         .rust_owned(true)
         .methods(vec![
             MethodDefBuilder::default()
@@ -277,18 +277,18 @@ lazy_static! {
         .rust_owned(false)
         .impls(vec![
             ImplDefBuilder::default()
-                .trait_name("ui::Button")
-                .trait_import(Some("ui"))
+                .trait_name("crate::ui::Button")
+                .trait_import(Some("crate::ui"))
                 .build().unwrap(),
 
             ImplDefBuilder::default()
                 .trait_name("HasText")
-                .trait_import(Some("ui::HasText"))
+                .trait_import(Some("crate::ui::HasText"))
                 .build().unwrap(),
 
             ImplDefBuilder::default()
                 .trait_name("HasClickHandlers")
-                .trait_import(Some("ui::HasClickHandlers"))
+                .trait_import(Some("crate::ui::HasClickHandlers"))
                 .generics(vec![
                     GenericDefBuilder::default()
                         .symbol(Some("R"))
@@ -343,7 +343,7 @@ lazy_static! {
         .impls(vec![
             ImplDefBuilder::default()
                 .trait_name("HasText")
-                .trait_import(Some("ui::HasText"))
+                .trait_import(Some("crate::ui::HasText"))
                 .build().unwrap()
         ])
         .fields(vec![
@@ -367,11 +367,11 @@ lazy_static! {
         .impls(vec![
             ImplDefBuilder::default()
                 .trait_name("HasText")
-                .trait_import(Some("ui::HasText"))
+                .trait_import(Some("crate::ui::HasText"))
                 .build().unwrap(),
             ImplDefBuilder::default()
                 .trait_name("HasIntValue")
-                .trait_import(Some("ui::HasIntValue"))
+                .trait_import(Some("crate::ui::HasIntValue"))
                 .build().unwrap(),
             ImplDefBuilder::default()
                 .trait_name("ui::ProgressBar")
@@ -424,11 +424,11 @@ lazy_static! {
         .impls(vec![
             ImplDefBuilder::default()
                 .trait_name("native::Texture")
-                .trait_import(Some("native"))
+                .trait_import(Some("crate::native"))
                 .build().unwrap(),
             ImplDefBuilder::default()
                 .trait_name("HasIntSize")
-                .trait_import(Some("native::HasIntSize"))
+                .trait_import(Some("crate::native::HasIntSize"))
                 .build().unwrap()
         ])
         .methods(vec![
@@ -483,7 +483,7 @@ lazy_static! {
         .impls(vec![
             ImplDefBuilder::default()
                 .trait_name("ui::Sprite")
-                .trait_import(Some("ui"))
+                .trait_import(Some("crate::ui"))
                 .generics(vec![
                   GenericDefBuilder::default()
                       .symbol(Some("T"))
@@ -494,7 +494,7 @@ lazy_static! {
 
             ImplDefBuilder::default()
                 .trait_name("HasDragHandlers")
-                .trait_import(Some("ui::HasDragHandlers"))
+                .trait_import(Some("crate::ui::HasDragHandlers"))
                 .generics(vec![
                   GenericDefBuilder::default()
                       .symbol(Some("R"))
@@ -505,17 +505,17 @@ lazy_static! {
 
             ImplDefBuilder::default()
                 .trait_name("HasMutableSize")
-                .trait_import(Some("ui::HasMutableSize"))
+                .trait_import(Some("crate::ui::HasMutableSize"))
                 .build().unwrap(),
 
             ImplDefBuilder::default()
                 .trait_name("HasMutableLocation")
-                .trait_import(Some("ui::HasMutableLocation"))
+                .trait_import(Some("crate::ui::HasMutableLocation"))
                 .build().unwrap(),
 
             ImplDefBuilder::default()
                 .trait_name("HasMutableVisibility")
-                .trait_import(Some("ui::HasMutableVisibility"))
+                .trait_import(Some("crate::ui::HasMutableVisibility"))
                 .build().unwrap()
         ])
         .methods(vec![
@@ -644,7 +644,7 @@ lazy_static! {
         .impls(vec![
             ImplDefBuilder::default()
                 .trait_name("ui::LoadingView")
-                .trait_import(Some("ui"))
+                .trait_import(Some("crate::ui"))
                 .generics(vec![
                     GenericDefBuilder::default()
                         .symbol(Some("P"))
@@ -679,7 +679,7 @@ lazy_static! {
         .impls(vec![
             ImplDefBuilder::default()
                 .trait_name("ui::MainMenuView")
-                .trait_import(Some("ui"))
+                .trait_import(Some("crate::ui"))
                 .generics(vec![
                     GenericDefBuilder::default()
                         .symbol(Some("B"))
@@ -717,7 +717,7 @@ lazy_static! {
                 .build().unwrap(),
             ImplDefBuilder::default()
                 .trait_name("ui::SpriteSource")
-                .trait_import(Some("ui"))
+                .trait_import(Some("crate::ui"))
                 .generics(vec![
                     GenericDefBuilder::default()
                         .symbol(Some("T"))
@@ -731,7 +731,7 @@ lazy_static! {
                 .build().unwrap(),
             ImplDefBuilder::default()
                 .trait_name("HasLayoutHandlers")
-                .trait_import(Some("ui::HasLayoutHandlers"))
+                .trait_import(Some("crate::ui::HasLayoutHandlers"))
                 .generics(vec![
                     GenericDefBuilder::default()
                         .symbol(Some("R"))
@@ -741,7 +741,7 @@ lazy_static! {
                 .build().unwrap(),
             ImplDefBuilder::default()
                 .trait_name("HasDragHandlers")
-                .trait_import(Some("ui::HasDragHandlers"))
+                .trait_import(Some("crate::ui::HasDragHandlers"))
                 .generics(vec![
                     GenericDefBuilder::default()
                         .symbol(Some("R"))
@@ -814,7 +814,7 @@ lazy_static! {
         .impls(vec![
             ImplDefBuilder::default()
                 .trait_name("native::SystemView")
-                .trait_import(Some("native"))
+                .trait_import(Some("crate::native"))
                 .generics(vec![
                     GenericDefBuilder::default()
                         .symbol(Some("T"))
@@ -846,7 +846,7 @@ lazy_static! {
         .impls(vec![
             ImplDefBuilder::default()
                 .trait_name("native::TextureLoader")
-                .trait_import(Some("native"))
+                .trait_import(Some("crate::native"))
                 .generics(vec![
                     GenericDefBuilder::default()
                         .symbol(Some("T"))
@@ -888,6 +888,9 @@ handlebars_helper!(lower_camel: |to_convert: str| {
 });
 
 pub fn generate() {
+    info!("Generating swift binindings");
+
+    info!("Building Handlebars");
     let mut hb = Handlebars::new();
 
     hb.register_escape_fn(|data| String::from(data));
@@ -910,9 +913,11 @@ pub fn generate() {
 
     let mut rust_imports_set: BTreeSet<String> = BTreeSet::new();
 
+    info!("Building Renderable Types");
     let mut renderable_types: Vec<RenderableType> = TYPES
         .iter()
         .map(|type_def| {
+            info!("Building Renderable Types for {:?}", type_def.name);
             for import in type_def.get_all_imports() {
                 rust_imports_set.insert(import);
             }
@@ -921,6 +926,7 @@ pub fn generate() {
         .map(|type_def| RenderableType::from_def(&type_def))
         .collect();
 
+    info!("Generating Imports");
     WRAPPED_TYPES
         .iter()
         .flat_map(|t| t.wrapped_type_imports.clone())
@@ -935,6 +941,7 @@ pub fn generate() {
         rust_imports.push(import);
     }
 
+    info!("Building Wrapped Types");
     let wrapped_types: Vec<RenderableWrappedType> = WRAPPED_TYPES
         .iter()
         .map(RenderableWrappedType::from_def)
@@ -953,6 +960,7 @@ pub fn generate() {
         wrapped_types: wrapped_types,
     };
 
+    info!("Rendering Rust files");
     {
         // Render rust file
         let gen_path = Path::new("src");
@@ -975,9 +983,10 @@ pub fn generate() {
         .expect("Failed to render swift_lib");
     }
 
+    info!("Rendering Swift File");
     {
         // Render swift file
-        let gen_path = Path::new("../four-fours-apple/FourFours Shared");
+        let gen_path = Path::new("../enchantron-apple/Enchantron Shared");
 
         let rust_binding_file = gen_path.join(Path::new("RustBinder.swift"));
 
@@ -996,4 +1005,6 @@ pub fn generate() {
         )
         .expect("Failed to render RustBinder");
     }
+
+    info!("Finished Rendering Swift Bingings");
 }

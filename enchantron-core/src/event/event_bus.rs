@@ -4,8 +4,8 @@ extern crate parallel_event_emitter;
 extern crate rayon;
 extern crate trace_error;
 
-use event::FourFoursEvent;
-use event::{EventListener, ListenerRegistration};
+use super::EnchantronEvent;
+use super::{EventListener, ListenerRegistration};
 
 use self::crossbeam_channel::{Receiver, Sender};
 use self::futures::future::Future;
@@ -16,11 +16,11 @@ use self::trace_error::Trace;
 use std::sync::{Arc, Mutex};
 
 type ConsumableFuture =
-    Box<Future<Item = usize, Error = Trace<EventError>> + Send>;
+    Box<Future<Item = usize, Error = Trace<EventError>> + Sync>;
 
 pub struct EventBus {
     sink: Sender<ConsumableFuture>,
-    emitter: Arc<Mutex<ParallelEventEmitter<FourFoursEvent>>>,
+    emitter: Arc<Mutex<ParallelEventEmitter<EnchantronEvent>>>,
 }
 
 impl EventBus {
@@ -57,11 +57,11 @@ impl EventBus {
 
     pub fn register<E, H>(
         &self,
-        event_type: FourFoursEvent,
+        event_type: EnchantronEvent,
         handler: &Arc<H>,
     ) -> ListenerRegistration
     where
-        E: Send + Clone + Into<FourFoursEvent> + 'static,
+        E: Sync + Clone + Into<EnchantronEvent> + 'static,
         H: EventListener<E>,
     {
         self.register_disambiguous(event_type, handler, None)
@@ -69,12 +69,12 @@ impl EventBus {
 
     pub fn register_disambiguous<E, H>(
         &self,
-        event_type: FourFoursEvent,
+        event_type: EnchantronEvent,
         handler: &Arc<H>,
         _: Option<E>,
     ) -> ListenerRegistration
     where
-        E: Send + Clone + Into<FourFoursEvent> + 'static,
+        E: Sync + Clone + Into<EnchantronEvent> + 'static,
         H: EventListener<E>,
     {
         let weak_handler = Arc::downgrade(handler);
@@ -85,7 +85,7 @@ impl EventBus {
 
         let mut locked_emitter = self.emitter.lock().unwrap();
 
-        if let Ok(real_listener_id) = locked_emitter.add_listener_value(
+        if let Ok(real_listener_id) = locked_emitter.add_listener_sync(
             event_type,
             move |arg_opt: Option<E>| {
                 if let Some(handler) = weak_handler.upgrade() {
@@ -114,11 +114,11 @@ impl EventBus {
 
     pub fn post<E>(&self, e: E)
     where
-        E: Send + Clone + Into<FourFoursEvent> + 'static,
+        E: Sync + Clone + Into<EnchantronEvent> + 'static,
     {
         let mut locked_emitter = self.emitter.lock().unwrap();
-        let event_type = e.clone().into();
-        let f = locked_emitter.emit_value(event_type, e.clone());
+        let event_type = e.into();
+        let f = locked_emitter.emit(event_type, e);
 
         self.sink.send(Box::new(f));
     }

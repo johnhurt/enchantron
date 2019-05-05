@@ -1,4 +1,4 @@
-use gen::{
+use super::{
     DataType, ImplBlockDef, RenderableArgumentBuilder, RenderableDataType,
     RenderableFunction, RenderableFunctionBuilder, TypeDef,
 };

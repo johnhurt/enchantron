@@ -1,4 +1,4 @@
-use gen::{ArgumentDef, DataType, ImplBlockDef};
+use super::{ArgumentDef, DataType, ImplBlockDef};
 
 #[derive(Default, Serialize, Builder, Clone)]
 #[builder(public)]

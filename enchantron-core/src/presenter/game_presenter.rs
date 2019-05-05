@@ -6,16 +6,16 @@ use std::thread;
 
 use std::time::{Duration, Instant};
 
-use event::{
+use crate::event::{
     Evaluate, EventBus, EventListener, FourFoursEvent, Layout,
     ListenerRegistration,
 };
 
-use model::{GameDisplayState, GameState, Point, Rect, Size};
+use crate::model::{GameDisplayState, GameState, Point, Rect, Size};
 
-use native::{HasIntSize, RuntimeResources, SystemView};
+use crate::native::{HasIntSize, RuntimeResources, SystemView};
 
-use ui::{
+use crate::ui::{
     DragHandler, GameView, HandlerRegistration, HasMutableVisibility,
     LayoutHandler,
 };

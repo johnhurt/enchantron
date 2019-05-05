@@ -1,4 +1,4 @@
-use model::{Point, Size};
+use super::{Point, Size};
 
 #[derive(Default, Debug, Clone)]
 pub struct Rect {

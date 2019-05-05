@@ -1,4 +1,4 @@
-use gen::WrappedTypeDef;
+use super::WrappedTypeDef;
 
 #[derive(Serialize, Builder, Clone, Default)]
 #[builder(public)]

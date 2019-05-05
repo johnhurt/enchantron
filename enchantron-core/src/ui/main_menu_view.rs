@@ -1,4 +1,4 @@
-use ui::Button;
+use super::Button;
 
 pub trait MainMenuView: 'static + Sized {
     type B: Button;

@@ -1,4 +1,4 @@
-use gen::{
+use super::{
     DataType, RustStructDataType, SwiftGenericizedDataType, SwiftStructDataType,
 };
 

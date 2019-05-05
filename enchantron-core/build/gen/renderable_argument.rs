@@ -1,4 +1,4 @@
-use gen::{ArgumentDef, RenderableDataType};
+use super::{ArgumentDef, RenderableDataType};
 
 #[derive(Serialize, Builder, Clone, Default)]
 #[builder(public)]

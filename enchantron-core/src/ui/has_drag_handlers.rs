@@ -1,4 +1,4 @@
-use ui::{DragHandler, HandlerRegistration};
+use super::{DragHandler, HandlerRegistration};
 
 pub trait HasDragHandlers: 'static {
     type R: HandlerRegistration;

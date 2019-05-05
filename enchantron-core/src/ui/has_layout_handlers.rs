@@ -1,4 +1,4 @@
-use ui::{HandlerRegistration, LayoutHandler};
+use super::{HandlerRegistration, LayoutHandler};
 
 pub trait HasLayoutHandlers: 'static {
     type R: HandlerRegistration;

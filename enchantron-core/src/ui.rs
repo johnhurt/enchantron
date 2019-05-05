@@ -16,7 +16,6 @@ pub use self::layout_handler::LayoutHandler;
 pub use self::progress_bar::ProgressBar;
 pub use self::sprite::Sprite;
 pub use self::sprite_source::SpriteSource;
-pub use self::ui_card::UiCard;
 
 pub use self::game_view::GameView;
 pub use self::loading_view::LoadingView;
@@ -37,7 +36,6 @@ mod has_text;
 mod progress_bar;
 mod sprite;
 mod sprite_source;
-mod ui_card;
 
 #[macro_use]
 mod click_handler;

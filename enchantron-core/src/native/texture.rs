@@ -1,4 +1,4 @@
-use native::HasIntSize;
+use super::HasIntSize;
 
 pub trait Texture: HasIntSize + 'static {
     fn get_sub_texture(

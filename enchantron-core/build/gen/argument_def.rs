@@ -1,4 +1,4 @@
-use gen::DataType;
+use super::DataType;
 
 #[derive(Default, Serialize, Builder, Clone)]
 #[builder(public)]

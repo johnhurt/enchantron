@@ -1,4 +1,4 @@
-use ui::{ClickHandler, HandlerRegistration};
+use super::{ClickHandler, HandlerRegistration};
 
 pub trait HasClickHandlers: 'static {
     type R: HandlerRegistration;

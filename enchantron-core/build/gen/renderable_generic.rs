@@ -1,4 +1,4 @@
-use gen::GenericDef;
+use super::GenericDef;
 
 #[derive(Serialize, Builder, Clone, Default)]
 #[builder(public)]

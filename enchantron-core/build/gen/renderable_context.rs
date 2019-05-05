@@ -1,4 +1,4 @@
-use gen::{RenderableType, RenderableWrappedType};
+use super::{RenderableType, RenderableWrappedType};
 
 #[derive(Serialize)]
 pub struct RenderableContext {

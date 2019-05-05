@@ -1,4 +1,4 @@
-use gen::{ImplDef, RenderableFunction, RenderableGeneric};
+use super::{ImplDef, RenderableFunction, RenderableGeneric};
 
 #[derive(Serialize, Builder, Clone, Default)]
 #[builder(public)]

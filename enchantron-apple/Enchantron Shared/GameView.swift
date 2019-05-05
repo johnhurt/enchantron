@@ -97,7 +97,6 @@ extension GameView {
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
     
     DispatchQueue.main.async {
-      self.eventSink?.touchesBegan(touches, with: event)
       
       let firstTouch = touches.first!
       
@@ -117,7 +116,6 @@ extension GameView {
   override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
     
     DispatchQueue.main.async {
-      self.eventSink?.touchesMoved(touches, with: event)
       
       let firstTouch = touches.first!
       
@@ -137,7 +135,6 @@ extension GameView {
   override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
     
     DispatchQueue.main.async {
-      self.eventSink?.touchesEnded(touches, with: event)
       
       let firstTouch = touches.first!
       

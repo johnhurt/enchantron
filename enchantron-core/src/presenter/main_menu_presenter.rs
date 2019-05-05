@@ -1,10 +1,10 @@
 use std::sync::{Arc, Mutex};
 
-use ui::{
+use crate::ui::{
     ClickHandler, HandlerRegistration, HasClickHandlers, HasText, MainMenuView,
 };
 
-use event::{
+use crate::event::{
     EventBus, EventListener, FourFoursEvent, ListenerRegistration, StartGame,
 };
 

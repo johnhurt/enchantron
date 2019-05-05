@@ -1,4 +1,4 @@
-use native::Texture;
+use super::Texture;
 
 pub trait TextureLoader: 'static {
     type T: Texture;

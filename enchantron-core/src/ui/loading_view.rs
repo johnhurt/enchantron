@@ -1,4 +1,4 @@
-use ui::ProgressBar;
+use super::ProgressBar;
 
 pub trait LoadingView: 'static + Sized {
     type P: ProgressBar;

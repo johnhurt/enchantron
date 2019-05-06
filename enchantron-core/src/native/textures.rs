@@ -67,37 +67,13 @@ macro_rules! define_texture_atlas {
   };
 }
 
-define_texture_atlas!(Card(x_tile_count: 1, y_tile_count: 1) {
-  card(left: 0, top: 0, width: 1, height: 1)
+define_texture_atlas!(Overworld(x_tile_count: 40, y_tile_count: 36) {
+  grass(left: 0, top: 0, width: 1, height: 1)
 });
 
-define_texture_atlas!(Symbols (x_tile_count: 6, y_tile_count: 6) {
-  zero(left: 0, top: 0, width: 1, height: 1),
-  one(left: 1, top: 0, width: 1, height: 1),
-  two(left: 2, top: 0, width: 1, height: 1),
-  three(left: 3, top: 0, width: 1, height: 1),
-  four(left: 4, top: 0, width: 1, height: 1),
-  five(left: 5, top: 0, width: 1, height: 1),
-  six(left: 0, top: 1, width: 1, height: 1),
-  seven(left: 1, top: 1, width: 1, height: 1),
-  eight(left: 2, top: 1, width: 1, height: 1),
-  nine(left: 3, top: 1, width: 1, height: 1),
-  plus(left: 4, top: 1, width: 1, height: 1),
-  minus(left: 5, top: 1, width: 1, height: 1),
-  times(left: 0, top: 2, width: 1, height: 1),
-  divide(left: 1, top: 2, width: 1, height: 1),
-  power(left: 2, top: 2, width: 1, height: 1),
-  radical(left: 3, top: 2, width: 1, height: 1),
-  paren_l(left: 4, top: 2, width: 1, height: 1),
-  paren_r(left: 5, top: 2, width: 1, height: 1),
-  inverse(left: 0, top: 3, width: 1, height: 1),
-  factorial(left: 1, top: 3, width: 1, height: 1),
-  decimal(left: 2, top: 3, width: 1, height: 1)
-});
 
 pub struct Textures<T: Texture> {
-    card: T,
-    symbols: Symbols<T>,
+    overworld: Overworld<T>
 }
 
 impl<T: Texture> Textures<T> {
@@ -106,7 +82,7 @@ impl<T: Texture> Textures<T> {
         progress_callback: &Fn(f64),
     ) -> Textures<T> {
         let card_atlas = Card::new(
-            texture_loader.load_texture(String::from("Card.png")),
+            texture_loader.load_texture(String::from("overworld.png")),
             |p| progress_callback(p / 2.),
         );
         let symbols_atlas = Symbols::new(

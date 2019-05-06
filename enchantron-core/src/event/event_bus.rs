@@ -118,8 +118,7 @@ impl EventBus {
     {
         let mut locked_emitter = self.emitter.lock().unwrap();
         let event_type = e.into();
-        let f = locked_emitter.emit(event_type, e);
+        let f = locked_emitter.emit_value_sync_spawn(event_type, e);
 
-        self.sink.send(Box::new(f));
     }
 }

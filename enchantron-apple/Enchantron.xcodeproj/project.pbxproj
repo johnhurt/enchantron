@@ -22,10 +22,6 @@
 		634109A7211CC7C000D40139 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63410980211CC7BE00D40139 /* GameScene.swift */; };
 		634109A8211CC7C000D40139 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 63410981211CC7C000D40139 /* Assets.xcassets */; };
 		634109A9211CC7C000D40139 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 63410981211CC7C000D40139 /* Assets.xcassets */; };
-		634589F92126257A00D81EAD /* Symbols.png in Resources */ = {isa = PBXBuildFile; fileRef = 634589F72126257900D81EAD /* Symbols.png */; };
-		634589FA2126257A00D81EAD /* Symbols.png in Resources */ = {isa = PBXBuildFile; fileRef = 634589F72126257900D81EAD /* Symbols.png */; };
-		634589FB2126257A00D81EAD /* Card.png in Resources */ = {isa = PBXBuildFile; fileRef = 634589F82126257900D81EAD /* Card.png */; };
-		634589FC2126257A00D81EAD /* Card.png in Resources */ = {isa = PBXBuildFile; fileRef = 634589F82126257900D81EAD /* Card.png */; };
 		634589FE212645B400D81EAD /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634589FD212645B400D81EAD /* LoadingView.swift */; };
 		634589FF212645B400D81EAD /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634589FD212645B400D81EAD /* LoadingView.swift */; };
 		6346A2622138921200481721 /* RookAndPawn White.png in Resources */ = {isa = PBXBuildFile; fileRef = 6346A2612138921200481721 /* RookAndPawn White.png */; };
@@ -42,6 +38,8 @@
 		6395650F212646BD006F2A71 /* TextureLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6395650D212646BD006F2A71 /* TextureLoader.swift */; };
 		63956511212707FF006F2A71 /* BaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63956510212707FF006F2A71 /* BaseView.swift */; };
 		63956512212707FF006F2A71 /* BaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63956510212707FF006F2A71 /* BaseView.swift */; };
+		63B04A96227F06DC00A40E2C /* overworld.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B04A95227F06DC00A40E2C /* overworld.png */; };
+		63B04A97227F06DC00A40E2C /* overworld.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B04A95227F06DC00A40E2C /* overworld.png */; };
 		63C34FED212CEB0400076E55 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63C34FEC212CEB0400076E55 /* GameView.swift */; };
 		63C34FEE212CEB0400076E55 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63C34FEC212CEB0400076E55 /* GameView.swift */; };
 		63C34FF0212F2F4700076E55 /* LayoutHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63C34FEF212F2F4700076E55 /* LayoutHandler.swift */; };
@@ -88,8 +86,6 @@
 		6341099C211CC7C000D40139 /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
 		6341099F211CC7C000D40139 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		634109A1211CC7C000D40139 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		634589F72126257900D81EAD /* Symbols.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Symbols.png; path = ../../resources/textures/Symbols.png; sourceTree = "<group>"; };
-		634589F82126257900D81EAD /* Card.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Card.png; path = ../../resources/textures/Card.png; sourceTree = "<group>"; };
 		634589FD212645B400D81EAD /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		6346A2612138921200481721 /* RookAndPawn White.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "RookAndPawn White.png"; sourceTree = "<group>"; };
 		6346A2642139D1E900481721 /* DragHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragHandler.swift; sourceTree = "<group>"; };
@@ -99,6 +95,7 @@
 		6395650A2126469C006F2A71 /* Texture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Texture.swift; sourceTree = "<group>"; };
 		6395650D212646BD006F2A71 /* TextureLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureLoader.swift; sourceTree = "<group>"; };
 		63956510212707FF006F2A71 /* BaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseView.swift; sourceTree = "<group>"; };
+		63B04A95227F06DC00A40E2C /* overworld.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = overworld.png; path = ../../resources/textures/overworld.png; sourceTree = "<group>"; };
 		63C34FEC212CEB0400076E55 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		63C34FEF212F2F4700076E55 /* LayoutHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutHandler.swift; sourceTree = "<group>"; };
 		63C34FF2212F5CF900076E55 /* Sprite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sprite.swift; sourceTree = "<group>"; };
@@ -230,8 +227,7 @@
 		634589F62126253700D81EAD /* Textures */ = {
 			isa = PBXGroup;
 			children = (
-				634589F82126257900D81EAD /* Card.png */,
-				634589F72126257900D81EAD /* Symbols.png */,
+				63B04A95227F06DC00A40E2C /* overworld.png */,
 			);
 			name = Textures;
 			sourceTree = "<group>";
@@ -340,11 +336,10 @@
 				63E983832129C9B90056E91C /* Indira_K.ttf in Resources */,
 				6341098F211CC7C000D40139 /* Main.storyboard in Resources */,
 				634109A2211CC7C000D40139 /* Actions.sks in Resources */,
-				634589FB2126257A00D81EAD /* Card.png in Resources */,
+				63B04A96227F06DC00A40E2C /* overworld.png in Resources */,
 				63410992211CC7C000D40139 /* LaunchScreen.storyboard in Resources */,
 				6346A2622138921200481721 /* RookAndPawn White.png in Resources */,
 				634109A8211CC7C000D40139 /* Assets.xcassets in Resources */,
-				634589F92126257A00D81EAD /* Symbols.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -352,14 +347,13 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63B04A97227F06DC00A40E2C /* overworld.png in Resources */,
 				634109A0211CC7C000D40139 /* Main.storyboard in Resources */,
 				634109A5211CC7C000D40139 /* Empty.sks in Resources */,
 				63E983842129C9B90056E91C /* Indira_K.ttf in Resources */,
 				634109A9211CC7C000D40139 /* Assets.xcassets in Resources */,
-				634589FC2126257A00D81EAD /* Card.png in Resources */,
 				6346A2632138921200481721 /* RookAndPawn White.png in Resources */,
 				634109A3211CC7C000D40139 /* Actions.sks in Resources */,
-				634589FA2126257A00D81EAD /* Symbols.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

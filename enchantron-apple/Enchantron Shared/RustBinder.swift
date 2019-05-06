@@ -27,75 +27,75 @@ class RustBinder {
 
     // Type Button
 
-    // Impl crate::ui::Button
-
     // Impl HasText
     set_button__get_text(button__get_text)
     set_button__set_text(button__set_text)
 
-    // Impl HasClickHandlers
-    set_button__add_click_handler(button__add_click_handler)
-
     // Impl Drop
     set_button__drop(button__drop)
 
-    // Type TextArea
+    // Impl crate::ui::Button
 
-    // Impl Drop
-    set_text_area__drop(text_area__drop)
+    // Impl HasClickHandlers
+    set_button__add_click_handler(button__add_click_handler)
+
+    // Type TextArea
 
     // Impl HasText
     set_text_area__get_text(text_area__get_text)
     set_text_area__set_text(text_area__set_text)
 
+    // Impl Drop
+    set_text_area__drop(text_area__drop)
+
     // Type ProgressBar
 
-    // Impl HasText
-    set_progress_bar__get_text(progress_bar__get_text)
-    set_progress_bar__set_text(progress_bar__set_text)
+    // Impl Drop
+    set_progress_bar__drop(progress_bar__drop)
 
     // Impl HasIntValue
     set_progress_bar__get_int_value(progress_bar__get_int_value)
     set_progress_bar__set_int_value(progress_bar__set_int_value)
 
-    // Impl Drop
-    set_progress_bar__drop(progress_bar__drop)
-
     // Impl ui::ProgressBar
 
+    // Impl HasText
+    set_progress_bar__get_text(progress_bar__get_text)
+    set_progress_bar__set_text(progress_bar__set_text)
+
     // Type Texture
+
+    // Impl Drop
+    set_texture__drop(texture__drop)
+
+    // Impl native::Texture
+    set_texture__get_sub_texture(texture__get_sub_texture)
 
     // Impl HasIntSize
     set_texture__get_width(texture__get_width)
     set_texture__get_height(texture__get_height)
 
-    // Impl native::Texture
-    set_texture__get_sub_texture(texture__get_sub_texture)
-
-    // Impl Drop
-    set_texture__drop(texture__drop)
-
     // Type Sprite
+
+    // Impl HasMutableLocation
+    set_sprite__set_location_animated(sprite__set_location_animated)
+
+    // Impl HasDragHandlers
+    set_sprite__add_drag_handler(sprite__add_drag_handler)
+
+    // Impl HasMutableVisibility
+    set_sprite__set_visible(sprite__set_visible)
 
     // Impl ui::Sprite
     set_sprite__set_texture(sprite__set_texture)
     set_sprite__propagate_events_to(sprite__propagate_events_to)
     set_sprite__remove_from_parent(sprite__remove_from_parent)
 
-    // Impl HasMutableVisibility
-    set_sprite__set_visible(sprite__set_visible)
-
-    // Impl HasMutableLocation
-    set_sprite__set_location_animated(sprite__set_location_animated)
-
-    // Impl HasMutableSize
-    set_sprite__set_size_animated(sprite__set_size_animated)
-
     // Impl Drop
     set_sprite__drop(sprite__drop)
 
-    // Impl HasDragHandlers
-    set_sprite__add_drag_handler(sprite__add_drag_handler)
+    // Impl HasMutableSize
+    set_sprite__set_size_animated(sprite__set_size_animated)
 
     // Type LoadingView
 
@@ -117,27 +117,27 @@ class RustBinder {
 
     // Type GameView
 
-    // Impl ui::GameView
-
-    // Impl Drop
-    set_game_view__drop(game_view__drop)
-
     // Impl HasLayoutHandlers
     set_game_view__add_layout_handler(game_view__add_layout_handler)
 
     // Impl ui::SpriteSource
     set_game_view__create_sprite(game_view__create_sprite)
 
+    // Impl Drop
+    set_game_view__drop(game_view__drop)
+
+    // Impl ui::GameView
+
     // Impl HasDragHandlers
     set_game_view__add_drag_handler(game_view__add_drag_handler)
 
     // Type SystemView
 
-    // Impl native::SystemView
-    set_system_view__get_texture_loader(system_view__get_texture_loader)
-
     // Impl Drop
     set_system_view__drop(system_view__drop)
+
+    // Impl native::SystemView
+    set_system_view__get_texture_loader(system_view__get_texture_loader)
 
     // Type TextureLoader
 
@@ -400,8 +400,6 @@ private func handler_registration__drop(_self: OpaquePointer?) {
 
 // Type Button
 
-// Impl crate::ui::Button
-
 // Impl HasText
 
 private func button__get_text(ref: OpaquePointer?
@@ -424,6 +422,15 @@ private func button__set_text(ref: OpaquePointer?
 
 }
 
+// Impl Drop
+
+private func button__drop(_self: OpaquePointer?) {
+  let _ : Button = Unmanaged.fromOpaque(UnsafeMutableRawPointer(_self!)).takeRetainedValue()
+}
+
+
+// Impl crate::ui::Button
+
 // Impl HasClickHandlers
 
 private func button__add_click_handler(ref: OpaquePointer?
@@ -436,21 +443,7 @@ private func button__add_click_handler(ref: OpaquePointer?
 
 }
 
-// Impl Drop
-
-private func button__drop(_self: OpaquePointer?) {
-  let _ : Button = Unmanaged.fromOpaque(UnsafeMutableRawPointer(_self!)).takeRetainedValue()
-}
-
-
 // Type TextArea
-
-// Impl Drop
-
-private func text_area__drop(_self: OpaquePointer?) {
-  let _ : TextArea = Unmanaged.fromOpaque(UnsafeMutableRawPointer(_self!)).takeRetainedValue()
-}
-
 
 // Impl HasText
 
@@ -469,29 +462,21 @@ private func text_area__set_text(ref: OpaquePointer?
 
 }
 
+// Impl Drop
+
+private func text_area__drop(_self: OpaquePointer?) {
+  let _ : TextArea = Unmanaged.fromOpaque(UnsafeMutableRawPointer(_self!)).takeRetainedValue()
+}
+
+
 // Type ProgressBar
 
-// Impl HasText
+// Impl Drop
 
-private func progress_bar__get_text(ref: OpaquePointer?
-    )
-        -> OpaquePointer? {
-  let _self : ProgressBar = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
-  return OpaquePointer(Unmanaged.passRetained(SwiftString(_self.getText(
-      ))).toOpaque())
-
-
+private func progress_bar__drop(_self: OpaquePointer?) {
+  let _ : ProgressBar = Unmanaged.fromOpaque(UnsafeMutableRawPointer(_self!)).takeRetainedValue()
 }
 
-private func progress_bar__set_text(ref: OpaquePointer?
-    , value: OpaquePointer?)
-        -> Void {
-  let _self : ProgressBar = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
-  _self.setText(
-      rustStringToString(RustString(value)))
-
-
-}
 
 // Impl HasIntValue
 
@@ -515,16 +500,50 @@ private func progress_bar__set_int_value(ref: OpaquePointer?
 
 }
 
+// Impl ui::ProgressBar
+
+// Impl HasText
+
+private func progress_bar__get_text(ref: OpaquePointer?
+    )
+        -> OpaquePointer? {
+  let _self : ProgressBar = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
+  return OpaquePointer(Unmanaged.passRetained(SwiftString(_self.getText(
+      ))).toOpaque())
+
+
+}
+
+private func progress_bar__set_text(ref: OpaquePointer?
+    , value: OpaquePointer?)
+        -> Void {
+  let _self : ProgressBar = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
+  _self.setText(
+      rustStringToString(RustString(value)))
+
+
+}
+
+// Type Texture
+
 // Impl Drop
 
-private func progress_bar__drop(_self: OpaquePointer?) {
-  let _ : ProgressBar = Unmanaged.fromOpaque(UnsafeMutableRawPointer(_self!)).takeRetainedValue()
+private func texture__drop(_self: OpaquePointer?) {
+  let _ : Texture = Unmanaged.fromOpaque(UnsafeMutableRawPointer(_self!)).takeRetainedValue()
 }
 
 
-// Impl ui::ProgressBar
+// Impl native::Texture
 
-// Type Texture
+private func texture__get_sub_texture(ref: OpaquePointer?
+    , left: Int64, top: Int64, width: Int64, height: Int64)
+        -> OpaquePointer? {
+  let _self : Texture = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
+  return OpaquePointer(Unmanaged.passRetained(_self.getSubTexture(
+      left, top, width, height)).toOpaque())
+
+
+}
 
 // Impl HasIntSize
 
@@ -548,26 +567,43 @@ private func texture__get_height(ref: OpaquePointer?
 
 }
 
-// Impl native::Texture
-
-private func texture__get_sub_texture(ref: OpaquePointer?
-    , left: Int64, top: Int64, width: Int64, height: Int64)
-        -> OpaquePointer? {
-  let _self : Texture = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
-  return OpaquePointer(Unmanaged.passRetained(_self.getSubTexture(
-      left, top, width, height)).toOpaque())
-
-
-}
-
-// Impl Drop
-
-private func texture__drop(_self: OpaquePointer?) {
-  let _ : Texture = Unmanaged.fromOpaque(UnsafeMutableRawPointer(_self!)).takeRetainedValue()
-}
-
-
 // Type Sprite
+
+// Impl HasMutableLocation
+
+private func sprite__set_location_animated(ref: OpaquePointer?
+    , left: Float64, top: Float64, durationSeconds: Float64)
+        -> Void {
+  let _self : Sprite = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
+  _self.setLocationAnimated(
+      left, top, durationSeconds)
+
+
+}
+
+// Impl HasDragHandlers
+
+private func sprite__add_drag_handler(ref: OpaquePointer?
+    , dragHandler: OpaquePointer?)
+        -> OpaquePointer? {
+  let _self : Sprite = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
+  return OpaquePointer(Unmanaged.passRetained(_self.addDragHandler(
+      DragHandler(dragHandler))).toOpaque())
+
+
+}
+
+// Impl HasMutableVisibility
+
+private func sprite__set_visible(ref: OpaquePointer?
+    , visible: Bool)
+        -> Void {
+  let _self : Sprite = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
+  _self.setVisible(
+      visible)
+
+
+}
 
 // Impl ui::Sprite
 
@@ -601,29 +637,12 @@ private func sprite__remove_from_parent(ref: OpaquePointer?
 
 }
 
-// Impl HasMutableVisibility
+// Impl Drop
 
-private func sprite__set_visible(ref: OpaquePointer?
-    , visible: Bool)
-        -> Void {
-  let _self : Sprite = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
-  _self.setVisible(
-      visible)
-
-
+private func sprite__drop(_self: OpaquePointer?) {
+  let _ : Sprite = Unmanaged.fromOpaque(UnsafeMutableRawPointer(_self!)).takeRetainedValue()
 }
 
-// Impl HasMutableLocation
-
-private func sprite__set_location_animated(ref: OpaquePointer?
-    , left: Float64, top: Float64, durationSeconds: Float64)
-        -> Void {
-  let _self : Sprite = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
-  _self.setLocationAnimated(
-      left, top, durationSeconds)
-
-
-}
 
 // Impl HasMutableSize
 
@@ -633,25 +652,6 @@ private func sprite__set_size_animated(ref: OpaquePointer?
   let _self : Sprite = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
   _self.setSizeAnimated(
       width, height, durationSeconds)
-
-
-}
-
-// Impl Drop
-
-private func sprite__drop(_self: OpaquePointer?) {
-  let _ : Sprite = Unmanaged.fromOpaque(UnsafeMutableRawPointer(_self!)).takeRetainedValue()
-}
-
-
-// Impl HasDragHandlers
-
-private func sprite__add_drag_handler(ref: OpaquePointer?
-    , dragHandler: OpaquePointer?)
-        -> OpaquePointer? {
-  let _self : Sprite = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
-  return OpaquePointer(Unmanaged.passRetained(_self.addDragHandler(
-      DragHandler(dragHandler))).toOpaque())
 
 
 }
@@ -714,15 +714,6 @@ private func main_menu_view__transition_to_game_view(ref: OpaquePointer?
 
 // Type GameView
 
-// Impl ui::GameView
-
-// Impl Drop
-
-private func game_view__drop(_self: OpaquePointer?) {
-  let _ : GameView = Unmanaged.fromOpaque(UnsafeMutableRawPointer(_self!)).takeRetainedValue()
-}
-
-
 // Impl HasLayoutHandlers
 
 private func game_view__add_layout_handler(ref: OpaquePointer?
@@ -747,6 +738,15 @@ private func game_view__create_sprite(ref: OpaquePointer?
 
 }
 
+// Impl Drop
+
+private func game_view__drop(_self: OpaquePointer?) {
+  let _ : GameView = Unmanaged.fromOpaque(UnsafeMutableRawPointer(_self!)).takeRetainedValue()
+}
+
+
+// Impl ui::GameView
+
 // Impl HasDragHandlers
 
 private func game_view__add_drag_handler(ref: OpaquePointer?
@@ -761,6 +761,13 @@ private func game_view__add_drag_handler(ref: OpaquePointer?
 
 // Type SystemView
 
+// Impl Drop
+
+private func system_view__drop(_self: OpaquePointer?) {
+  let _ : SystemView = Unmanaged.fromOpaque(UnsafeMutableRawPointer(_self!)).takeRetainedValue()
+}
+
+
 // Impl native::SystemView
 
 private func system_view__get_texture_loader(ref: OpaquePointer?
@@ -769,13 +776,6 @@ private func system_view__get_texture_loader(ref: OpaquePointer?
   let _self : SystemView = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
   return  OpaquePointer(Unmanaged.passRetained(_self.textureLoader).toOpaque())
 }
-
-// Impl Drop
-
-private func system_view__drop(_self: OpaquePointer?) {
-  let _ : SystemView = Unmanaged.fromOpaque(UnsafeMutableRawPointer(_self!)).takeRetainedValue()
-}
-
 
 // Type TextureLoader
 

@@ -1,6 +1,6 @@
 use super::{HasDragHandlers, HasLayoutHandlers, SpriteSource};
 
 pub trait GameView:
-    SpriteSource + HasLayoutHandlers + HasDragHandlers + 'static
+    SpriteSource + HasLayoutHandlers + HasDragHandlers + Sync + Send + 'static
 {
 }

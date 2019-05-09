@@ -1,6 +1,6 @@
 use super::HasIntSize;
 
-pub trait Texture: HasIntSize + 'static {
+pub trait Texture: HasIntSize + Sync + Send + 'static {
     fn get_sub_texture(
         &self,
         left: i64,

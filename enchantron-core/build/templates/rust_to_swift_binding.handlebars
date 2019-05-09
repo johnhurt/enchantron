@@ -113,6 +113,9 @@ pub enum Opaque_{{name}}{}
 
 pub struct {{name}}(*mut Opaque_{{name}});
 
+unsafe impl Send for {{name}} {}
+unsafe impl Sync for {{name}} {}
+
 {{~#each impls}}
 #[allow(non_snake_case)]
 impl {{#if trait_name}}{{trait_name}} for {{/if}}{{../name}} {

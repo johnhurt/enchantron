@@ -7,11 +7,11 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use crate::event::{
-    Evaluate, EventBus, EventListener, FourFoursEvent, Layout,
+    EventBus, EventListener, EnchantronEvent, Layout,
     ListenerRegistration,
 };
 
-use crate::model::{GameDisplayState, GameState, Point, Rect, Size};
+use crate::model::{Point, Rect, Size};
 
 use crate::native::{HasIntSize, RuntimeResources, SystemView};
 
@@ -40,26 +40,19 @@ where
     V: GameView<T = S::T>,
 {
     view: V,
-    event_bus: Arc<EventBus>,
+    event_bus: EventBus<EnchantronEvent>,
     runtime_resources: Arc<RuntimeResources<S>>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
     handler_registrations: Mutex<Vec<Box<HandlerRegistration>>>,
-
-    display_state: RwLock<GameDisplayState<V::S>>,
 }
 
-impl<V, S> EventListener<Layout> for GamePresenter<V, S>
+impl<V, S> EventListener<EnchantronEvent,Layout> for GamePresenter<V, S>
 where
     S: SystemView,
     V: GameView<T = S::T>,
 {
     fn on_event(&self, event: &Layout) {
         info!("Game view resized to : {}, {}", event.width, event.height);
-
-        let mut display_state = self
-            .display_state
-            .write()
-            .expect("Failed to lock display state for reading");
     }
 }
 
@@ -83,15 +76,7 @@ where
     /// Initialize the display state with the initial game state
     fn initialize_game_state(
         this: Arc<GamePresenter<V, S>>,
-        game_state: GameState,
     ) {
-        let mut new_display_state = GameDisplayState::default();
-
-        *this
-            .display_state
-            .write()
-            .expect("Failed to get write lock on display state") =
-            new_display_state;
     }
 
     fn bind(self) -> Arc<GamePresenter<V, S>> {
@@ -109,22 +94,14 @@ where
         let result = Arc::new(self);
 
         result.add_listener_registration(
-            result.event_bus.register_disambiguous(
-                FourFoursEvent::Layout,
-                &result,
-                Some(Layout {
-                    width: 0,
-                    height: 0,
-                }),
-            ),
-        );
+                result.event_bus.register(Layout::default(), &result));
 
         result
     }
 
     pub fn new(
         view: V,
-        event_bus: Arc<EventBus>,
+        event_bus: EventBus<EnchantronEvent>,
         runtime_resources: Arc<RuntimeResources<S>>,
     ) -> Arc<GamePresenter<V, S>> {
         let result = GamePresenter {
@@ -133,15 +110,11 @@ where
             runtime_resources: runtime_resources,
             listener_registrations: Mutex::new(Vec::new()),
             handler_registrations: Mutex::new(Vec::new()),
-
-            display_state: RwLock::new(GameDisplayState::default()),
         };
-
-        let game_state = GameState::default();
 
         let arc_result = result.bind();
 
-        GamePresenter::initialize_game_state(arc_result.clone(), game_state);
+        GamePresenter::initialize_game_state(arc_result.clone());
 
         arc_result
     }

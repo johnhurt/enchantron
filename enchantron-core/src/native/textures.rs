@@ -73,7 +73,7 @@ define_texture_atlas!(Overworld(x_tile_count: 40, y_tile_count: 36) {
 
 
 pub struct Textures<T: Texture> {
-    overworld: Overworld<T>
+    pub overworld: Overworld<T>
 }
 
 impl<T: Texture> Textures<T> {
@@ -81,26 +81,12 @@ impl<T: Texture> Textures<T> {
         texture_loader: &TextureLoader<T = T>,
         progress_callback: &Fn(f64),
     ) -> Textures<T> {
-        let card_atlas = Card::new(
+        let overworld = Overworld::new(
             texture_loader.load_texture(String::from("overworld.png")),
-            |p| progress_callback(p / 2.),
+            |p| progress_callback(p),
         );
-        let symbols_atlas = Symbols::new(
-            texture_loader.load_texture(String::from("Symbols.png")),
-            |p| progress_callback(0.5 + p / 2.),
-        );
-
         Textures {
-            card: card_atlas.card,
-            symbols: symbols_atlas,
+            overworld: overworld
         }
-    }
-
-    pub fn card(&self) -> &T {
-        &self.card
-    }
-
-    pub fn symbols(&self) -> &Symbols<T> {
-        &self.symbols
     }
 }

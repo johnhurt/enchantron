@@ -1,4 +1,4 @@
-use crate::event::EventBus;
+use crate::event::{ EventBus, EnchantronEvent };
 use log::SetLoggerError;
 use simplelog::{CombinedLogger, Config, LevelFilter, SimpleLogger};
 use std::ops::Deref;
@@ -43,7 +43,7 @@ impl Deref for ApplicationContext {
 }
 
 pub struct ApplicationContextInner {
-    event_bus: Arc<EventBus>,
+    event_bus: EventBus<EnchantronEvent>,
     system_view: Arc<SystemView>,
     runtime_resources: RwLock<Option<Arc<RuntimeResources<SystemView>>>>,
 }

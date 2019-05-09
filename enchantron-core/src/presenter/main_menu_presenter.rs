@@ -5,17 +5,17 @@ use crate::ui::{
 };
 
 use crate::event::{
-    EventBus, EventListener, FourFoursEvent, ListenerRegistration, StartGame,
+    EventBus, EventListener, EnchantronEvent, ListenerRegistration, StartGame,
 };
 
 pub struct MainMenuPresenter<V: MainMenuView> {
     view: V,
     handler_registrations: Mutex<Vec<Box<HandlerRegistration>>>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
-    event_bus: Arc<EventBus>,
+    event_bus: EventBus<EnchantronEvent>,
 }
 
-impl<V: MainMenuView> EventListener<StartGame> for MainMenuPresenter<V> {
+impl<V: MainMenuView> EventListener<EnchantronEvent,StartGame> for MainMenuPresenter<V> {
     fn on_event(&self, _: &StartGame) {
         self.view.transition_to_game_view()
     }
@@ -50,7 +50,7 @@ impl<V: MainMenuView> MainMenuPresenter<V> {
         result.add_listener_registration(
             result
                 .event_bus
-                .register(FourFoursEvent::StartGame, &result),
+                .register(StartGame::default(), &result),
         );
 
         result
@@ -61,7 +61,7 @@ impl<V: MainMenuView> MainMenuPresenter<V> {
         result
     }
 
-    pub fn new(view: V, event_bus: Arc<EventBus>) -> Arc<MainMenuPresenter<V>> {
+    pub fn new(view: V, event_bus: EventBus<EnchantronEvent>) -> Arc<MainMenuPresenter<V>> {
         let result = MainMenuPresenter {
             view: view,
             handler_registrations: Mutex::new(Vec::new()),

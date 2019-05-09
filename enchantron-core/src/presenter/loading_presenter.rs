@@ -1,5 +1,5 @@
 use crate::event::{
-    EventBus, EventListener, FourFoursEvent, ListenerRegistration,
+    EventBus, EventListener, EnchantronEvent, ListenerRegistration,
     LoadResources,
 };
 
@@ -16,12 +16,12 @@ where
 {
     view: V,
     system_view: Arc<S>,
-    resources_sink: Box<Fn(RuntimeResources<S>)>,
-    event_bus: Arc<EventBus>,
+    resources_sink: Box<Fn(RuntimeResources<S>) + Send + Sync>,
+    event_bus: EventBus<EnchantronEvent>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
 }
 
-impl<V, S> EventListener<LoadResources> for LoadingPresenter<V, S>
+impl<V, S> EventListener<EnchantronEvent,LoadResources> for LoadingPresenter<V, S>
 where
     V: LoadingView,
     S: SystemView,
@@ -57,7 +57,7 @@ where
         result.add_listener_registration(
             result
                 .event_bus
-                .register(FourFoursEvent::LoadResources, &result),
+                .register(LoadResources::default(), &result),
         );
 
         result
@@ -73,8 +73,8 @@ where
     pub fn new(
         view: V,
         system_view: Arc<S>,
-        event_bus: Arc<EventBus>,
-        resources_sink: Box<Fn(RuntimeResources<S>)>,
+        event_bus: EventBus<EnchantronEvent>,
+        resources_sink: Box<Fn(RuntimeResources<S>) + Send + Sync>,
     ) -> Arc<LoadingPresenter<V, S>> {
         LoadingPresenter {
             view: view,

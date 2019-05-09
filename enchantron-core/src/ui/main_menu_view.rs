@@ -1,6 +1,6 @@
 use super::Button;
 
-pub trait MainMenuView: 'static + Sized {
+pub trait MainMenuView: 'static + Sized + Send + Sync {
     type B: Button;
 
     fn get_start_new_game_button(&self) -> Self::B;

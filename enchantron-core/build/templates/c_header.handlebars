@@ -1,0 +1,15 @@
+#ifndef enchantron_h
+#define enchantron_h
+
+{{cbindgen_imports}}
+
+{{~#each type}}
+{{#if rust_owned}}
+typedef struct {{type_name}} {{type_name}};
+
+{{/if}}
+{{/each}}
+
+{{cbindgen_body}}
+
+#endif /* enchantron_h */

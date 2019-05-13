@@ -37,22 +37,7 @@ fn main() {
     info!("Running build script");
 
     generate_swift_bindings();
-    let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
 
-    let header_file_name = "enchantron.h";
-
-    let config = cbindgen::Config::from_file("cbindgen.toml")
-        .unwrap_or_else(|_| panic!("No toml"));
-
-    cbindgen::Builder::new()
-        .with_crate(crate_dir)
-        .with_config(config)
-        .generate()
-        .unwrap_or_else(|err| {
-            error!("Unable to generate bindings {:?}", err);
-            panic!("Failed to generate bindings")
-        })
-        .write_to_file(header_file_name);
     //});
 
     /*if let Err(e) = result {

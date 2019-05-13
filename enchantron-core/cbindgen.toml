@@ -1,6 +1,1 @@
-include_guard = "enchantron_h"
 language = "C"
-
-[export]
-include=["util/RustString"]
-item_types = ["constants", "globals", "enums", "structs", "unions", "typedefs", "opaque", "functions"]

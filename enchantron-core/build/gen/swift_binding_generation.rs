@@ -5,7 +5,7 @@ use std::path::Path;
 
 use heck::{MixedCase, SnakeCase};
 
-use handlebars::{handlebars_helper, Handlebars};
+use handlebars::{handlebars_helper, Handlebars, StringWriter};
 
 use itertools::Itertools;
 
@@ -1004,6 +1004,41 @@ pub fn generate() {
             writer,
         )
         .expect("Failed to render RustBinder");
+    }
+
+    // This is a kluge to make up for the fact that cbindgen can't handle
+    // Rust 2018 :( ... Or something ... all I know is that the current
+    // version of cbindgen (0.6.8) misses some structs
+    info!("Rendering the c header");
+    {
+        let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+
+        let header_file_name = "enchantron.h";
+
+        let config = cbindgen::Config::from_file("cbindgen.toml")
+            .unwrap_or_else(|_| panic!("No toml"));
+
+        let mut cbindgen_contents_writer = StringWriter::new();
+
+        cbindgen::Builder::new()
+            .with_crate(crate_dir)
+            .with_config(config)
+            .generate()
+            .unwrap_or_else(|err| {
+                error!("Unable to generate bindings {:?}", err);
+                panic!("Failed to generate bindings")
+            })
+            .write_to_file(cbindgen_contents_writer);
+
+        let raw_cbindgen_contents = cbindgen_contents_writer.to_string();
+
+        // Split the generated header into 2 on the first insteance
+        // of "typedef".  Everything above should be headers and constants, and
+        // everything below should be types and methods
+        let parts = raw_cbindgen_contents.splitn(2, "typedef");
+
+        let cbindgen_body = String::of("typedef") + parts.take(1);
+        let cbindgen_headers = String::of(parts.take(0));
     }
 
     info!("Finished Rendering Swift Bingings");

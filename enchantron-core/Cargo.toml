@@ -3,7 +3,7 @@ name = "enchantron-core"
 version = "0.1.0"
 authors = ["Kevin Guthrie <kevin.guthrie@gmail.com>"]
 edition = "2018"
-#build = "build/build.rs"
+build = "build/build.rs"
 
 
 [dependencies]

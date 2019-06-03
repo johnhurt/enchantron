@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, Mutex, RwLock, RwLockReadGuard};
 
 use std::sync::atomic::AtomicIsize;
 
@@ -7,8 +7,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use crate::event::{
-    EventBus, EventListener, EnchantronEvent, Layout,
-    ListenerRegistration,
+    EnchantronEvent, EventBus, EventListener, Layout, ListenerRegistration,
 };
 
 use crate::model::{Point, Rect, Size};
@@ -16,23 +15,14 @@ use crate::model::{Point, Rect, Size};
 use crate::native::{HasIntSize, RuntimeResources, SystemView};
 
 use crate::ui::{
-    DragHandler, GameView, HandlerRegistration, HasMutableVisibility,
-    LayoutHandler,
+    DragHandler, GameDisplayState, GameView, HandlerRegistration,
+    HasMutableLocation, HasMutableSize, HasMutableVisibility, LayoutHandler,
+    Sprite, SpriteSource,
 };
 
 lazy_static! {
     static ref MIN_EVAL_SEPARATION: Duration = Duration::from_millis(500);
 }
-
-const BOUNDARY_FRACTION: f64 = 0.04;
-const SPACING_FRACTION: f64 = 0.04;
-const MAX_CARD_WIDTH_FRAC: f64 = 0.2;
-const MAX_CARD_HEIGHT_FRAC: f64 = 0.35;
-
-const MIN_SUPPLY_CARD_WIDTH_PTS: f64 = 45.0;
-const MIN_PLAY_CARD_WIDTH_PTS: f64 = 35.0;
-
-const TEX_AREA_HEIGHT_FRAC: f64 = 0.3;
 
 pub struct GamePresenter<V, S>
 where
@@ -44,15 +34,25 @@ where
     runtime_resources: Arc<RuntimeResources<S>>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
     handler_registrations: Mutex<Vec<Box<HandlerRegistration>>>,
+
+    display_state: RwLock<GameDisplayState<V::S>>,
 }
 
-impl<V, S> EventListener<EnchantronEvent,Layout> for GamePresenter<V, S>
+impl<V, S> EventListener<EnchantronEvent, Layout> for GamePresenter<V, S>
 where
     S: SystemView,
     V: GameView<T = S::T>,
 {
     fn on_event(&self, event: &Layout) {
         info!("Game view resized to : {}, {}", event.width, event.height);
+
+        let display_state = self.get_display_state();
+        let sprite = &display_state.grass;
+
+        sprite.set_location(
+            event.width as f64 / 2. - 32.,
+            event.height as f64 / 2. - 32.,
+        );
     }
 }
 
@@ -61,6 +61,16 @@ where
     S: SystemView,
     V: GameView<T = S::T>,
 {
+    ///
+    /// Get a read-lock on the game display state
+    ///
+    fn get_display_state(&self) -> RwLockReadGuard<GameDisplayState<V::S>> {
+        self.display_state.read().unwrap_or_else(|err| {
+            error!("Failed to get read lock on display state: {:?}", err);
+            panic!("Failed to get a read lock on the display state");
+        })
+    }
+
     fn add_listener_registration(&self, lr: ListenerRegistration) {
         if let Ok(mut locked_list) = self.listener_registrations.lock() {
             locked_list.push(lr);
@@ -74,9 +84,11 @@ where
     }
 
     /// Initialize the display state with the initial game state
-    fn initialize_game_state(
-        this: Arc<GamePresenter<V, S>>,
-    ) {
+    fn initialize_game_state(this: Arc<GamePresenter<V, S>>) {
+        let sprite = &this.get_display_state().grass;
+        sprite.set_texture(this.runtime_resources.textures().overworld.grass());
+        sprite.set_visible(true);
+        sprite.set_size(64., 64.);
     }
 
     fn bind(self) -> Arc<GamePresenter<V, S>> {
@@ -94,7 +106,8 @@ where
         let result = Arc::new(self);
 
         result.add_listener_registration(
-                result.event_bus.register(Layout::default(), &result));
+            result.event_bus.register(Layout::default(), &result),
+        );
 
         result
     }
@@ -104,12 +117,16 @@ where
         event_bus: EventBus<EnchantronEvent>,
         runtime_resources: Arc<RuntimeResources<S>>,
     ) -> Arc<GamePresenter<V, S>> {
+        let display_state = GameDisplayState::new(&view);
+
         let result = GamePresenter {
             view: view,
             event_bus: event_bus,
             runtime_resources: runtime_resources,
             listener_registrations: Mutex::new(Vec::new()),
             handler_registrations: Mutex::new(Vec::new()),
+
+            display_state: RwLock::new(display_state),
         };
 
         let arc_result = result.bind();

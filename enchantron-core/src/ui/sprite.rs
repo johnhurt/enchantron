@@ -9,6 +9,8 @@ pub trait Sprite:
     + HasMutableLocation
     + HasMutableVisibility
     + HasDragHandlers
+    + Send
+    + Sync
     + 'static
 {
     type T: Texture;

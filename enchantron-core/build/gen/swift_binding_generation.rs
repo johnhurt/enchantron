@@ -1,12 +1,13 @@
 use std::collections::BTreeSet;
+use std::env;
 use std::fs;
-use std::fs::{File, OpenOptions};
+use std::fs::{remove_file, File, OpenOptions};
 use std::path::Path;
 
-use heck::{MixedCase, SnakeCase};
-
+use cbindgen;
+use cbindgen::Language;
 use handlebars::{handlebars_helper, Handlebars, StringWriter};
-
+use heck::{MixedCase, SnakeCase};
 use itertools::Itertools;
 
 use super::data_type::*;
@@ -911,6 +912,12 @@ pub fn generate() {
     )
     .expect("Failed to load swift template");
 
+    hb.register_template_file(
+        "c_header",
+        "build/templates/c_header.handlebars",
+    )
+    .expect("Failed to load swift template");
+
     let mut rust_imports_set: BTreeSet<String> = BTreeSet::new();
 
     info!("Building Renderable Types");
@@ -954,10 +961,12 @@ pub fn generate() {
             .collect(),
     );
 
-    let renderable_context = RenderableContext {
+    let mut renderable_context = RenderableContext {
         types: renderable_types,
         rust_imports: rust_imports,
         wrapped_types: wrapped_types,
+        c_header_imports: String::default(),
+        c_header_body: String::default(),
     };
 
     info!("Rendering Rust files");
@@ -1015,30 +1024,49 @@ pub fn generate() {
 
         let header_file_name = "enchantron.h";
 
-        let config = cbindgen::Config::from_file("cbindgen.toml")
-            .unwrap_or_else(|_| panic!("No toml"));
-
         let mut cbindgen_contents_writer = StringWriter::new();
 
         cbindgen::Builder::new()
             .with_crate(crate_dir)
-            .with_config(config)
+            .with_language(Language::C)
             .generate()
             .unwrap_or_else(|err| {
                 error!("Unable to generate bindings {:?}", err);
                 panic!("Failed to generate bindings")
             })
-            .write_to_file(cbindgen_contents_writer);
+            .write(&mut cbindgen_contents_writer);
 
-        let raw_cbindgen_contents = cbindgen_contents_writer.to_string();
+        let raw_cbindgen_contents = cbindgen_contents_writer.into_string();
 
         // Split the generated header into 2 on the first insteance
         // of "typedef".  Everything above should be headers and constants, and
         // everything below should be types and methods
-        let parts = raw_cbindgen_contents.splitn(2, "typedef");
+        let split_index =
+            raw_cbindgen_contents.find("typedef").unwrap_or_else(|| {
+                error!("Failed to find typedef in cbindgen content");
+                panic!("Failed to find typedef in cbindgen content");
+            });
 
-        let cbindgen_body = String::of("typedef") + parts.take(1);
-        let cbindgen_headers = String::of(parts.take(0));
+        let (cbindgen_imports, cbindgen_body) =
+            raw_cbindgen_contents.split_at(split_index);
+
+        // Render swift file
+        let gen_path = Path::new(".");
+
+        let c_header_file = gen_path.join(Path::new(header_file_name));
+
+        let _ = fs::remove_file(&c_header_file);
+        File::create(&c_header_file).expect("Failed to create lib_swift file");
+
+        let mut options = OpenOptions::new();
+        options.write(true);
+        let writer: File = options.open(&c_header_file).unwrap();
+
+        renderable_context.c_header_imports = String::from(cbindgen_imports);
+        renderable_context.c_header_body = String::from(cbindgen_body);
+
+        hb.render_to_write("c_header", &renderable_context, writer)
+            .expect("Failed to render c header");
     }
 
     info!("Finished Rendering Swift Bingings");

@@ -3,7 +3,6 @@ use std::hash::Hash;
 
 use super::Event;
 
-
 macro_rules! define_events {
     ($events_name:ident, $($e:ident $body:tt ), *) => {
 
@@ -27,7 +26,6 @@ macro_rules! define_events {
         )*
     }
 }
-
 
 define_events!(EnchantronEvent,
     LoadResources{},

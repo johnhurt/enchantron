@@ -3,7 +3,9 @@ pub struct ListenerRegistration {
 }
 
 impl ListenerRegistration {
-    pub fn new(deregister: Box<Fn() + Sync + Send + 'static>) -> ListenerRegistration {
+    pub fn new(
+        deregister: Box<Fn() + Sync + Send + 'static>,
+    ) -> ListenerRegistration {
         ListenerRegistration {
             deregister: deregister,
         }

@@ -17,6 +17,8 @@ pub use self::progress_bar::ProgressBar;
 pub use self::sprite::Sprite;
 pub use self::sprite_source::SpriteSource;
 
+pub use self::game_display_state::GameDisplayState;
+
 pub use self::game_view::GameView;
 pub use self::loading_view::LoadingView;
 pub use self::main_menu_view::MainMenuView;
@@ -36,6 +38,8 @@ mod has_text;
 mod progress_bar;
 mod sprite;
 mod sprite_source;
+
+mod game_display_state;
 
 #[macro_use]
 mod click_handler;

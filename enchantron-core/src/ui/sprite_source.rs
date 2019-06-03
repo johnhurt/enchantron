@@ -1,7 +1,7 @@
 use super::Sprite;
 use crate::native::Texture;
 
-pub trait SpriteSource {
+pub trait SpriteSource: Send + Sync {
     type T: Texture;
     type S: Sprite<T = Self::T>;
 

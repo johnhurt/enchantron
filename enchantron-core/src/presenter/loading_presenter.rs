@@ -1,5 +1,5 @@
 use crate::event::{
-    EventBus, EventListener, EnchantronEvent, ListenerRegistration,
+    EnchantronEvent, EventBus, EventListener, ListenerRegistration,
     LoadResources,
 };
 
@@ -21,7 +21,8 @@ where
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
 }
 
-impl<V, S> EventListener<EnchantronEvent,LoadResources> for LoadingPresenter<V, S>
+impl<V, S> EventListener<EnchantronEvent, LoadResources>
+    for LoadingPresenter<V, S>
 where
     V: LoadingView,
     S: SystemView,
@@ -55,9 +56,7 @@ where
         let result = Arc::new(self);
 
         result.add_listener_registration(
-            result
-                .event_bus
-                .register(LoadResources::default(), &result),
+            result.event_bus.register(LoadResources::default(), &result),
         );
 
         result

@@ -1,15 +1,14 @@
 #ifndef enchantron_h
 #define enchantron_h
 
-{{cbindgen_imports}}
+{{c_header_imports}}
 
-{{~#each type}}
-{{#if rust_owned}}
-typedef struct {{type_name}} {{type_name}};
+{{~#each types}}
+{{~#if rust_owned}}typedef struct {{name}} {{name}};
 
 {{/if}}
-{{/each}}
+{{~/each}}
 
-{{cbindgen_body}}
+{{c_header_body}}
 
 #endif /* enchantron_h */

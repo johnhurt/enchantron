@@ -1,4 +1,4 @@
-use crate::event::{ EventBus, EnchantronEvent };
+use crate::event::{EnchantronEvent, EventBus};
 use log::SetLoggerError;
 use simplelog::{CombinedLogger, Config, LevelFilter, SimpleLogger};
 use std::ops::Deref;

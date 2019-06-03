@@ -71,9 +71,8 @@ define_texture_atlas!(Overworld(x_tile_count: 40, y_tile_count: 36) {
   grass(left: 0, top: 0, width: 1, height: 1)
 });
 
-
 pub struct Textures<T: Texture> {
-    pub overworld: Overworld<T>
+    pub overworld: Overworld<T>,
 }
 
 impl<T: Texture> Textures<T> {
@@ -86,7 +85,7 @@ impl<T: Texture> Textures<T> {
             |p| progress_callback(p),
         );
         Textures {
-            overworld: overworld
+            overworld: overworld,
         }
     }
 }

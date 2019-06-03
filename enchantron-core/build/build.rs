@@ -10,7 +10,6 @@ extern crate log;
 use regex::Regex;
 use serde_json::from_str;
 use simplelog::{CombinedLogger, Config, LevelFilter, TermLogger, WriteLogger};
-use std::env;
 use std::fs::{remove_file, File, OpenOptions};
 use std::io::prelude::*;
 use std::panic;

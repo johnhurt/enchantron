@@ -20,9 +20,9 @@ class GameScene: SKScene {
   
     // Set the scale mode to scale to fit the window
     scene.size = size
-    scene.scaleMode = .aspectFill
+    //scene.scaleMode = .aspectFill
     
-    scene.anchorPoint = CGPoint(x: 0.0, y: 1.0)
+    //scene.anchorPoint = CGPoint(x: 0.0, y: 1.0)
     
     return scene
   }
@@ -30,8 +30,12 @@ class GameScene: SKScene {
   private var currentView : BaseView?
   
   func setUpScene() {
-    let systemView = SystemView(textureLoader: TextureLoader())
+    let systemView = SystemView(textureLoader: TextureLoader(), viewport: Viewport())
 
+    self.camera = systemView.viewport
+    
+    self.addChild(self.camera!)
+    
     let ctx = RustBinder.bindToRust(systemView)
     
     let transitioner = TransitionService(transitionClosure: { (view) in
@@ -65,6 +69,7 @@ class GameScene: SKScene {
     let setSizeOp : () -> () = {
       self.size = size
       self.currentView?.setSize(size: self.size)
+      self.camera?.position = CGPoint(x: size.width / 2, y: -size.height / 2 )
     }
     
     if Thread.isMainThread {
@@ -73,10 +78,12 @@ class GameScene: SKScene {
     else {
       DispatchQueue.main.sync { setSizeOp() }
     }
+    
   }
   
   override func update(_ currentTime: TimeInterval) {
     // Called before each frame is rendered
+    
   }
 }
 

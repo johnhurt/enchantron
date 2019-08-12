@@ -16,6 +16,7 @@ pub use self::layout_handler::LayoutHandler;
 pub use self::progress_bar::ProgressBar;
 pub use self::sprite::Sprite;
 pub use self::sprite_source::SpriteSource;
+pub use self::viewport::Viewport;
 
 pub use self::game_display_state::GameDisplayState;
 
@@ -38,6 +39,7 @@ mod has_text;
 mod progress_bar;
 mod sprite;
 mod sprite_source;
+mod viewport;
 
 mod game_display_state;
 

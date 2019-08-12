@@ -38,6 +38,8 @@
 		6395650F212646BD006F2A71 /* TextureLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6395650D212646BD006F2A71 /* TextureLoader.swift */; };
 		63956511212707FF006F2A71 /* BaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63956510212707FF006F2A71 /* BaseView.swift */; };
 		63956512212707FF006F2A71 /* BaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63956510212707FF006F2A71 /* BaseView.swift */; };
+		639AD25422AC8E6900A35225 /* Viewport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639AD25322AC8E6900A35225 /* Viewport.swift */; };
+		639AD25522AC943E00A35225 /* Viewport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639AD25322AC8E6900A35225 /* Viewport.swift */; };
 		63B04A96227F06DC00A40E2C /* overworld.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B04A95227F06DC00A40E2C /* overworld.png */; };
 		63B04A97227F06DC00A40E2C /* overworld.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B04A95227F06DC00A40E2C /* overworld.png */; };
 		63C34FED212CEB0400076E55 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63C34FEC212CEB0400076E55 /* GameView.swift */; };
@@ -73,7 +75,7 @@
 /* Begin PBXFileReference section */
 		6341097E211CC7BE00D40139 /* Actions.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Actions.sks; sourceTree = "<group>"; };
 		6341097F211CC7BE00D40139 /* Empty.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Empty.sks; sourceTree = "<group>"; };
-		63410980211CC7BE00D40139 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
+		63410980211CC7BE00D40139 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		63410981211CC7C000D40139 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		63410986211CC7C000D40139 /* Enchantron.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Enchantron.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		63410989211CC7C000D40139 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -95,6 +97,7 @@
 		6395650A2126469C006F2A71 /* Texture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Texture.swift; sourceTree = "<group>"; };
 		6395650D212646BD006F2A71 /* TextureLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureLoader.swift; sourceTree = "<group>"; };
 		63956510212707FF006F2A71 /* BaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseView.swift; sourceTree = "<group>"; };
+		639AD25322AC8E6900A35225 /* Viewport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Viewport.swift; sourceTree = "<group>"; };
 		63B04A95227F06DC00A40E2C /* overworld.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = overworld.png; path = ../../resources/textures/overworld.png; sourceTree = "<group>"; };
 		63C34FEC212CEB0400076E55 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		63C34FEF212F2F4700076E55 /* LayoutHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutHandler.swift; sourceTree = "<group>"; };
@@ -153,32 +156,33 @@
 		6341097D211CC7BE00D40139 /* Enchantron Shared */ = {
 			isa = PBXGroup;
 			children = (
-				63D5899C226E59F200A40E2C /* enchantron.h */,
 				63F97B12211CCC1400784701 /* Enchantron-Bridging-Header.h */,
-				6341097F211CC7BE00D40139 /* Empty.sks */,
-				6341097E211CC7BE00D40139 /* Actions.sks */,
-				63410981211CC7C000D40139 /* Assets.xcassets */,
+				63D5899C226E59F200A40E2C /* enchantron.h */,
 				6346A2612138921200481721 /* RookAndPawn White.png */,
-				634589F5212624FC00D81EAD /* Resources */,
-				63410980211CC7BE00D40139 /* GameScene.swift */,
-				63F97AF9211CC9B500784701 /* RustBinder.swift */,
+				6341097E211CC7BE00D40139 /* Actions.sks */,
+				6341097F211CC7BE00D40139 /* Empty.sks */,
+				63956510212707FF006F2A71 /* BaseView.swift */,
 				63F97AFF211CCB0300784701 /* Button.swift */,
 				63F97AFD211CCB0300784701 /* ClickHandler.swift */,
+				6346A2642139D1E900481721 /* DragHandler.swift */,
+				63410980211CC7BE00D40139 /* GameScene.swift */,
+				63C34FEC212CEB0400076E55 /* GameView.swift */,
 				63F97B01211CCB0400784701 /* HandlerRegistration.swift */,
-				63F97B02211CCB0400784701 /* MainMenuView.swift */,
-				63F97B03211CCB0400784701 /* SwiftString.swift */,
-				63F97AFE211CCB0300784701 /* TextArea.swift */,
-				63F97B00211CCB0400784701 /* TransitionService.swift */,
+				63C34FEF212F2F4700076E55 /* LayoutHandler.swift */,
 				634589FD212645B400D81EAD /* LoadingView.swift */,
+				63F97B02211CCB0400784701 /* MainMenuView.swift */,
 				6395650721264645006F2A71 /* ProgressBar.swift */,
+				63F97AF9211CC9B500784701 /* RustBinder.swift */,
+				63C34FF2212F5CF900076E55 /* Sprite.swift */,
+				63F97B03211CCB0400784701 /* SwiftString.swift */,
+				63E98385212A00EF0056E91C /* SystemView.swift */,
+				63F97AFE211CCB0300784701 /* TextArea.swift */,
 				6395650A2126469C006F2A71 /* Texture.swift */,
 				6395650D212646BD006F2A71 /* TextureLoader.swift */,
-				63956510212707FF006F2A71 /* BaseView.swift */,
-				63E98385212A00EF0056E91C /* SystemView.swift */,
-				63C34FEC212CEB0400076E55 /* GameView.swift */,
-				63C34FEF212F2F4700076E55 /* LayoutHandler.swift */,
-				63C34FF2212F5CF900076E55 /* Sprite.swift */,
-				6346A2642139D1E900481721 /* DragHandler.swift */,
+				63F97B00211CCB0400784701 /* TransitionService.swift */,
+				639AD25322AC8E6900A35225 /* Viewport.swift */,
+				63410981211CC7C000D40139 /* Assets.xcassets */,
+				634589F5212624FC00D81EAD /* Resources */,
 			);
 			path = "Enchantron Shared";
 			sourceTree = "<group>";
@@ -385,6 +389,7 @@
 				6395650821264645006F2A71 /* ProgressBar.swift in Sources */,
 				63E98386212A00EF0056E91C /* SystemView.swift in Sources */,
 				63F97B10211CCB0400784701 /* SwiftString.swift in Sources */,
+				639AD25422AC8E6900A35225 /* Viewport.swift in Sources */,
 				6341098A211CC7C000D40139 /* AppDelegate.swift in Sources */,
 				63956511212707FF006F2A71 /* BaseView.swift in Sources */,
 			);
@@ -413,6 +418,7 @@
 				6395650921264645006F2A71 /* ProgressBar.swift in Sources */,
 				63E98387212A00F00056E91C /* SystemView.swift in Sources */,
 				63F97B11211CCB0400784701 /* SwiftString.swift in Sources */,
+				639AD25522AC943E00A35225 /* Viewport.swift in Sources */,
 				6341099B211CC7C000D40139 /* AppDelegate.swift in Sources */,
 				63956512212707FF006F2A71 /* BaseView.swift in Sources */,
 			);
@@ -618,7 +624,7 @@
 					"@executable_path/../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../enchantron-core/target/debug";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rookandpawn.Enchantron;
 				PRODUCT_NAME = Enchantron;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -642,7 +648,7 @@
 					"@executable_path/../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../enchantron-core/target/debug";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rookandpawn.Enchantron;
 				PRODUCT_NAME = Enchantron;
 				PROVISIONING_PROFILE_SPECIFIER = "";

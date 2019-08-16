@@ -574,6 +574,19 @@ lazy_static! {
               .build().unwrap(),
 
           MethodDefBuilder::default()
+              .name("set_parent")
+              .arguments(vec![
+                ArgumentDefBuilder::default()
+                    .name("parent")
+                    .data_type(DataType::swift_struct("SpriteSink", None))
+                    .build().unwrap()
+              ])
+              .impl_block(Some(ImplBlockDefBuilder::default()
+                  .trait_name("ui::Sprite")
+                  .build().unwrap()))
+              .build().unwrap(),
+
+          MethodDefBuilder::default()
               .name("set_size_animated")
               .arguments(vec![
 
@@ -870,6 +883,17 @@ lazy_static! {
                 ])
                 .return_type(Some(DataType::swift_generic(Some("T"),
                     DataType::swift_struct("Texture", None))))
+                .build().unwrap()
+        ])
+        .build().unwrap(),
+
+    TypeDefBuilder::default()
+        .name("SpriteSink")
+        .rust_owned(false)
+        .impls(vec![
+            ImplDefBuilder::default()
+                .trait_name("ui::SpriteSink")
+                .trait_import(Some("crate::ui"))
                 .build().unwrap()
         ])
         .build().unwrap()

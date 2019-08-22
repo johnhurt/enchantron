@@ -574,11 +574,11 @@ lazy_static! {
               .build().unwrap(),
 
           MethodDefBuilder::default()
-              .name("set_parent")
+              .name("set_containing_coordinate_system")
               .arguments(vec![
                 ArgumentDefBuilder::default()
                     .name("parent")
-                    .data_type(DataType::swift_struct("SpriteSink", None))
+                    .data_type(DataType::swift_struct("CoordinateSystem", None))
                     .build().unwrap()
               ])
               .impl_block(Some(ImplBlockDefBuilder::default()

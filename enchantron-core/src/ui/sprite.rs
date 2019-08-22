@@ -1,8 +1,7 @@
 use crate::native::Texture;
 
 use super::{
-    HasDragHandlers, HasMutableLocation, HasMutableSize, HasMutableVisibility,
-    SpriteSink,
+    HasDragHandlers, HasMutableLocation, HasMutableSize, HasMutableVisibility, CoordinateSystem
 };
 
 pub trait Sprite:
@@ -15,6 +14,7 @@ pub trait Sprite:
     + 'static
 {
     type T: Texture;
+    type C: CoordinateSystem;
 
     fn set_texture(&self, texture: &Self::T);
 
@@ -22,5 +22,5 @@ pub trait Sprite:
 
     fn remove_from_parent(&self);
 
-    fn set_parent(&self, parent: &Self);
+    fn set_containing_coordinate_system(&self, parent: &Self::C);
 }

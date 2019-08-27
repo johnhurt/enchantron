@@ -1,0 +1,10 @@
+
+use crate::view_types::ViewTypes;
+use super::{Viewport};
+
+/// Trait for providing a viewport
+pub trait HasViewport : 'static {
+    type V : Viewport;
+
+    fn get_viewport(&self) -> Self::V;
+}

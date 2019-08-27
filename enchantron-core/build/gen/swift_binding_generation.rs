@@ -40,7 +40,7 @@ lazy_static! {
 
     WrappedTypeDefBuilder::default()
         .wrapper_name("WrappedGamePresenter")
-        .wrapped_type_name("Arc<GamePresenter<GameView,SystemView>>")
+        .wrapped_type_name("Arc<GamePresenter<ViewTypes>>")
         .wrapped_type_imports(vec![
             "std::sync::Arc",
             "crate::presenter::GamePresenter"
@@ -268,6 +268,48 @@ lazy_static! {
                       .name("height")
                       .data_type(LONG.clone())
                       .build().unwrap()
+                ])
+                .build().unwrap()
+        ])
+        .build().unwrap(),
+
+    TypeDefBuilder::default()
+        .name("ViewTypes")
+        .rust_owned(false)
+        .impls(vec![
+            ImplDefBuilder::default()
+                .trait_name("view_types::ViewTypes")
+                .trait_import(Some("crate::view_types"))
+                .generics(vec![
+                    GenericDefBuilder::default()
+                        .symbol(Some("Sprite"))
+                        .bound_type("Sprite")
+                        .build().unwrap(),
+
+                    GenericDefBuilder::default()
+                        .symbol(Some("Texture"))
+                        .bound_type("Texture")
+                        .build().unwrap(),
+
+                    GenericDefBuilder::default()
+                        .symbol(Some("TextureLoader"))
+                        .bound_type("TextureLoader")
+                        .build().unwrap(),
+
+                    GenericDefBuilder::default()
+                        .symbol(Some("SystemView"))
+                        .bound_type("SystemView")
+                        .build().unwrap(),
+
+                    GenericDefBuilder::default()
+                        .symbol(Some("GameView"))
+                        .bound_type("GameView")
+                        .build().unwrap(),
+
+                    GenericDefBuilder::default()
+                        .symbol(Some("Viewport"))
+                        .bound_type("Viewport")
+                        .build().unwrap()
                 ])
                 .build().unwrap()
         ])
@@ -574,19 +616,6 @@ lazy_static! {
               .build().unwrap(),
 
           MethodDefBuilder::default()
-              .name("set_containing_coordinate_system")
-              .arguments(vec![
-                ArgumentDefBuilder::default()
-                    .name("parent")
-                    .data_type(DataType::swift_struct("CoordinateSystem", None))
-                    .build().unwrap()
-              ])
-              .impl_block(Some(ImplBlockDefBuilder::default()
-                  .trait_name("ui::Sprite")
-                  .build().unwrap()))
-              .build().unwrap(),
-
-          MethodDefBuilder::default()
               .name("set_size_animated")
               .arguments(vec![
 
@@ -740,7 +769,7 @@ lazy_static! {
                     GenericDefBuilder::default()
                         .symbol(Some("S"))
                         .bound_type("Sprite")
-                        .build().unwrap()
+                        .build().unwrap(),
                 ])
                 .build().unwrap(),
             ImplDefBuilder::default()
@@ -762,7 +791,18 @@ lazy_static! {
                         .bound_type("HandlerRegistration")
                         .build().unwrap()
                 ])
-                .build().unwrap()
+                .build().unwrap(),
+            ImplDefBuilder::default()
+                .trait_name("HasViewport")
+                .trait_import(Some("crate::ui::HasViewport"))
+                .generics(vec![
+                    GenericDefBuilder::default()
+                        .symbol(Some("V"))
+                        .bound_type("Viewport")
+                        .build().unwrap()
+                ])
+                .build().unwrap(),
+
         ])
         .fields(vec![
             // FieldDefBuilder::default()
@@ -816,8 +856,52 @@ lazy_static! {
                     .build().unwrap()))
                 .return_type(Some(DataType::swift_generic(Some("S"),
                     DataType::swift_struct("Sprite", None))))
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("get_viewport")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("HasViewport")
+                    .build().unwrap()))
+                .return_type(Some(DataType::swift_generic(Some("V"),
+                    DataType::swift_struct("Viewport", None))))
                 .build().unwrap()
         ])
+        .build().unwrap(),
+
+    TypeDefBuilder::default()
+        .name("Viewport")
+        .rust_owned(false)
+        .impls(vec![
+            ImplDefBuilder::default()
+                .trait_name("ui::Viewport")
+                .trait_import(Some("crate::ui"))
+                .build().unwrap(),
+            ImplDefBuilder::default()
+                .trait_name("ui::SpriteSource")
+                .trait_import(Some("crate::ui"))
+                .generics(vec![
+                    GenericDefBuilder::default()
+                        .symbol(Some("T"))
+                        .bound_type("Texture")
+                        .build().unwrap(),
+                    GenericDefBuilder::default()
+                        .symbol(Some("S"))
+                        .bound_type("Sprite")
+                        .build().unwrap(),
+                ])
+                .build().unwrap(),
+        ])
+        .methods(vec![
+            MethodDefBuilder::default()
+                .name("create_sprite")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("ui::SpriteSource")
+                    .build().unwrap()))
+                .return_type(Some(DataType::swift_generic(Some("S"),
+                    DataType::swift_struct("Sprite", None))))
+                .build().unwrap()
+            ])
         .build().unwrap(),
 
     // Native resources
@@ -887,16 +971,6 @@ lazy_static! {
         ])
         .build().unwrap(),
 
-    TypeDefBuilder::default()
-        .name("SpriteSink")
-        .rust_owned(false)
-        .impls(vec![
-            ImplDefBuilder::default()
-                .trait_name("ui::SpriteSink")
-                .trait_import(Some("crate::ui"))
-                .build().unwrap()
-        ])
-        .build().unwrap()
   ];
 }
 

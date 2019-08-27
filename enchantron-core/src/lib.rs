@@ -31,4 +31,6 @@ mod event;
 mod native;
 mod presenter;
 
+mod view_types;
+
 mod lib_gen;

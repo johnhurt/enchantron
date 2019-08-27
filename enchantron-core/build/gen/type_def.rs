@@ -29,7 +29,7 @@ impl TypeDef {
 
         let mut direct_impl = RenderableImplBlock::default();
 
-        self.impls.iter().foreach(|imp| {
+        self.impls.iter().for_each(|imp| {
             result.insert(
                 String::from(imp.trait_name),
                 RenderableImplBlock::new_from_def(imp),

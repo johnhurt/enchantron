@@ -1,10 +1,6 @@
 use std::sync::{Arc, Mutex, RwLock, RwLockReadGuard};
 
-use std::sync::atomic::AtomicIsize;
-
-use std::thread;
-
-use std::time::{Duration, Instant};
+use crate::view_types::ViewTypes;
 
 use crate::event::{
     EnchantronEvent, EventBus, EventListener, Layout, ListenerRegistration,
@@ -17,31 +13,25 @@ use crate::native::{HasIntSize, RuntimeResources, SystemView};
 use crate::ui::{
     DragHandler, GameDisplayState, GameView, HandlerRegistration,
     HasMutableLocation, HasMutableSize, HasMutableVisibility, LayoutHandler,
-    Sprite, SpriteSource,
+    Sprite, SpriteSource, HasLayoutHandlers, HasViewport
 };
 
-lazy_static! {
-    static ref MIN_EVAL_SEPARATION: Duration = Duration::from_millis(500);
-}
-
-pub struct GamePresenter<V, S>
+pub struct GamePresenter<T>
 where
-    S: SystemView,
-    V: GameView<T = S::T>,
+    T: ViewTypes
 {
-    view: V,
+    view: T::GameView,
     event_bus: EventBus<EnchantronEvent>,
-    runtime_resources: Arc<RuntimeResources<S>>,
+    runtime_resources: Arc<RuntimeResources<T::SystemView>>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
     handler_registrations: Mutex<Vec<Box<HandlerRegistration>>>,
 
-    display_state: RwLock<GameDisplayState<V::S>>,
+    display_state: RwLock<GameDisplayState<T::Sprite>>,
 }
 
-impl<V, S> EventListener<EnchantronEvent, Layout> for GamePresenter<V, S>
+impl<T> EventListener<EnchantronEvent, Layout> for GamePresenter<T>
 where
-    S: SystemView,
-    V: GameView<T = S::T>,
+    T: ViewTypes
 {
     fn on_event(&self, event: &Layout) {
         info!("Game view resized to : {}, {}", event.width, event.height);
@@ -56,15 +46,14 @@ where
     }
 }
 
-impl<V, S> GamePresenter<V, S>
+impl<T> GamePresenter<T>
 where
-    S: SystemView,
-    V: GameView<T = S::T>,
+    T: ViewTypes
 {
     ///
     /// Get a read-lock on the game display state
     ///
-    fn get_display_state(&self) -> RwLockReadGuard<GameDisplayState<V::S>> {
+    fn get_display_state(&self) -> RwLockReadGuard<GameDisplayState<T::Sprite>> {
         self.display_state.read().unwrap_or_else(|err| {
             error!("Failed to get read lock on display state: {:?}", err);
             panic!("Failed to get a read lock on the display state");
@@ -84,14 +73,14 @@ where
     }
 
     /// Initialize the display state with the initial game state
-    fn initialize_game_state(this: Arc<GamePresenter<V, S>>) {
+    fn initialize_game_state(this: Arc<GamePresenter<T>>) {
         let sprite = &this.get_display_state().grass;
         sprite.set_texture(this.runtime_resources.textures().overworld.grass());
         sprite.set_visible(true);
         sprite.set_size(64., 64.);
     }
 
-    fn bind(self) -> Arc<GamePresenter<V, S>> {
+    fn bind(self) -> Arc<GamePresenter<T>> {
         let copied_event_bus = self.event_bus.clone();
 
         self.add_handler_registration(Box::new(self.view.add_layout_handler(
@@ -113,11 +102,11 @@ where
     }
 
     pub fn new(
-        view: V,
+        view: T::GameView,
         event_bus: EventBus<EnchantronEvent>,
-        runtime_resources: Arc<RuntimeResources<S>>,
-    ) -> Arc<GamePresenter<V, S>> {
-        let display_state = GameDisplayState::new(&view);
+        runtime_resources: Arc<RuntimeResources<T::SystemView>>,
+    ) -> Arc<GamePresenter<T>> {
+        let display_state = GameDisplayState::new(&view.get_viewport());
 
         let result = GamePresenter {
             view: view,
@@ -137,10 +126,9 @@ where
     }
 }
 
-impl<V, S> Drop for GamePresenter<V, S>
+impl<T> Drop for GamePresenter<T>
 where
-    S: SystemView,
-    V: GameView<T = S::T>,
+    T: ViewTypes
 {
     fn drop(&mut self) {
         info!("Dropping Game Presenter")

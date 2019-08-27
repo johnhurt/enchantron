@@ -1,6 +1,5 @@
 pub use self::button::Button;
 pub use self::click_handler::ClickHandler;
-pub use self::coordinate_system::CoordinateSystem;
 pub use self::drag_handler::DragHandler;
 pub use self::handler_registration::HandlerRegistration;
 pub use self::has_click_handlers::HasClickHandlers;
@@ -17,6 +16,8 @@ pub use self::layout_handler::LayoutHandler;
 pub use self::progress_bar::ProgressBar;
 pub use self::sprite::Sprite;
 pub use self::sprite_source::SpriteSource;
+pub use self::has_viewport::HasViewport;
+pub use self::viewport::Viewport;
 
 pub use self::game_display_state::GameDisplayState;
 
@@ -25,7 +26,6 @@ pub use self::loading_view::LoadingView;
 pub use self::main_menu_view::MainMenuView;
 
 mod button;
-mod coordinate_system;
 mod handler_registration;
 mod has_click_handlers;
 mod has_drag_handlers;
@@ -40,6 +40,9 @@ mod has_text;
 mod progress_bar;
 mod sprite;
 mod sprite_source;
+mod viewport;
+mod has_viewport;
+
 
 mod game_display_state;
 

@@ -111,7 +111,7 @@ pub extern "C" fn {{name}}
 #[allow(non_camel_case_types)]
 pub enum Opaque_{{name}}{}
 
-pub struct {{name}}(*mut Opaque_{{name}});
+pub struct {{name}} {{~#if empty_struct}} {} {{~else}} (*mut Opaque_{{name}}); {{~/if}}
 
 unsafe impl Send for {{name}} {}
 unsafe impl Sync for {{name}} {}

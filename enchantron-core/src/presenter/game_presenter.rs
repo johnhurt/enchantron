@@ -12,13 +12,13 @@ use crate::native::{HasIntSize, RuntimeResources, SystemView};
 
 use crate::ui::{
     DragHandler, GameDisplayState, GameView, HandlerRegistration,
-    HasMutableLocation, HasMutableSize, HasMutableVisibility, LayoutHandler,
-    Sprite, SpriteSource, HasLayoutHandlers, HasViewport
+    HasLayoutHandlers, HasMutableLocation, HasMutableSize,
+    HasMutableVisibility, HasViewport, LayoutHandler, Sprite, SpriteSource,
 };
 
 pub struct GamePresenter<T>
 where
-    T: ViewTypes
+    T: ViewTypes,
 {
     view: T::GameView,
     event_bus: EventBus<EnchantronEvent>,
@@ -31,7 +31,7 @@ where
 
 impl<T> EventListener<EnchantronEvent, Layout> for GamePresenter<T>
 where
-    T: ViewTypes
+    T: ViewTypes,
 {
     fn on_event(&self, event: &Layout) {
         info!("Game view resized to : {}, {}", event.width, event.height);
@@ -48,12 +48,14 @@ where
 
 impl<T> GamePresenter<T>
 where
-    T: ViewTypes
+    T: ViewTypes,
 {
     ///
     /// Get a read-lock on the game display state
     ///
-    fn get_display_state(&self) -> RwLockReadGuard<GameDisplayState<T::Sprite>> {
+    fn get_display_state(
+        &self,
+    ) -> RwLockReadGuard<GameDisplayState<T::Sprite>> {
         self.display_state.read().unwrap_or_else(|err| {
             error!("Failed to get read lock on display state: {:?}", err);
             panic!("Failed to get a read lock on the display state");
@@ -128,7 +130,7 @@ where
 
 impl<T> Drop for GamePresenter<T>
 where
-    T: ViewTypes
+    T: ViewTypes,
 {
     fn drop(&mut self) {
         info!("Dropping Game Presenter")

@@ -12,6 +12,7 @@ use super::{
 pub struct RenderableType {
     pub name: String,
     pub rust_owned: bool,
+    pub empty_struct: bool,
     pub impls: Vec<RenderableImplBlock>,
 }
 
@@ -20,6 +21,7 @@ impl RenderableType {
         RenderableTypeBuilder::default()
             .name(String::from(type_def.name))
             .rust_owned(type_def.rust_owned)
+            .empty_struct(type_def.empty_struct)
             .impls(type_def.get_renderable_functions())
             .build()
             .unwrap()

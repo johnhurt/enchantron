@@ -14,6 +14,7 @@ class BaseView: SKNode {
   private var presenter : AnyObject?
   private var ctx : ApplicationContext?
   private var transitionService : TransitionService?
+  private var viewport : Viewport?
   
   private var size: CGSize?
   
@@ -43,6 +44,16 @@ class BaseView: SKNode {
   
   func setPresenter(presenter: AnyObject) {
     self.presenter = presenter
+  }
+  
+  func setViewport(viewport: Viewport) {
+    self.viewport = viewport
+  }
+  
+  func getViewport() -> Viewport {
+    self.scene!.camera = self.viewport!
+    self.scene!.addChild(self.viewport!)
+    return self.viewport!
   }
   
   func unsetPresenter() {

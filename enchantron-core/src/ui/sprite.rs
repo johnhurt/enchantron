@@ -1,7 +1,7 @@
 use crate::native::Texture;
 
 use super::{
-    HasDragHandlers, HasMutableLocation, HasMutableSize, HasMutableVisibility
+    HasDragHandlers, HasMutableLocation, HasMutableSize, HasMutableVisibility,
 };
 
 pub trait Sprite:

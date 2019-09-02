@@ -12,11 +12,11 @@ pub use self::has_mutable_size::HasMutableSize;
 pub use self::has_mutable_visibility::HasMutableVisibility;
 pub use self::has_size::HasSize;
 pub use self::has_text::HasText;
+pub use self::has_viewport::HasViewport;
 pub use self::layout_handler::LayoutHandler;
 pub use self::progress_bar::ProgressBar;
 pub use self::sprite::Sprite;
 pub use self::sprite_source::SpriteSource;
-pub use self::has_viewport::HasViewport;
 pub use self::viewport::Viewport;
 
 pub use self::game_display_state::GameDisplayState;
@@ -37,12 +37,11 @@ mod has_mutable_size;
 mod has_mutable_visibility;
 mod has_size;
 mod has_text;
+mod has_viewport;
 mod progress_bar;
 mod sprite;
 mod sprite_source;
 mod viewport;
-mod has_viewport;
-
 
 mod game_display_state;
 

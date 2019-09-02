@@ -67,26 +67,6 @@ class GameView : BaseView {
     }
   }
   
-  func createSprite() -> Sprite {
-    return Sprite()
-  }
-  
-  func addSprite(sprite: Sprite) {
-    
-    let onMain : () -> () = {
-      sprite.zPosition = CGFloat(GameView.z)
-      GameView.z += 1
-      self.addChild(sprite)
-    }
-    
-    if Thread.isMainThread {
-      onMain()
-    }
-    else {
-      DispatchQueue.main.sync { onMain() }
-    }
-  }
-  
   deinit {
     print("Dropping GameView")
   }

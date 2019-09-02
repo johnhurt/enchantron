@@ -28,13 +28,11 @@ class GameScene: SKScene {
   }
 
   private var currentView : BaseView?
+  private var viewport : Viewport?
   
   func setUpScene() {
-    let systemView = SystemView(textureLoader: TextureLoader(), viewport: Viewport())
-
-    self.camera = systemView.viewport
-    
-    self.addChild(self.camera!)
+    let systemView = SystemView(textureLoader: TextureLoader())
+    self.viewport = Viewport()
     
     let ctx = RustBinder.bindToRust(systemView)
     
@@ -42,6 +40,8 @@ class GameScene: SKScene {
       DispatchQueue.main.async {
         self.removeAllChildren()
         self.removeAllActions()
+        self.camera = nil
+        view.setViewport(viewport: self.viewport!)
         self.addChild(view)
         self.currentView = view
         self.setSize(size: self.size)

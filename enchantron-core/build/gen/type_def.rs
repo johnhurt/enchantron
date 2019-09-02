@@ -19,6 +19,7 @@ pub struct TypeDef {
     pub fields: Vec<FieldDef>,
     pub methods: Vec<MethodDef>,
     pub rust_owned: bool,
+    pub empty_struct: bool,
     pub rust_import: Option<&'static str>,
     pub custom_rust_drop_code: Option<&'static str>,
 }
@@ -113,26 +114,31 @@ impl TypeDef {
             }
         }
 
-        result.insert(
-            String::from("Drop"),
-            RenderableImplBlockBuilder::default()
-                .trait_name(Some(String::from("Drop")))
-                .functions(vec![RenderableFunctionBuilder::default()
-                    .name(self.name.to_snake_case() + &String::from("__drop"))
-                    .type_name(String::from(self.name))
-                    .impl_name(Some(String::from("drop")))
-                    .rust_owned(self.rust_owned)
-                    .require_mutable_self(true)
-                    .is_drop(true)
-                    .custom_rust_code(
-                        self.custom_rust_drop_code
-                            .map(|code| String::from(code)),
-                    )
+        // Empty Structs don't need drop impls
+        if !self.empty_struct {
+            result.insert(
+                String::from("Drop"),
+                RenderableImplBlockBuilder::default()
+                    .trait_name(Some(String::from("Drop")))
+                    .functions(vec![RenderableFunctionBuilder::default()
+                        .name(
+                            self.name.to_snake_case() + &String::from("__drop"),
+                        )
+                        .type_name(String::from(self.name))
+                        .impl_name(Some(String::from("drop")))
+                        .rust_owned(self.rust_owned)
+                        .require_mutable_self(true)
+                        .is_drop(true)
+                        .custom_rust_code(
+                            self.custom_rust_drop_code
+                                .map(|code| String::from(code)),
+                        )
+                        .build()
+                        .unwrap()])
                     .build()
-                    .unwrap()])
-                .build()
-                .unwrap(),
-        );
+                    .unwrap(),
+            );
+        }
 
         let mut result_vec: Vec<RenderableImplBlock> =
             result.drain().map(|(_, ib)| ib).collect();

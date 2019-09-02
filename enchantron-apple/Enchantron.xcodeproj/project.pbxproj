@@ -30,6 +30,8 @@
 		6346A2662139D1E900481721 /* DragHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6346A2642139D1E900481721 /* DragHandler.swift */; };
 		63531FC32278BD850060D9AD /* libenchantron.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63531FC22278BD850060D9AD /* libenchantron.a */; };
 		63531FC52278BD9E0060D9AD /* libenchantron.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63531FC42278BD9E0060D9AD /* libenchantron.a */; };
+		6364099023181E3C00B46512 /* SpriteSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6364098F23181E3C00B46512 /* SpriteSource.swift */; };
+		63640991231824DC00B46512 /* SpriteSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6364098F23181E3C00B46512 /* SpriteSource.swift */; };
 		6395650821264645006F2A71 /* ProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6395650721264645006F2A71 /* ProgressBar.swift */; };
 		6395650921264645006F2A71 /* ProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6395650721264645006F2A71 /* ProgressBar.swift */; };
 		6395650B2126469C006F2A71 /* Texture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6395650A2126469C006F2A71 /* Texture.swift */; };
@@ -93,6 +95,7 @@
 		6346A2642139D1E900481721 /* DragHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragHandler.swift; sourceTree = "<group>"; };
 		63531FC22278BD850060D9AD /* libenchantron.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libenchantron.a; path = "../enchantron-core/target/universal/debug/libenchantron.a"; sourceTree = "<group>"; };
 		63531FC42278BD9E0060D9AD /* libenchantron.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libenchantron.a; path = "../enchantron-core/target/debug/libenchantron.a"; sourceTree = "<group>"; };
+		6364098F23181E3C00B46512 /* SpriteSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteSource.swift; sourceTree = "<group>"; };
 		6395650721264645006F2A71 /* ProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBar.swift; sourceTree = "<group>"; };
 		6395650A2126469C006F2A71 /* Texture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Texture.swift; sourceTree = "<group>"; };
 		6395650D212646BD006F2A71 /* TextureLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureLoader.swift; sourceTree = "<group>"; };
@@ -180,6 +183,7 @@
 				6395650A2126469C006F2A71 /* Texture.swift */,
 				6395650D212646BD006F2A71 /* TextureLoader.swift */,
 				63F97B00211CCB0400784701 /* TransitionService.swift */,
+				6364098F23181E3C00B46512 /* SpriteSource.swift */,
 				639AD25322AC8E6900A35225 /* Viewport.swift */,
 				63410981211CC7C000D40139 /* Assets.xcassets */,
 				634589F5212624FC00D81EAD /* Resources */,
@@ -376,6 +380,7 @@
 				634109A6211CC7C000D40139 /* GameScene.swift in Sources */,
 				63F97B06211CCB0400784701 /* TextArea.swift in Sources */,
 				63C34FED212CEB0400076E55 /* GameView.swift in Sources */,
+				6364099023181E3C00B46512 /* SpriteSource.swift in Sources */,
 				63F97B0C211CCB0400784701 /* HandlerRegistration.swift in Sources */,
 				6395650B2126469C006F2A71 /* Texture.swift in Sources */,
 				634589FE212645B400D81EAD /* LoadingView.swift in Sources */,
@@ -408,6 +413,7 @@
 				63F97B0D211CCB0400784701 /* HandlerRegistration.swift in Sources */,
 				6395650C2126469C006F2A71 /* Texture.swift in Sources */,
 				634589FF212645B400D81EAD /* LoadingView.swift in Sources */,
+				63640991231824DC00B46512 /* SpriteSource.swift in Sources */,
 				63F97AFB211CC9B500784701 /* RustBinder.swift in Sources */,
 				6395650F212646BD006F2A71 /* TextureLoader.swift in Sources */,
 				63C34FF4212F5CF900076E55 /* Sprite.swift in Sources */,

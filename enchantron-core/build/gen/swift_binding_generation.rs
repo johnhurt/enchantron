@@ -276,6 +276,7 @@ lazy_static! {
     TypeDefBuilder::default()
         .name("ViewTypes")
         .rust_owned(false)
+        .empty_struct(true)
         .impls(vec![
             ImplDefBuilder::default()
                 .trait_name("view_types::ViewTypes")

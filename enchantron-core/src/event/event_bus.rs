@@ -113,8 +113,6 @@ impl<K: EventKey> EventBus<K> {
                     Some(existing_listeners) => existing_listeners
                 };
 
-                info!("wft");
-
                 *slot_map_key_opt_ref = Some(listeners.insert( Box::new(move |arg| {
                     if let Some(handler) = listener.upgrade() {
 

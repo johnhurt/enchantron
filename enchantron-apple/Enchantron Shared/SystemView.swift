@@ -10,10 +10,8 @@ import Foundation
 
 class SystemView {
   let textureLoader : TextureLoader
-  let viewport : Viewport
   
-  init(textureLoader : TextureLoader, viewport : Viewport) {
+  init(textureLoader : TextureLoader) {
     self.textureLoader = textureLoader
-    self.viewport = viewport
   }
 }

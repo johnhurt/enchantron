@@ -43,5 +43,4 @@ public class Viewport : SKCameraNode {
     
     run(move)
   }
-  
 }

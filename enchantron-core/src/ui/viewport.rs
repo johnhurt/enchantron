@@ -1,6 +1,3 @@
+use super::SpriteSource;
 
-use super::{SpriteSource};
-
-pub trait Viewport : 'static + Send + Sync + SpriteSource {
-
-}
+pub trait Viewport: 'static + Send + Sync + SpriteSource {}

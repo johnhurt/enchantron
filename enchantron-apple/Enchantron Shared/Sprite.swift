@@ -80,7 +80,7 @@ class Sprite : SKSpriteNode {
   
   func removeHandler(_ handler: DragHandler) {
     DispatchQueue.main.sync {
-      if let index = self.dragHandlers.index(of: handler) {
+      if let index = self.dragHandlers.firstIndex(of: handler) {
         self.dragHandlers.remove(at: index)
       }
     }

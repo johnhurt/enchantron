@@ -12,24 +12,22 @@ protocol SpriteSource {
   func createSprite() -> Sprite
 }
 
-extension SKNode {
-  func createSprite() -> Sprite {
+func createSpriteOn(parent : SKNode) -> Sprite {
     let sprite = Sprite()
     
     let onMain : () -> () = {
-      sprite.zPosition = CGFloat(GameView.z)
-      GameView.z += 1
-      self.addChild(sprite)
+        sprite.zPosition = CGFloat(GameView.z)
+        GameView.z += 1
+        parent.addChild(sprite)
     }
     
     if Thread.isMainThread {
-      onMain()
+        onMain()
     }
     else {
-      DispatchQueue.main.sync { onMain() }
+        DispatchQueue.main.sync { onMain() }
     }
     
     return sprite
-  }
 }
 

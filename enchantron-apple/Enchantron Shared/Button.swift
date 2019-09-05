@@ -73,7 +73,7 @@ class Button : SKNode {
   
   func removeHandler(_ handler: ClickHandler) {
     DispatchQueue.main.sync {
-      if let index = self.clickHandlers.index(of: handler) {
+      if let index = self.clickHandlers.firstIndex(of: handler) {
         self.clickHandlers.remove(at: index)
       }
     }

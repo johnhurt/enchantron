@@ -10,20 +10,38 @@ import Foundation
 import SpriteKit
 
 class TransitionService {
-  
-  typealias TransitionClosure = (BaseView) -> Void
-  
-  let transitionClosure : TransitionClosure
-  
-  init(transitionClosure: @escaping TransitionClosure ) {
-    self.transitionClosure = transitionClosure
-  }
-  
-  func transition(view: BaseView) {
-    self.transitionClosure(view)
-  }
-  
-  deinit{
-    print("Dropping Transition Service")
-  }
+    
+    typealias PresenterBinder<T : BaseView> = (T) -> AnyObject
+    typealias TransitionClosure = (BaseView) -> Void
+    
+    let preBindTransition : TransitionClosure
+    let postBindTransition : TransitionClosure
+    
+    init(preBindTransition: @escaping TransitionClosure
+        , postBindTransition: @escaping TransitionClosure ) {
+        self.preBindTransition = preBindTransition
+        self.postBindTransition = postBindTransition
+    }
+    
+    func transition<T: BaseView>(view: T, presenterBinder: @escaping PresenterBinder<T>) {
+        let transitionOp = {
+            self.preBindTransition(view)
+            view.setPresenter(presenter: presenterBinder(view))
+            self.postBindTransition(view)
+        }
+        
+        if Thread.isMainThread {
+            transitionOp()
+        }
+        else {
+            DispatchQueue.main.sync { self.preBindTransition(view) }
+            view.setPresenter(presenter: presenterBinder(view))
+            DispatchQueue.main.sync { self.postBindTransition(view) }
+        }
+        
+    }
+    
+    deinit{
+        print("Dropping Transition Service")
+    }
 }

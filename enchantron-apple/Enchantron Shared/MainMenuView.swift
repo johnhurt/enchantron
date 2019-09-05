@@ -35,9 +35,7 @@ class MainMenuView : BaseView {
   }
   
   func transitionToGameView() {
-    let gameView = GameView()
-    gameView.setPresenter(presenter: getContext().bindToGameView(view: gameView))
-    transitionTo(newView: gameView)
+    transitionTo(newView: GameView(), presenterBinder: getContext().bindToGameView)
   }
   
   override func layout(size: CGSize) {

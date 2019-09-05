@@ -37,7 +37,7 @@ class GameView : BaseView {
   
   func removeHandler(_ handler: LayoutHandler) {
     DispatchQueue.main.sync {
-      if let index = self.layoutHandlers.index(of: handler) {
+      if let index = self.layoutHandlers.firstIndex(of: handler) {
         self.layoutHandlers.remove(at: index)
       }
     }
@@ -55,7 +55,7 @@ class GameView : BaseView {
   
   func removeHandler(_ handler: DragHandler) {
     DispatchQueue.main.sync {
-      if let index = self.dragHandlers.index(of: handler) {
+      if let index = self.dragHandlers.firstIndex(of: handler) {
         self.dragHandlers.remove(at: index)
       }
     }
@@ -70,6 +70,12 @@ class GameView : BaseView {
   deinit {
     print("Dropping GameView")
   }
+}
+
+extension GameView : SpriteSource {
+    func createSprite() -> Sprite {
+        return createSpriteOn(parent: self)
+    }
 }
 
 

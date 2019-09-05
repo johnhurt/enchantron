@@ -11,79 +11,79 @@ import SpriteKit
 class GameScene: SKScene {
     
     
-  class func newGameScene(size: CGSize) -> GameScene {
-    // Load 'GameScene.sks' as an SKScene.
-    guard let scene = SKScene(fileNamed: "Empty.sks") as? GameScene else {
-      print("Failed to load GameScene.sks")
-      abort()
-    }
-  
-    // Set the scale mode to scale to fit the window
-    scene.size = size
-    //scene.scaleMode = .aspectFill
-    
-    //scene.anchorPoint = CGPoint(x: 0.0, y: 1.0)
-    
-    return scene
-  }
-
-  private var currentView : BaseView?
-  private var viewport : Viewport?
-  
-  func setUpScene() {
-    let systemView = SystemView(textureLoader: TextureLoader())
-    self.viewport = Viewport()
-    
-    let ctx = RustBinder.bindToRust(systemView)
-    
-    let transitioner = TransitionService(transitionClosure: { (view) in
-      DispatchQueue.main.async {
-        self.removeAllChildren()
-        self.removeAllActions()
-        self.camera = nil
-        view.setViewport(viewport: self.viewport!)
-        self.addChild(view)
-        self.currentView = view
-        self.setSize(size: self.size)
-      }
-    })
-    
-    let loadingView = LoadingView()
-    
-    loadingView.initializeCtx(ctx: ctx, transitionService: transitioner)
-    transitioner.transition(view: loadingView)
-    loadingView.setPresenter(presenter: ctx.bindToLoadingView(view: loadingView))
-  }
-  
-  #if os(watchOS)
-  override func sceneDidLoad() {
-    self.setUpScene()
-  }
-  #else
-  override func didMove(to view: SKView) {
-    self.setUpScene()
-  }
-  #endif
-  
-  func setSize(size: CGSize) {
-    let setSizeOp : () -> () = {
-      self.size = size
-      self.currentView?.setSize(size: self.size)
-      self.camera?.position = CGPoint(x: size.width / 2, y: -size.height / 2 )
+    class func newGameScene(size: CGSize) -> GameScene {
+        // Load 'GameScene.sks' as an SKScene.
+        guard let scene = SKScene(fileNamed: "Empty.sks") as? GameScene else {
+            print("Failed to load GameScene.sks")
+            abort()
+        }
+        
+        // Set the scale mode to scale to fit the window
+        scene.size = size
+        //scene.scaleMode = .aspectFill
+        
+        //scene.anchorPoint = CGPoint(x: 0.0, y: 1.0)
+        
+        return scene
     }
     
-    if Thread.isMainThread {
-      setSizeOp()
-    }
-    else {
-      DispatchQueue.main.sync { setSizeOp() }
+    private var currentView : BaseView?
+    private var viewport : Viewport?
+    
+    func setUpScene() {
+        let systemView = SystemView(textureLoader: TextureLoader())
+        self.viewport = Viewport()
+        self.camera = self.viewport
+        
+        let ctx = RustBinder.bindToRust(systemView)
+        
+        let transitioner = TransitionService(preBindTransition: { (view) in
+            self.removeAllChildren()
+            self.removeAllActions()
+            self.viewport!.reset(size: self.size)
+            self.addChild(self.viewport!)
+            view.setViewport(viewport: self.viewport!)
+        }, postBindTransition: { (view) in
+            self.addChild(view)
+            self.currentView = view
+            self.setSize(size: self.size)
+        })
+        
+        let loadingView = LoadingView()
+        
+        loadingView.initializeCtx(ctx: ctx, transitionService: transitioner)
+        transitioner.transition(view: loadingView, presenterBinder: ctx.bindToLoadingView )
     }
     
-  }
-  
-  override func update(_ currentTime: TimeInterval) {
-    // Called before each frame is rendered
+    #if os(watchOS)
+    override func sceneDidLoad() {
+        self.setUpScene()
+    }
+    #else
+    override func didMove(to view: SKView) {
+        self.setUpScene()
+    }
+    #endif
     
-  }
+    func setSize(size: CGSize) {
+        let setSizeOp : () -> () = {
+            self.size = size
+            self.viewport?.resize(size: self.size)
+            self.currentView?.setSize(size: self.size)
+        }
+        
+        if Thread.isMainThread {
+            setSizeOp()
+        }
+        else {
+            DispatchQueue.main.sync { setSizeOp() }
+        }
+        
+    }
+    
+    override func update(_ currentTime: TimeInterval) {
+        // Called before each frame is rendered
+        
+    }
 }
 

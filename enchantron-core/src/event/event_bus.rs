@@ -1,4 +1,6 @@
+use atomic_counter::RelaxedCounter;
 use std::any::Any;
+use std::hash::Hash;
 use std::sync::{Arc, Weak};
 
 use super::{Event, EventKey, EventListener, ListenerRegistration};
@@ -9,7 +11,7 @@ use chashmap::CHashMap;
 use crossbeam_channel::{Receiver, Sender};
 use rayon::ThreadPoolBuilder;
 
-type BoxedAny = Box<Any + Send + Sync + 'static>;
+type BoxedAny = Box<dyn Any + Send + Sync + 'static>;
 
 /// Centeralizable component for blindly passing and receiving messages.
 /// Internally this contains an arc, so this object can be cloned without worry
@@ -20,8 +22,8 @@ pub struct EventBus<K: EventKey> {
 
 /// Impl details for event bus
 struct InnerEventBus<K: EventKey> {
-    listeners: CHashMap<K, SimpleSlotMap<Box<Fn(&Any) + Send + Sync>>>,
-    sink: Sender<(K, BoxedAny)>,
+    listeners: CHashMap<K, SimpleSlotMap<Box<dyn Fn(&dyn Any) + Send + Sync>>>,
+    sinks: Sender<(K, BoxedAny)>,
 }
 
 impl<K: EventKey> Default for EventBus<K> {
@@ -172,10 +174,17 @@ impl<K: EventKey> EventBus<K> {
             .send((event.get_event_key(), Box::new(event)))
         {
             Err(err) => {
-                error!("Failed to publish event to to channel: {:?}", err);
-                panic!("Failed to publish event to to channel");
+                error!("Failed to publish event to channel: {:?}", err);
+                panic!("Failed to publish event to channel");
             }
             _ => {}
         };
+    }
+
+    pub fn post_With_partition<E: Event<K>, P: Hash>(
+        &self,
+        event: E,
+        partition_key: P,
+    ) {
     }
 }

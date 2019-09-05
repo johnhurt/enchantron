@@ -12,7 +12,7 @@ use crate::native::{HasIntSize, RuntimeResources, SystemView};
 
 use crate::ui::{
     DragHandler, GameDisplayState, GameView, HandlerRegistration,
-    HasLayoutHandlers, HasMutableLocation, HasMutableSize,
+    HasDragHandlers, HasLayoutHandlers, HasMutableLocation, HasMutableSize,
     HasMutableVisibility, HasViewport, LayoutHandler, Sprite, SpriteSource,
 };
 
@@ -74,6 +74,12 @@ where
         }
     }
 
+    fn on_drag_start(&self, drag_point: &Point) {}
+
+    fn on_drag_move(&self, drag_x: f64, drag_y: f64) {}
+
+    fn on_drag_end(&self) {}
+
     /// Initialize the display state with the initial game state
     fn initialize_game_state(this: Arc<GamePresenter<T>>) {
         let sprite = &this.get_display_state().grass;
@@ -95,6 +101,26 @@ where
         )));
 
         let result = Arc::new(self);
+        let result_drag_start = Arc::downgrade(&result);
+        let result_drag_move = result_drag_start.clone();
+        let result_drag_end = result_drag_start.clone();
+
+        result.add_handler_registration(Box::new(
+            result.view.add_drag_handler(create_drag_handler!(
+                on_drag_start(wx, wy, _lx, _ly) {
+                    result_drag_start.upgrade()
+                        .map(|p| p.on_drag_start(&Point { x: wx, y: wy }));
+                },
+                on_drag_move(wx, wy, _lx, _ly) {
+                    result_drag_move.upgrade()
+                        .map(|p| p.on_drag_move(wx, wy));
+                },
+                on_drag_end(_wx, _wy, _lx, _ly) {
+                    result_drag_end.upgrade()
+                        .map(|p| p.on_drag_end());
+                }
+            )),
+        ));
 
         result.add_listener_registration(
             result.event_bus.register(Layout::default(), &result),

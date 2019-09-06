@@ -2,14 +2,17 @@ use atomic_counter::RelaxedCounter;
 use std::any::Any;
 use std::hash::Hash;
 use std::sync::{Arc, Weak};
+use std::sync::mpsc::{Sender, Receiver};
+use std::sync::mpsc;
 
 use super::{Event, EventKey, EventListener, ListenerRegistration};
 
 use crate::util::SimpleSlotMap;
 
 use chashmap::CHashMap;
-use crossbeam_channel::{Receiver, Sender};
 use rayon::ThreadPoolBuilder;
+
+const WORKER_COUNT : usize = 8;
 
 type BoxedAny = Box<dyn Any + Send + Sync + 'static>;
 
@@ -23,7 +26,7 @@ pub struct EventBus<K: EventKey> {
 /// Impl details for event bus
 struct InnerEventBus<K: EventKey> {
     listeners: CHashMap<K, SimpleSlotMap<Box<dyn Fn(&dyn Any) + Send + Sync>>>,
-    sinks: Sender<(K, BoxedAny)>,
+    sinks: [Sender<(K, BoxedAny)>; WORKER_COUNT],
 }
 
 impl<K: EventKey> Default for EventBus<K> {

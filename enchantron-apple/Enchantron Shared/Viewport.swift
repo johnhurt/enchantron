@@ -35,6 +35,11 @@ public class Viewport : SKCameraNode {
         self.container.position = CGPoint(x: -size.width / 2.0, y : size.height / 2.0)
     }
     
+    func setVisible(_ visible: Bool) {
+        let action = visible ? SKAction.unhide() : SKAction.hide() 
+        run(action)
+    }
+    
     func setSizeAnimated(_ width: Float64, _ height: Float64, _ durationSeconds: Float64) {
         let resize = SKAction.resize(
             toWidth: CGFloat(width),

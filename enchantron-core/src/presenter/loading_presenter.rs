@@ -28,16 +28,21 @@ where
     S: SystemView,
 {
     fn on_event(&self, _: &LoadResources) {
+        debug!("blah1");
         let textures =
             Textures::new(&self.system_view.get_texture_loader(), &|p| {
                 self.view
                     .get_progress_indicator()
                     .set_int_value((p * 100.) as i64);
             });
+        debug!("blah2");
 
         (self.resources_sink)(RuntimeResources::new(textures));
+        debug!("blah3");
 
         self.view.transition_to_main_menu_view();
+
+        debug!("blah4");
     }
 }
 

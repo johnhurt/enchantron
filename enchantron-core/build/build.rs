@@ -32,20 +32,19 @@ fn main() {
 
     info!("Running build script");
 
-    //let result = panic::catch_unwind(|| {
-    info!("Running build script");
+    let result = panic::catch_unwind(|| {
+        info!("Running build script");
 
-    generate_swift_bindings();
+        generate_swift_bindings();
+    });
 
-    //});
-
-    /*if let Err(e) = result {
+    if let Err(e) = result {
         if let Some(e) = e.downcast_ref::<&'static str>() {
             error!("Got an error: {}", e);
         } else {
             error!("Got an unknown error: {:?}", e);
         }
-    }*/
+    }
 
     info!("build.rs done");
 }

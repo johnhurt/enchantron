@@ -1,17 +1,16 @@
-use atomic_counter::RelaxedCounter;
 use std::any::Any;
-use std::hash::Hash;
-use std::collections::hash_map::DefaultHasher;
-use std::convert::TryInto;
+use std::hash::{Hash, Hasher};
 
-use std::sync::{Arc};
+use std::sync::Arc;
 
 use super::{Event, EventKey, EventListener, ListenerRegistration};
 
 use crate::util::SimpleSlotMap;
 
+use atomic_counter::{AtomicCounter, RelaxedCounter};
 use crossbeam_channel;
-use crossbeam_channel::{Sender, Receiver};
+use crossbeam_channel::{Receiver, Sender};
+use fasthash::MetroHasher;
 
 use chashmap::CHashMap;
 use rayon::ThreadPoolBuilder;
@@ -25,13 +24,12 @@ type BoxedAny = Box<dyn Any + Send + Sync + 'static>;
 #[derive(Clone)]
 pub struct EventBus<K: EventKey> {
     inner: Arc<InnerEventBus<K>>,
-    hasher: DefaultHasher
 }
 
 /// Impl details for event bus
 struct InnerEventBus<K: EventKey> {
     listeners: CHashMap<K, SimpleSlotMap<Box<dyn Fn(&dyn Any) + Send + Sync>>>,
-    sinks: [Sender<(K, BoxedAny)>; WORKER_COUNT],
+    sinks: Vec<Sender<(K, BoxedAny)>>,
     event_counter: RelaxedCounter,
 }
 
@@ -53,11 +51,14 @@ impl<K: EventKey> Default for EventBus<K> {
             let copied_event_bus = inner_event_bus_arc.clone();
 
             pool.spawn(move || loop {
+                debug!("Event loop {} looping", i);
+
                 match source.recv() {
                     Ok((key, arg)) => {
                         debug!("Firing {:?} - {:?}", key, arg);
 
-                        copied_event_bus.evaluate(key, arg)
+                        copied_event_bus.evaluate(key, arg);
+                        debug!("Fired {:?}", key);
                     }
                     Err(e) => info!("Eventbus channel {} closed", i),
                 };
@@ -66,7 +67,6 @@ impl<K: EventKey> Default for EventBus<K> {
 
         EventBus {
             inner: inner_event_bus_arc,
-            hasher: DefaultHasher::new()
         }
     }
 }
@@ -88,7 +88,7 @@ impl<K: EventKey> InnerEventBus<K> {
         (
             InnerEventBus {
                 listeners: CHashMap::default(),
-                sinks: sinks.as_slice().try_into().expect("Vec->Array fail :("),
+                sinks: sinks,
                 event_counter: RelaxedCounter::new(0),
             },
             sources,
@@ -96,11 +96,13 @@ impl<K: EventKey> InnerEventBus<K> {
     }
 
     fn evaluate(&self, key: K, arg: BoxedAny) {
+        debug!("Evaluating");
         if let Some(handlers) = self.listeners.get(&key) {
-            handlers.iter().for_each(|func| func(&*arg)); // <- Note the deref before borrow
+            handlers.iter().(|func| func(&*arg)); // <- Note the deref before borrow
         } else {
             info!("No handlers found for event key: {:?}", key);
         }
+        debug!("Evaluated");
     }
 }
 
@@ -185,11 +187,22 @@ impl<K: EventKey> EventBus<K> {
     /// Post the given event to the event bus.  This event will be distributed
     /// to all listeners registered to accept the given event
     pub fn post<E: Event<K>>(&self, event: E) {
-        info!("Posting event {:?}", event);
+        self.post_with_partition(event, self.inner.event_counter.inc());
+    }
 
-        match self
-            .inner
-            .sink
+    pub fn post_with_partition<E: Event<K>, P: Hash>(
+        &self,
+        event: E,
+        partition_key: P,
+    ) {
+        let mut h: MetroHasher = Default::default();
+        partition_key.hash(&mut h);
+
+        let sink_index = 5; // (h.finish() as usize) % WORKER_COUNT;
+
+        debug!("Posting event {:?} on sink {}", event, sink_index);
+
+        match self.inner.sinks[sink_index]
             .send((event.get_event_key(), Box::new(event)))
         {
             Err(err) => {
@@ -198,12 +211,5 @@ impl<K: EventKey> EventBus<K> {
             }
             _ => {}
         };
-    }
-
-    pub fn post_With_partition<E: Event<K>, P: Hash>(
-        &self,
-        event: E,
-        partition_key: P,
-    ) {
     }
 }

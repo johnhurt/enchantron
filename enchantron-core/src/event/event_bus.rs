@@ -1,9 +1,9 @@
 use atomic_counter::RelaxedCounter;
 use std::any::Any;
 use std::hash::Hash;
-use std::sync::{Arc, Weak};
-use std::sync::mpsc::{Sender, Receiver};
 use std::sync::mpsc;
+use std::sync::mpsc::{Receiver, Sender};
+use std::sync::{Arc, Weak};
 
 use super::{Event, EventKey, EventListener, ListenerRegistration};
 
@@ -12,7 +12,7 @@ use crate::util::SimpleSlotMap;
 use chashmap::CHashMap;
 use rayon::ThreadPoolBuilder;
 
-const WORKER_COUNT : usize = 8;
+const WORKER_COUNT: usize = 8;
 
 type BoxedAny = Box<dyn Any + Send + Sync + 'static>;
 
@@ -27,38 +27,38 @@ pub struct EventBus<K: EventKey> {
 struct InnerEventBus<K: EventKey> {
     listeners: CHashMap<K, SimpleSlotMap<Box<dyn Fn(&dyn Any) + Send + Sync>>>,
     sinks: [Sender<(K, BoxedAny)>; WORKER_COUNT],
+    event_counter: RelaxedCounter,
 }
 
 impl<K: EventKey> Default for EventBus<K> {
     fn default() -> EventBus<K> {
-        let (inner_event_bus, source): (
+        let (inner_event_bus, mut sources): (
             InnerEventBus<K>,
-            Receiver<(K, BoxedAny)>,
+            Vec<Receiver<(K, BoxedAny)>>,
         ) = InnerEventBus::create();
 
         let inner_event_bus_arc = Arc::new(inner_event_bus);
 
-        let worker_count = 8;
         let pool = ThreadPoolBuilder::new()
-            .num_threads(worker_count)
+            .num_threads(WORKER_COUNT)
             .build()
             .unwrap();
 
-        for _ in 0..worker_count {
-            let copied_source = source.clone();
+        sources.into_iter().enumerate().for_each(|i, source| {
             let copied_event_bus = inner_event_bus_arc.clone();
 
             pool.spawn(move || loop {
-                match copied_source.recv() {
+                match source.recv() {
                     Ok((key, arg)) => {
-                        info!("Firing {:?} - {:?}", key, arg);
+                        debug!("Firing {:?} - {:?}", key, arg);
 
                         copied_event_bus.evaluate(key, arg)
                     }
-                    Err(e) => warn!("Receive from channel failed: {:?}", e),
+                    Err(e) => info!("Eventbus channel {} closed", i),
                 };
             })
-        }
+        });
+
         EventBus {
             inner: inner_event_bus_arc,
         }
@@ -66,16 +66,26 @@ impl<K: EventKey> Default for EventBus<K> {
 }
 
 impl<K: EventKey> InnerEventBus<K> {
-    fn create() -> (InnerEventBus<K>, Receiver<(K, BoxedAny)>) {
-        let (sink, source): (Sender<(K, BoxedAny)>, Receiver<(K, BoxedAny)>) =
-            crossbeam_channel::unbounded();
+    fn create() -> (InnerEventBus<K>, Vec<Receiver<(K, BoxedAny)>>) {
+        let mut sinks: Vec<Sender<(K, BoxedAny)>> = Vec::new();
+        let mut sources: Vec<Receiver<(K, BoxedAny)>> = Vec::new();
+
+        for _ in 0..WORKER_COUNT {
+            let (sink, source): (
+                Sender<(K, BoxedAny)>,
+                Receiver<(K, BoxedAny)>,
+            ) = mpsc::channel();
+            sinks.append(sink);
+            sources.append(source);
+        }
 
         (
             InnerEventBus {
                 listeners: CHashMap::default(),
-                sink: sink,
+                sinks: sinks.as_slice().try_into().expect("Vec->Array fail :("),
+                event_counter: RelaxedCounter::new(0),
             },
-            source,
+            sources,
         )
     }
 

@@ -892,6 +892,21 @@ lazy_static! {
                         .build().unwrap(),
                 ])
                 .build().unwrap(),
+
+            ImplDefBuilder::default()
+                .trait_name("HasMutableSize")
+                .trait_import(Some("crate::ui::HasMutableSize"))
+                .build().unwrap(),
+
+            ImplDefBuilder::default()
+                .trait_name("HasMutableLocation")
+                .trait_import(Some("crate::ui::HasMutableLocation"))
+                .build().unwrap(),
+
+            ImplDefBuilder::default()
+                .trait_name("HasMutableVisibility")
+                .trait_import(Some("crate::ui::HasMutableVisibility"))
+                .build().unwrap()
         ])
         .methods(vec![
             MethodDefBuilder::default()
@@ -901,7 +916,68 @@ lazy_static! {
                     .build().unwrap()))
                 .return_type(Some(DataType::swift_generic(Some("S"),
                     DataType::swift_struct("Sprite", None))))
-                .build().unwrap()
+                .build().unwrap(),
+
+          MethodDefBuilder::default()
+              .name("set_size_animated")
+              .arguments(vec![
+
+                ArgumentDefBuilder::default()
+                    .name("width")
+                    .data_type(DOUBLE.clone())
+                    .build().unwrap(),
+
+                ArgumentDefBuilder::default()
+                    .name("height")
+                    .data_type(DOUBLE.clone())
+                    .build().unwrap(),
+
+                ArgumentDefBuilder::default()
+                    .name("duration_seconds")
+                    .data_type(DOUBLE.clone())
+                    .build().unwrap()
+              ])
+              .impl_block(Some(ImplBlockDefBuilder::default()
+                  .trait_name("HasMutableSize")
+                  .build().unwrap()))
+              .build().unwrap(),
+
+          MethodDefBuilder::default()
+              .name("set_location_animated")
+              .arguments(vec![
+
+                ArgumentDefBuilder::default()
+                    .name("left")
+                    .data_type(DOUBLE.clone())
+                    .build().unwrap(),
+
+                ArgumentDefBuilder::default()
+                    .name("top")
+                    .data_type(DOUBLE.clone())
+                    .build().unwrap(),
+
+                ArgumentDefBuilder::default()
+                    .name("duration_seconds")
+                    .data_type(DOUBLE.clone())
+                    .build().unwrap()
+              ])
+              .impl_block(Some(ImplBlockDefBuilder::default()
+                  .trait_name("HasMutableLocation")
+                  .build().unwrap()))
+              .build().unwrap(),
+
+          MethodDefBuilder::default()
+              .name("set_visible")
+              .arguments(vec![
+                ArgumentDefBuilder::default()
+                    .name("visible")
+                    .data_type(BOOLEAN.clone())
+                    .build().unwrap()
+              ])
+              .impl_block(Some(ImplBlockDefBuilder::default()
+                  .trait_name("HasMutableVisibility")
+                  .build().unwrap()))
+              .build().unwrap()
             ])
         .build().unwrap(),
 

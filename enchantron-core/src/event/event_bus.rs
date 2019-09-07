@@ -1,13 +1,17 @@
 use atomic_counter::RelaxedCounter;
 use std::any::Any;
 use std::hash::Hash;
-use std::sync::mpsc;
-use std::sync::mpsc::{Receiver, Sender};
-use std::sync::{Arc, Weak};
+use std::collections::hash_map::DefaultHasher;
+use std::convert::TryInto;
+
+use std::sync::{Arc};
 
 use super::{Event, EventKey, EventListener, ListenerRegistration};
 
 use crate::util::SimpleSlotMap;
+
+use crossbeam_channel;
+use crossbeam_channel::{Sender, Receiver};
 
 use chashmap::CHashMap;
 use rayon::ThreadPoolBuilder;
@@ -21,6 +25,7 @@ type BoxedAny = Box<dyn Any + Send + Sync + 'static>;
 #[derive(Clone)]
 pub struct EventBus<K: EventKey> {
     inner: Arc<InnerEventBus<K>>,
+    hasher: DefaultHasher
 }
 
 /// Impl details for event bus
@@ -44,7 +49,7 @@ impl<K: EventKey> Default for EventBus<K> {
             .build()
             .unwrap();
 
-        sources.into_iter().enumerate().for_each(|i, source| {
+        sources.into_iter().enumerate().for_each(|(i, source)| {
             let copied_event_bus = inner_event_bus_arc.clone();
 
             pool.spawn(move || loop {
@@ -61,6 +66,7 @@ impl<K: EventKey> Default for EventBus<K> {
 
         EventBus {
             inner: inner_event_bus_arc,
+            hasher: DefaultHasher::new()
         }
     }
 }
@@ -74,9 +80,9 @@ impl<K: EventKey> InnerEventBus<K> {
             let (sink, source): (
                 Sender<(K, BoxedAny)>,
                 Receiver<(K, BoxedAny)>,
-            ) = mpsc::channel();
-            sinks.append(sink);
-            sources.append(source);
+            ) = crossbeam_channel::unbounded();
+            sinks.push(sink);
+            sources.push(source);
         }
 
         (

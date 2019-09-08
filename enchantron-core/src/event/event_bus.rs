@@ -1,6 +1,6 @@
 use std::any::Any;
 use std::hash::{Hash, Hasher};
-
+use std::thread;
 use std::sync::Arc;
 
 use super::{Event, EventKey, EventListener, ListenerRegistration};
@@ -35,7 +35,7 @@ struct InnerEventBus<K: EventKey> {
 
 impl<K: EventKey> Default for EventBus<K> {
     fn default() -> EventBus<K> {
-        let (inner_event_bus, mut sources): (
+        let (inner_event_bus, sources): (
             InnerEventBus<K>,
             Vec<Receiver<(K, BoxedAny)>>,
         ) = InnerEventBus::create();
@@ -60,7 +60,7 @@ impl<K: EventKey> Default for EventBus<K> {
                         copied_event_bus.evaluate(key, arg);
                         debug!("Fired {:?}", key);
                     }
-                    Err(e) => info!("Eventbus channel {} closed", i),
+                    Err(_) => info!("Eventbus channel {} closed", i),
                 };
             })
         });
@@ -97,8 +97,9 @@ impl<K: EventKey> InnerEventBus<K> {
 
     fn evaluate(&self, key: K, arg: BoxedAny) {
         debug!("Evaluating");
+
         if let Some(handlers) = self.listeners.get(&key) {
-            handlers.iter().(|func| func(&*arg)); // <- Note the deref before borrow
+            handlers.iter().for_each(|func| thread::spawn( || func(&*arg) )); // <- Note the deref before borrow
         } else {
             info!("No handlers found for event key: {:?}", key);
         }

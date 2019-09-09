@@ -1,6 +1,6 @@
 use crate::event::{
-    EnchantronEvent, EventBus, EventListener, ListenerRegistration,
-    LoadResources,
+    EnchantronEvent, EventBus, EventListener, HasListenerRegistrations,
+    ListenerRegistration, LoadResources,
 };
 
 use std::sync::{Arc, Mutex};
@@ -16,7 +16,7 @@ where
 {
     view: V,
     system_view: Arc<S>,
-    resources_sink: Box<Fn(RuntimeResources<S>) + Send + Sync>,
+    resources_sink: Box<dyn Fn(RuntimeResources<S>) + Send + Sync>,
     event_bus: EventBus<EnchantronEvent>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
 }
@@ -46,23 +46,33 @@ where
     }
 }
 
+impl<V, S> HasListenerRegistrations for LoadingPresenter<V, S>
+where
+    V: LoadingView,
+    S: SystemView,
+{
+    fn add_listener_registration(
+        &self,
+        listener_registration: ListenerRegistration,
+    ) {
+        if let Ok(mut locked_list) = self.listener_registrations.lock() {
+            info!("Adding listener registration to loading presenter");
+            locked_list.push(listener_registration);
+        } else {
+            error!("Failed to add listener registration");
+        }
+    }
+}
+
 impl<V, S> LoadingPresenter<V, S>
 where
     V: LoadingView,
     S: SystemView,
 {
-    fn add_listener_registration(&self, lr: ListenerRegistration) {
-        if let Ok(mut locked_list) = self.listener_registrations.lock() {
-            locked_list.push(lr);
-        }
-    }
-
     fn bind(self) -> Arc<LoadingPresenter<V, S>> {
         let result = Arc::new(self);
 
-        result.add_listener_registration(
-            result.event_bus.register(LoadResources::default(), &result),
-        );
+        result.event_bus.register(LoadResources::default(), &result);
 
         result
             .view
@@ -78,7 +88,7 @@ where
         view: V,
         system_view: Arc<S>,
         event_bus: EventBus<EnchantronEvent>,
-        resources_sink: Box<Fn(RuntimeResources<S>) + Send + Sync>,
+        resources_sink: Box<dyn Fn(RuntimeResources<S>) + Send + Sync>,
     ) -> Arc<LoadingPresenter<V, S>> {
         LoadingPresenter {
             view: view,

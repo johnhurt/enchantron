@@ -1,7 +1,7 @@
 use std::any::Any;
 use std::hash::{Hash, Hasher};
-use std::thread;
 use std::sync::Arc;
+use std::thread;
 
 use super::{Event, EventKey, EventListener, ListenerRegistration};
 
@@ -13,7 +13,8 @@ use crossbeam_channel::{Receiver, Sender};
 use fasthash::MetroHasher;
 
 use chashmap::CHashMap;
-use rayon::ThreadPoolBuilder;
+use rayon;
+use rayon::{ThreadPool, ThreadPoolBuilder};
 
 const WORKER_COUNT: usize = 8;
 
@@ -31,6 +32,7 @@ struct InnerEventBus<K: EventKey> {
     listeners: CHashMap<K, SimpleSlotMap<Box<dyn Fn(&dyn Any) + Send + Sync>>>,
     sinks: Vec<Sender<(K, BoxedAny)>>,
     event_counter: RelaxedCounter,
+    registration_thread_pool: ThreadPool,
 }
 
 impl<K: EventKey> Default for EventBus<K> {
@@ -90,6 +92,10 @@ impl<K: EventKey> InnerEventBus<K> {
                 listeners: CHashMap::default(),
                 sinks: sinks,
                 event_counter: RelaxedCounter::new(0),
+                registration_thread_pool: ThreadPoolBuilder::new()
+                    .num_threads(WORKER_COUNT)
+                    .build()
+                    .unwrap(),
             },
             sources,
         )
@@ -99,7 +105,7 @@ impl<K: EventKey> InnerEventBus<K> {
         debug!("Evaluating");
 
         if let Some(handlers) = self.listeners.get(&key) {
-            handlers.iter().for_each(|func| thread::spawn( || func(&*arg) )); // <- Note the deref before borrow
+            handlers.iter().for_each(|func| func(&*arg)); // <- Note the deref before borrow
         } else {
             info!("No handlers found for event key: {:?}", key);
         }
@@ -120,69 +126,82 @@ impl<K: EventKey> EventBus<K> {
         &self,
         event: E,
         listener_arc: &Arc<H>,
-    ) -> ListenerRegistration {
-        let event_key = event.get_event_key();
+    ) {
+        let listener_for_registration = listener_arc.clone();
         let listener = Arc::downgrade(listener_arc);
-
-        let mut slot_map_key_opt: Option<usize> = None;
-
-        {
-            let slot_map_key_opt_ref = &mut slot_map_key_opt;
-
-            info!("Adding a listener for {:?}", &event_key);
-
-            self.inner.listeners.alter(event_key, move | listeners_opt | {
-                let mut listeners = match listeners_opt {
-                    None => SimpleSlotMap::new(),
-                    Some(existing_listeners) => existing_listeners
-                };
-
-                *slot_map_key_opt_ref = Some(listeners.insert( Box::new(move |arg| {
-                    if let Some(handler) = listener.upgrade() {
-
-                        if let Some(arg) = arg.downcast_ref::<E>() {
-                            handler.on_event(arg);
-                        }
-                        else {
-                            error!("Unable to downcast any ref to correct event type");
-                            panic!("Unable to downcast any ref to correct event type");
-                        };
-                    }
-                })));
-
-                info!("Got key {:?}", *slot_map_key_opt_ref);
-                info!("There are now {} listeners for {:?} Events", listeners.len(), &event_key);
-
-                Some(listeners)
-            });
-        }
-
-        info!("Now the key is {:?}", slot_map_key_opt);
-
         let inner_clone = self.inner.clone();
-        let slot_map_key = slot_map_key_opt.unwrap_or_else(|| {
-            error!("Failed to set slot map key when adding event listener");
-            panic!("Failed to set slot map key when adding event listener");
+
+        self.inner.registration_thread_pool.spawn(move || {
+            let event_key = event.get_event_key();
+            let mut slot_map_key_opt: Option<usize> = None;
+
+            {
+                let slot_map_key_opt_ref = &mut slot_map_key_opt;
+
+                info!("Adding a listener for {:?}", &event_key);
+
+                inner_clone.listeners.alter(event_key, move | listeners_opt | {
+                    let mut listeners = match listeners_opt {
+                        None => SimpleSlotMap::new(),
+                        Some(existing_listeners) => existing_listeners
+                    };
+
+                    *slot_map_key_opt_ref = Some(listeners.insert( Box::new(move |arg| {
+                        if let Some(handler) = listener.upgrade() {
+
+                            if let Some(arg) = arg.downcast_ref::<E>() {
+                                handler.on_event(arg);
+                            }
+                            else {
+                                error!("Unable to downcast any ref to correct event type");
+                                panic!("Unable to downcast any ref to correct event type");
+                            };
+                        }
+                    })));
+
+                    info!("Got key {:?}", *slot_map_key_opt_ref);
+                    info!("There are now {} listeners for {:?} Events", listeners.len(), &event_key);
+
+                    Some(listeners)
+                });
+            }
+
+            info!("Now the key is {:?}", slot_map_key_opt);
+
+            let slot_map_key = slot_map_key_opt.unwrap_or_else(|| {
+                error!("Failed to set slot map key when adding event listener");
+                panic!("Failed to set slot map key when adding event listener");
+            });
+
+            // Create and return the registration
+            let lr = ListenerRegistration::new(Box::new(move || {
+                info!("Deregistering listener for event {:?}", &event_key);
+
+                let another_inner_clone = inner_clone.clone();
+
+                inner_clone.registration_thread_pool.spawn(move || {
+
+                    another_inner_clone.listeners.alter(event_key, |listeners_opt| {
+                        match listeners_opt {
+                            None => {
+                                warn!(
+                                    "Attempted to remove a listener from an empty map"
+                                );
+                                None
+                            }
+                            Some(mut listeners) => {
+                                let _ = listeners.remove(slot_map_key);
+                                Some(listeners)
+                            }
+                        }
+                    })
+                });
+            }));
+
+            listener_for_registration.add_listener_registration(lr);
         });
 
-        // Create and return the registration
-        ListenerRegistration::new(Box::new(move || {
-            info!("Deregistering listener for event {:?}", &event_key);
-            inner_clone.listeners.alter(event_key, |listeners_opt| {
-                match listeners_opt {
-                    None => {
-                        warn!(
-                            "Attempted to remove a listener from an empty map"
-                        );
-                        None
-                    }
-                    Some(mut listeners) => {
-                        let _ = listeners.remove(slot_map_key);
-                        Some(listeners)
-                    }
-                }
-            })
-        }))
+        debug!("Finished registering blah");
     }
 
     /// Post the given event to the event bus.  This event will be distributed
@@ -199,7 +218,7 @@ impl<K: EventKey> EventBus<K> {
         let mut h: MetroHasher = Default::default();
         partition_key.hash(&mut h);
 
-        let sink_index = 5; // (h.finish() as usize) % WORKER_COUNT;
+        let sink_index = (h.finish() as usize) % WORKER_COUNT;
 
         debug!("Posting event {:?} on sink {}", event, sink_index);
 

@@ -1,6 +1,3 @@
-use std::any::Any;
-use std::hash::Hash;
-
 use super::Event;
 
 macro_rules! define_events {

@@ -1,7 +1,7 @@
-use super::{Event, EventKey};
+use super::{Event, EventKey, HasListenerRegistrations};
 
 pub trait EventListener<K: EventKey, E: Event<K>>:
-    Sync + Send + 'static
+    HasListenerRegistrations + Sync + Send + 'static
 {
     fn on_event(&self, event: &E);
 }

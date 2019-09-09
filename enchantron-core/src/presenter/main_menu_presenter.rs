@@ -5,12 +5,13 @@ use crate::ui::{
 };
 
 use crate::event::{
-    EnchantronEvent, EventBus, EventListener, ListenerRegistration, StartGame,
+    EnchantronEvent, EventBus, EventListener, HasListenerRegistrations,
+    ListenerRegistration, StartGame,
 };
 
 pub struct MainMenuPresenter<V: MainMenuView> {
     view: V,
-    handler_registrations: Mutex<Vec<Box<HandlerRegistration>>>,
+    handler_registrations: Mutex<Vec<Box<dyn HandlerRegistration>>>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
     event_bus: EventBus<EnchantronEvent>,
 }
@@ -23,6 +24,23 @@ impl<V: MainMenuView> EventListener<EnchantronEvent, StartGame>
     }
 }
 
+impl<V> HasListenerRegistrations for MainMenuPresenter<V>
+where
+    V: MainMenuView,
+{
+    fn add_listener_registration(
+        &self,
+        listener_registration: ListenerRegistration,
+    ) {
+        if let Ok(mut locked_list) = self.listener_registrations.lock() {
+            info!("Adding listener registration to loading presenter");
+            locked_list.push(listener_registration);
+        } else {
+            error!("Failed to add listener registration");
+        }
+    }
+}
+
 impl<V: MainMenuView> MainMenuPresenter<V> {
     fn add_listener_registration(&self, lr: ListenerRegistration) {
         if let Ok(mut locked_list) = self.listener_registrations.lock() {
@@ -30,7 +48,7 @@ impl<V: MainMenuView> MainMenuPresenter<V> {
         }
     }
 
-    fn add_handler_registration(&self, hr: Box<HandlerRegistration>) {
+    fn add_handler_registration(&self, hr: Box<dyn HandlerRegistration>) {
         if let Ok(mut locked_list) = self.handler_registrations.lock() {
             locked_list.push(hr);
         }
@@ -49,9 +67,7 @@ impl<V: MainMenuView> MainMenuPresenter<V> {
 
         let result = Arc::new(self);
 
-        result.add_listener_registration(
-            result.event_bus.register(StartGame::default(), &result),
-        );
+        result.event_bus.register(StartGame::default(), &result);
 
         result
             .view

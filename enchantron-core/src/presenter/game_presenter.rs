@@ -3,7 +3,8 @@ use std::sync::{Arc, Mutex, RwLock, RwLockReadGuard};
 use crate::view_types::ViewTypes;
 
 use crate::event::{
-    EnchantronEvent, EventBus, EventListener, Layout, ListenerRegistration,
+    EnchantronEvent, EventBus, EventListener, HasListenerRegistrations, Layout,
+    ListenerRegistration,
 };
 
 use crate::model::{Point, Rect, Size};
@@ -24,9 +25,26 @@ where
     event_bus: EventBus<EnchantronEvent>,
     runtime_resources: Arc<RuntimeResources<T::SystemView>>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
-    handler_registrations: Mutex<Vec<Box<HandlerRegistration>>>,
+    handler_registrations: Mutex<Vec<Box<dyn HandlerRegistration>>>,
 
     display_state: RwLock<GameDisplayState<T::Sprite>>,
+}
+
+impl<T> HasListenerRegistrations for GamePresenter<T>
+where
+    T: ViewTypes,
+{
+    fn add_listener_registration(
+        &self,
+        listener_registration: ListenerRegistration,
+    ) {
+        if let Ok(mut locked_list) = self.listener_registrations.lock() {
+            info!("Adding listener registration to Game Presenter");
+            locked_list.push(listener_registration);
+        } else {
+            error!("Failed to add listener registration to Game Presenter");
+        }
+    }
 }
 
 impl<T> EventListener<EnchantronEvent, Layout> for GamePresenter<T>
@@ -62,13 +80,7 @@ where
         })
     }
 
-    fn add_listener_registration(&self, lr: ListenerRegistration) {
-        if let Ok(mut locked_list) = self.listener_registrations.lock() {
-            locked_list.push(lr);
-        }
-    }
-
-    fn add_handler_registration(&self, hr: Box<HandlerRegistration>) {
+    fn add_handler_registration(&self, hr: Box<dyn HandlerRegistration>) {
         if let Ok(mut locked_list) = self.handler_registrations.lock() {
             locked_list.push(hr);
         }
@@ -122,9 +134,7 @@ where
             )),
         ));
 
-        result.add_listener_registration(
-            result.event_bus.register(Layout::default(), &result),
-        );
+        result.event_bus.register(Layout::default(), &result);
 
         result
     }

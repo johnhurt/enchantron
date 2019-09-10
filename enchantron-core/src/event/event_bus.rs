@@ -1,7 +1,7 @@
 use std::any::Any;
+use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
-use std::thread;
 
 use super::{Event, EventKey, EventListener, ListenerRegistration};
 
@@ -10,7 +10,6 @@ use crate::util::SimpleSlotMap;
 use atomic_counter::{AtomicCounter, RelaxedCounter};
 use crossbeam_channel;
 use crossbeam_channel::{Receiver, Sender};
-use fasthash::MetroHasher;
 
 use chashmap::CHashMap;
 use rayon;
@@ -215,7 +214,7 @@ impl<K: EventKey> EventBus<K> {
         event: E,
         partition_key: P,
     ) {
-        let mut h: MetroHasher = Default::default();
+        let mut h: DefaultHasher = Default::default();
         partition_key.hash(&mut h);
 
         let sink_index = (h.finish() as usize) % WORKER_COUNT;

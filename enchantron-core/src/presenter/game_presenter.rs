@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex, RwLock, RwLockReadGuard};
+use std::sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::view_types::ViewTypes;
 
@@ -7,14 +7,14 @@ use crate::event::{
     ListenerRegistration,
 };
 
-use crate::model::{Point, Rect, Size};
+use crate::model::{Point, Size};
 
-use crate::native::{HasIntSize, RuntimeResources, SystemView};
+use crate::native::RuntimeResources;
 
 use crate::ui::{
-    DragHandler, GameDisplayState, GameView, HandlerRegistration,
+    DragHandler, DragState, GameDisplayState, HandlerRegistration,
     HasDragHandlers, HasLayoutHandlers, HasMutableLocation, HasMutableSize,
-    HasMutableVisibility, HasViewport, LayoutHandler, Sprite, SpriteSource,
+    HasMutableVisibility, HasViewport, LayoutHandler, Sprite,
 };
 
 pub struct GamePresenter<T>
@@ -54,13 +54,9 @@ where
     fn on_event(&self, event: &Layout) {
         info!("Game view resized to : {}, {}", event.width, event.height);
 
-        let display_state = self.get_display_state();
-        let sprite = &display_state.grass;
-
-        sprite.set_location(
-            event.width as f64 / 2. - 32.,
-            event.height as f64 / 2. - 32.,
-        );
+        let mut display_state = self.get_display_state_mut();
+        let new_size = Size::new(event.width as f64, event.height as f64);
+        display_state.viewport_rect.size = new_size;
     }
 }
 
@@ -80,17 +76,64 @@ where
         })
     }
 
+    ///
+    /// Get a write-lock on the game display state
+    ///
+    fn get_display_state_mut(
+        &self,
+    ) -> RwLockWriteGuard<GameDisplayState<T::Sprite>> {
+        self.display_state.write().unwrap_or_else(|err| {
+            error!("Failed to get write lock on display state: {:?}", err);
+            panic!("Failed to get a write lock on the display state");
+        })
+    }
+
     fn add_handler_registration(&self, hr: Box<dyn HandlerRegistration>) {
         if let Ok(mut locked_list) = self.handler_registrations.lock() {
             locked_list.push(hr);
         }
     }
 
-    fn on_drag_start(&self, drag_point: &Point) {}
+    fn on_drag_start(&self, drag_point: &Point) {
+        debug!("Drag started {:?}", drag_point);
 
-    fn on_drag_move(&self, drag_x: f64, drag_y: f64) {}
+        let mut display_state = self.get_display_state_mut();
 
-    fn on_drag_end(&self) {}
+        display_state.drag_state = Option::Some(DragState::new(
+            drag_point.clone(),
+            display_state.viewport_rect.clone(),
+        ));
+    }
+
+    fn on_drag_move(&self, drag_x: f64, drag_y: f64) {
+        debug!("Drag moved ({}, {})", drag_x, drag_y);
+
+        let mut display_state = self.get_display_state_mut();
+
+        let new_top_left =
+            if let Some(mut drag_state) = display_state.drag_state.as_ref() {
+                Point::new(
+                    drag_state.start_viewport_rect.top_left.x - drag_x
+                        + drag_state.start_point.x,
+                    drag_state.start_viewport_rect.top_left.y - drag_y
+                        + drag_state.start_point.y,
+                )
+            } else {
+                error!("Invalid drag state found");
+                panic!("Invalid drag state found");
+            };
+
+        self.view
+            .get_viewport()
+            .set_location(new_top_left.x, new_top_left.y);
+
+        display_state.viewport_rect.top_left = new_top_left;
+    }
+
+    fn on_drag_end(&self) {
+        debug!("Drag ended");
+        self.get_display_state_mut().drag_state = Option::None;
+    }
 
     /// Initialize the display state with the initial game state
     fn initialize_game_state(this: Arc<GamePresenter<T>>) {
@@ -144,7 +187,7 @@ where
         event_bus: EventBus<EnchantronEvent>,
         runtime_resources: Arc<RuntimeResources<T::SystemView>>,
     ) -> Arc<GamePresenter<T>> {
-        let display_state = GameDisplayState::new(&view.get_viewport());
+        let display_state = GameDisplayState::new(&view);
 
         let result = GamePresenter {
             view: view,

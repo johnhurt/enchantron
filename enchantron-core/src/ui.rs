@@ -1,6 +1,7 @@
 pub use self::button::Button;
 pub use self::click_handler::ClickHandler;
 pub use self::drag_handler::DragHandler;
+pub use self::drag_state::DragState;
 pub use self::handler_registration::HandlerRegistration;
 pub use self::has_click_handlers::HasClickHandlers;
 pub use self::has_drag_handlers::HasDragHandlers;
@@ -26,6 +27,7 @@ pub use self::loading_view::LoadingView;
 pub use self::main_menu_view::MainMenuView;
 
 mod button;
+mod drag_state;
 mod handler_registration;
 mod has_click_handlers;
 mod has_drag_handlers;

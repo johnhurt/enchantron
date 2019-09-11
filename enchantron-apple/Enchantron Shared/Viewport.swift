@@ -12,6 +12,8 @@ import SpriteKit
 public class Viewport : SKCameraNode {
     
     let container = SKNode()
+    var size = CGSize(width: 0, height: 0)
+    var zeroPosition = CGPoint(x: 0, y: 0)
     
     public override init() {
         super.init()
@@ -27,12 +29,20 @@ public class Viewport : SKCameraNode {
         self.xScale = 1.0;
         self.yScale = 1.0;
         self.container.removeAllActions()
+        self.zeroPosition = CGPoint(x: size.width / 2.0 , y: -size.height / 2.0)
+        self.position = self.zeroPosition
         resize(size: size)
     }
     
     func resize(size: CGSize) {
-        self.position = CGPoint(x: size.width / 2.0 , y: -size.height / 2.0)
         self.container.position = CGPoint(x: -size.width / 2.0, y : size.height / 2.0)
+        let positionShift = CGPoint(x: (self.size.width - size.width) / 2.0, y: (self.size.height - size.height) / 2.0 )
+        self.zeroPosition = CGPoint(x: self.zeroPosition.x - positionShift.x,
+                                    y: self.zeroPosition.y + positionShift.y)
+        let newPosition = CGPoint(x: self.position.x - positionShift.x,
+                                  y: self.position.y + positionShift.y);
+        self.size = size
+        self.position = newPosition
     }
     
     func setVisible(_ visible: Bool) {
@@ -55,7 +65,7 @@ public class Viewport : SKCameraNode {
     
     func setLocationAnimated(_ left: Float64, _ top: Float64, _ durationSeconds: Float64) {
         let move = SKAction.move(
-            to: CGPoint(x: CGFloat(left), y: -CGFloat(top)),
+            to: CGPoint(x: CGFloat(left) + zeroPosition.x, y: -CGFloat(top) + zeroPosition.y),
             duration: durationSeconds)
         
         if durationSeconds > 0.0 {

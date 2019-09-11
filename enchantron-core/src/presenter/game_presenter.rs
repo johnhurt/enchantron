@@ -7,13 +7,13 @@ use crate::event::{
     ListenerRegistration,
 };
 
-use crate::model::{Point, Size};
+use crate::model::{Point, Rect, Size};
 
 use crate::native::RuntimeResources;
 
 use crate::ui::{
     DragHandler, DragState, GameDisplayState, HandlerRegistration,
-    HasDragHandlers, HasLayoutHandlers, HasMutableLocation, HasMutableSize,
+    HasDragHandlers, HasLayoutHandlers, HasMutableLocation,
     HasMutableVisibility, HasViewport, LayoutHandler, Sprite,
 };
 
@@ -54,9 +54,18 @@ where
     fn on_event(&self, event: &Layout) {
         info!("Game view resized to : {}, {}", event.width, event.height);
 
-        let mut display_state = self.get_display_state_mut();
         let new_size = Size::new(event.width as f64, event.height as f64);
-        display_state.viewport_rect.size = new_size;
+
+        let mut display_state = self.get_display_state_mut();
+        display_state.layout(new_size);
+
+        self.view.get_viewport().set_location_point(
+            &display_state
+                .viewport_rect
+                .as_ref()
+                .map(|rect| &rect.top_left)
+                .expect("Blah"),
+        );
     }
 }
 
@@ -101,7 +110,10 @@ where
 
         display_state.drag_state = Option::Some(DragState::new(
             drag_point.clone(),
-            display_state.viewport_rect.clone(),
+            display_state
+                .viewport_rect
+                .clone()
+                .unwrap_or_else(|| Rect::default()),
         ));
     }
 
@@ -111,7 +123,7 @@ where
         let mut display_state = self.get_display_state_mut();
 
         let new_top_left =
-            if let Some(mut drag_state) = display_state.drag_state.as_ref() {
+            if let Some(drag_state) = display_state.drag_state.as_ref() {
                 Point::new(
                     drag_state.start_viewport_rect.top_left.x - drag_x
                         + drag_state.start_point.x,
@@ -127,7 +139,9 @@ where
             .get_viewport()
             .set_location(new_top_left.x, new_top_left.y);
 
-        display_state.viewport_rect.top_left = new_top_left;
+        if let Some(ref mut viewport_rect) = display_state.viewport_rect {
+            viewport_rect.top_left = new_top_left;
+        }
     }
 
     fn on_drag_end(&self) {
@@ -140,7 +154,7 @@ where
         let sprite = &this.get_display_state().grass;
         sprite.set_texture(this.runtime_resources.textures().overworld.grass());
         sprite.set_visible(true);
-        sprite.set_size(64., 64.);
+        //sprite.set_size(64., 64.);
     }
 
     fn bind(self) -> Arc<GamePresenter<T>> {

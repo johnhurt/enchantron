@@ -20,9 +20,6 @@ class GameScene: SKScene {
         
         // Set the scale mode to scale to fit the window
         scene.size = size
-        //scene.scaleMode = .aspectFill
-        
-        //scene.anchorPoint = CGPoint(x: 0.0, y: 1.0)
         
         return scene
     }

@@ -13,6 +13,7 @@ class BaseView: SKNode {
     
     private var dragHandlers: [DragHandler] = []
     private var layoutHandlers: [LayoutHandler] = []
+    private var magnifyHandlers: [MagnifyHandler] = []
     
     private var presenter : AnyObject?
     private var ctx : ApplicationContext?
@@ -81,6 +82,17 @@ class BaseView: SKNode {
         
     }
     
+    func addMagnifyHandler(_ handler: MagnifyHandler) -> HandlerRegistration {
+        DispatchQueue.main.sync {
+            self.magnifyHandlers.append(handler)
+        }
+        
+        return HandlerRegistration(deregister_callback: {
+            self.removeHandler(handler)
+        })
+        
+    }
+    
     func removeHandler(_ handler: LayoutHandler) {
         DispatchQueue.main.sync {
             if let index = self.layoutHandlers.firstIndex(of: handler) {
@@ -107,12 +119,25 @@ class BaseView: SKNode {
         }
     }
     
+    func removeHandler(_ handler: MagnifyHandler) {
+        DispatchQueue.main.sync {
+            if let index = self.magnifyHandlers.firstIndex(of: handler) {
+                self.magnifyHandlers.remove(at: index)
+            }
+        }
+    }
+    
     func layout(size: CGSize) {
         layoutHandlers.forEach { (handler) in
             handler.onLayout(width: Int64(size.width), height: Int64(size.height))
         }
     }
     
+    func magnify(_ scaleChangeAdditive: CGFloat) {
+        magnifyHandlers.forEach { (handler) in
+            handler.onMagnify(scaleChangeAdditive: Float64(scaleChangeAdditive))
+        }
+    }
 }
 
 

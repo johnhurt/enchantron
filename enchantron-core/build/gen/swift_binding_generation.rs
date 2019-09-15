@@ -170,6 +170,24 @@ lazy_static! {
         ])
         .build().unwrap(),
 
+
+    TypeDefBuilder::default()
+        .name("MagnifyHandler")
+        .rust_import(Some("crate::ui::MagnifyHandler"))
+        .rust_owned(true)
+        .methods(vec![
+            MethodDefBuilder::default()
+                .name("on_magnify")
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("scale_change_additive")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap()
+                ])
+                .build().unwrap()
+        ])
+        .build().unwrap(),
+
     TypeDefBuilder::default()
         .name("DragHandler")
         .rust_import(Some("crate::ui::DragHandler"))
@@ -784,6 +802,16 @@ lazy_static! {
                 ])
                 .build().unwrap(),
             ImplDefBuilder::default()
+                .trait_name("HasMagnifyHandlers")
+                .trait_import(Some("crate::ui::HasMagnifyHandlers"))
+                .generics(vec![
+                    GenericDefBuilder::default()
+                        .symbol(Some("R"))
+                        .bound_type("HandlerRegistration")
+                        .build().unwrap()
+                ])
+                .build().unwrap(),
+            ImplDefBuilder::default()
                 .trait_name("HasDragHandlers")
                 .trait_import(Some("crate::ui::HasDragHandlers"))
                 .generics(vec![
@@ -851,6 +879,23 @@ lazy_static! {
                 .build().unwrap(),
 
             MethodDefBuilder::default()
+                .name("add_magnify_handler")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("HasMagnifyHandlers")
+                    .build().unwrap()))
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("magnify_handler")
+                        .data_type(DataType::rust_struct(
+                            "MagnifyHandler",
+                            Some("ui::MagnifyHandler")))
+                        .build().unwrap()
+                ])
+                .return_type(Some(DataType::swift_generic(Some("R"),
+                    DataType::swift_struct("HandlerRegistration", None))))
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
                 .name("create_sprite")
                 .impl_block(Some(ImplBlockDefBuilder::default()
                     .trait_name("ui::SpriteSource")
@@ -894,8 +939,8 @@ lazy_static! {
                 .build().unwrap(),
 
             ImplDefBuilder::default()
-                .trait_name("HasMutableSize")
-                .trait_import(Some("crate::ui::HasMutableSize"))
+                .trait_name("HasMutableScale")
+                .trait_import(Some("crate::ui::HasMutableScale"))
                 .build().unwrap(),
 
             ImplDefBuilder::default()
@@ -919,16 +964,11 @@ lazy_static! {
                 .build().unwrap(),
 
           MethodDefBuilder::default()
-              .name("set_size_animated")
+              .name("set_scale_animated")
               .arguments(vec![
 
                 ArgumentDefBuilder::default()
-                    .name("width")
-                    .data_type(DOUBLE.clone())
-                    .build().unwrap(),
-
-                ArgumentDefBuilder::default()
-                    .name("height")
+                    .name("scale")
                     .data_type(DOUBLE.clone())
                     .build().unwrap(),
 
@@ -938,7 +978,7 @@ lazy_static! {
                     .build().unwrap()
               ])
               .impl_block(Some(ImplBlockDefBuilder::default()
-                  .trait_name("HasMutableSize")
+                  .trait_name("HasMutableScale")
                   .build().unwrap()))
               .build().unwrap(),
 

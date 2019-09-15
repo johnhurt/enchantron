@@ -9,6 +9,7 @@ where
     pub grass: S,
     pub viewport_rect: Option<Rect>,
     pub drag_state: Option<DragState>,
+    pub viewport_scale: f64,
 }
 
 impl<T, S> GameDisplayState<S>
@@ -23,6 +24,7 @@ where
             grass: sprite_source.create_sprite(),
             drag_state: Default::default(),
             viewport_rect: Default::default(),
+            viewport_scale: 1.,
         }
     }
 
@@ -46,5 +48,11 @@ where
             viewport_rect.size = new_size;
             self.viewport_rect = Some(viewport_rect);
         }
+    }
+
+    /// change the scale of the area shown by the viewport by the given
+    /// additive amount
+    pub fn change_scale_additive(&mut self, scale_change_additive: f64) {
+        self.viewport_scale *= 1. - scale_change_additive;
     }
 }

@@ -148,6 +148,12 @@ extension GameScene {
     
     #if os(OSX)
     
+    override func magnify(with event: NSEvent) {
+        DispatchQueue.main.async {
+            self.currentView!.magnify(event.magnification)
+        }
+    }
+    
     override func mouseDown(with event: NSEvent) {
         DispatchQueue.main.async {
             let localPoint = event.location(in: self)

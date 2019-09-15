@@ -13,8 +13,9 @@ use crate::native::RuntimeResources;
 
 use crate::ui::{
     DragHandler, DragState, GameDisplayState, HandlerRegistration,
-    HasDragHandlers, HasLayoutHandlers, HasMutableLocation,
-    HasMutableVisibility, HasViewport, LayoutHandler, Sprite,
+    HasDragHandlers, HasLayoutHandlers, HasMagnifyHandlers, HasMutableLocation,
+    HasMutableScale, HasMutableVisibility, HasViewport, LayoutHandler,
+    MagnifyHandler, Sprite,
 };
 
 pub struct GamePresenter<T>
@@ -103,6 +104,18 @@ where
         }
     }
 
+    fn on_magnify(&self, scale_change_additive: f64) {
+        debug!("Scale changing by {}", scale_change_additive);
+
+        let mut display_state = self.get_display_state_mut();
+
+        display_state.change_scale_additive(scale_change_additive);
+
+        self.view
+            .get_viewport()
+            .set_scale(display_state.viewport_scale);
+    }
+
     fn on_drag_start(&self, drag_point: &Point) {
         debug!("Drag started {:?}", drag_point);
 
@@ -187,6 +200,17 @@ where
                 on_drag_end(_wx, _wy, _lx, _ly) {
                     result_drag_end.upgrade()
                         .map(|p| p.on_drag_end());
+                }
+            )),
+        ));
+
+        let result_for_magnify = Arc::downgrade(&result);
+
+        result.add_handler_registration(Box::new(
+            result.view.add_magnify_handler(create_magnify_handler!(
+                on_magnify(scale_change_additive) {
+                    result_for_magnify.upgrade()
+                        .map(|p| p.on_magnify(scale_change_additive));
                 }
             )),
         ));

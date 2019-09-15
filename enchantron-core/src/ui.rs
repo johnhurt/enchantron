@@ -8,13 +8,16 @@ pub use self::has_drag_handlers::HasDragHandlers;
 pub use self::has_int_value::HasIntValue;
 pub use self::has_layout_handlers::HasLayoutHandlers;
 pub use self::has_location::HasLocation;
+pub use self::has_magnify_handlers::HasMagnifyHandlers;
 pub use self::has_mutable_location::HasMutableLocation;
+pub use self::has_mutable_scale::HasMutableScale;
 pub use self::has_mutable_size::HasMutableSize;
 pub use self::has_mutable_visibility::HasMutableVisibility;
 pub use self::has_size::HasSize;
 pub use self::has_text::HasText;
 pub use self::has_viewport::HasViewport;
 pub use self::layout_handler::LayoutHandler;
+pub use self::magnify_handler::MagnifyHandler;
 pub use self::progress_bar::ProgressBar;
 pub use self::sprite::Sprite;
 pub use self::sprite_source::SpriteSource;
@@ -34,7 +37,9 @@ mod has_drag_handlers;
 mod has_int_value;
 mod has_layout_handlers;
 mod has_location;
+mod has_magnify_handlers;
 mod has_mutable_location;
+mod has_mutable_scale;
 mod has_mutable_size;
 mod has_mutable_visibility;
 mod has_size;
@@ -55,6 +60,9 @@ mod layout_handler;
 
 #[macro_use]
 mod drag_handler;
+
+#[macro_use]
+mod magnify_handler;
 
 mod game_view;
 mod loading_view;

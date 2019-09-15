@@ -50,22 +50,24 @@ public class Viewport : SKCameraNode {
         run(action)
     }
     
-    func setSizeAnimated(_ width: Float64, _ height: Float64, _ durationSeconds: Float64) {
-        let resize = SKAction.resize(
-            toWidth: CGFloat(width),
-            height: CGFloat(height),
+    func setScaleAnimated(_ newScale: Float64, _ durationSeconds: Float64) {
+        
+        let rescale = SKAction.scale(
+            to: CGFloat(newScale),
             duration: durationSeconds)
         
         if durationSeconds > 0.0 {
-            resize.timingMode = .easeInEaseOut
+            rescale.timingMode = .easeInEaseOut
         }
         
-        run(resize)
+        run(rescale)
     }
     
     func setLocationAnimated(_ left: Float64, _ top: Float64, _ durationSeconds: Float64) {
         let move = SKAction.move(
-            to: CGPoint(x: CGFloat(left) + zeroPosition.x, y: -CGFloat(top) + zeroPosition.y),
+            to: CGPoint(
+                x: CGFloat(left) + zeroPosition.x,
+                y: -CGFloat(top) + zeroPosition.y),
             duration: durationSeconds)
         
         if durationSeconds > 0.0 {

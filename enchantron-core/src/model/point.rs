@@ -1,3 +1,6 @@
+
+use std::ops::{Mul, MulAssign};
+
 #[derive(Default, Debug, Clone)]
 pub struct Point {
     pub x: f64,
@@ -16,10 +19,35 @@ impl Point {
     }
 
     pub fn distance_to(&self, point: &Point) -> f64 {
-        let dx = (self.x - point.x);
-        let dy = (self.y - point.y);
+        let dx = self.x - point.x;
+        let dy = self.y - point.y;
 
         (dx * dx + dy * dy).sqrt()
+    }
+
+}
+
+impl Mul<f64> for Point {
+    type Output = Point;
+
+    fn mul(mut self, rhs: f64) -> Point {
+        self *= rhs;
+        self
+    }
+}
+
+impl Mul<f64> for &Point {
+    type Output = Point;
+
+    fn mul(self, rhs: f64) -> Point {
+        self.clone() * rhs
+    }
+}
+
+impl MulAssign<f64> for Point {
+    fn mul_assign(&mut self, rhs: f64) {
+        self.x *= rhs;
+        self.y *= rhs;
     }
 }
 

@@ -58,15 +58,10 @@ where
         let new_size = Size::new(event.width as f64, event.height as f64);
 
         let mut display_state = self.get_display_state_mut();
-        display_state.layout(new_size);
+        let viewport_info = display_state.layout(new_size);
 
-        self.view.get_viewport().set_location_point(
-            &display_state
-                .viewport_rect
-                .as_ref()
-                .map(|rect| &rect.top_left)
-                .expect("Blah"),
-        );
+        self.view.get_viewport()
+            .set_location_point(&viewport_info.viewport_rect.top_left);
     }
 }
 
@@ -109,11 +104,12 @@ where
 
         let mut display_state = self.get_display_state_mut();
 
-        display_state.change_scale_additive(scale_change_additive);
+        let new_scale = display_state
+                .change_scale_additive(scale_change_additive);
 
         self.view
             .get_viewport()
-            .set_scale(display_state.viewport_scale);
+            .set_scale(new_scale);
     }
 
     fn on_drag_start(&self, drag_point: &Point) {
@@ -124,8 +120,8 @@ where
         display_state.drag_state = Option::Some(DragState::new(
             drag_point.clone(),
             display_state
-                .viewport_rect
-                .clone()
+                .get_viewport_rect()
+                .map(Clone::clone)
                 .unwrap_or_else(|| Rect::default()),
         ));
     }
@@ -135,26 +131,34 @@ where
 
         let mut display_state = self.get_display_state_mut();
 
-        let new_top_left =
+        let scale = display_state.get_viewport_scale();
+
+        let new_position =
             if let Some(drag_state) = display_state.drag_state.as_ref() {
+
+                let screen_coord_delta = Point::new(
+                    drag_state.start_point.x - drag_x,
+                    drag_state.start_point.y - drag_y);
+
+                let scaled_delta = Point::new(
+                    screen_coord_delta.x * scale,
+                    screen_coord_delta.y * scale);
+
                 Point::new(
-                    drag_state.start_viewport_rect.top_left.x - drag_x
-                        + drag_state.start_point.x,
-                    drag_state.start_viewport_rect.top_left.y - drag_y
-                        + drag_state.start_point.y,
-                )
+                    drag_state.start_viewport_rect.top_left.x + scaled_delta.x,
+                    drag_state.start_viewport_rect.top_left.y + scaled_delta.y)
+
             } else {
                 error!("Invalid drag state found");
                 panic!("Invalid drag state found");
             };
 
+        let new_position_ref = display_state.move_viewport(new_position);
+
         self.view
             .get_viewport()
-            .set_location(new_top_left.x, new_top_left.y);
+            .set_location(new_position_ref.x, new_position_ref.y);
 
-        if let Some(ref mut viewport_rect) = display_state.viewport_rect {
-            viewport_rect.top_left = new_top_left;
-        }
     }
 
     fn on_drag_end(&self) {

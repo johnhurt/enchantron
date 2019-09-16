@@ -14,6 +14,7 @@ public class Viewport : SKCameraNode {
     let container = SKNode()
     var size = CGSize(width: 0, height: 0)
     var zeroPosition = CGPoint(x: 0, y: 0)
+    var scale = CGFloat(1)
     
     public override init() {
         super.init()
@@ -28,6 +29,7 @@ public class Viewport : SKCameraNode {
         self.zRotation = 0.0;
         self.xScale = 1.0;
         self.yScale = 1.0;
+        self.scale = CGFloat(1)
         self.container.removeAllActions()
         self.zeroPosition = CGPoint(x: size.width / 2.0 , y: -size.height / 2.0)
         self.position = self.zeroPosition
@@ -50,11 +52,18 @@ public class Viewport : SKCameraNode {
         run(action)
     }
     
+    func updateScale(newScale: CGFloat) {
+        self.scale = newScale
+        //self.zeroPosition = CGPoint(x: self.zeroPosition.x * scaleScale, y: self.zeroPosition.y * scaleScale)
+    }
+    
     func setScaleAnimated(_ newScale: Float64, _ durationSeconds: Float64) {
         
-        let rescale = SKAction.scale(
-            to: CGFloat(newScale),
-            duration: durationSeconds)
+        let rescale = SKAction.group([
+            SKAction.scale(to: CGFloat(newScale), duration: durationSeconds),
+            SKAction.customAction(withDuration: 0, actionBlock: { (_, _) in
+                self.updateScale(newScale: CGFloat(newScale))
+            })])
         
         if durationSeconds > 0.0 {
             rescale.timingMode = .easeInEaseOut
@@ -64,10 +73,13 @@ public class Viewport : SKCameraNode {
     }
     
     func setLocationAnimated(_ left: Float64, _ top: Float64, _ durationSeconds: Float64) {
+        
+        print(CGPoint(x: CGFloat(left) + zeroPosition.x / scale, y: CGFloat(top) + zeroPosition.y / scale))
+        
         let move = SKAction.move(
             to: CGPoint(
-                x: CGFloat(left) + zeroPosition.x,
-                y: -CGFloat(top) + zeroPosition.y),
+                x: CGFloat(left) + zeroPosition.x * scale,
+                y: -CGFloat(top) + zeroPosition.y * scale),
             duration: durationSeconds)
         
         if durationSeconds > 0.0 {

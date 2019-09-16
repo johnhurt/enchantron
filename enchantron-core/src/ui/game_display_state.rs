@@ -1,15 +1,14 @@
 use crate::model::{Point, Rect, Size};
 use crate::native::Texture;
-use crate::ui::{DragState, Sprite, SpriteSource};
+use crate::ui::{DragState, Sprite, SpriteSource, ViewportInfo };
 
 pub struct GameDisplayState<S>
 where
     S: Sprite,
 {
     pub grass: S,
-    pub viewport_rect: Option<Rect>,
+    pub viewport_info: Option<ViewportInfo>,
     pub drag_state: Option<DragState>,
-    pub viewport_scale: f64,
 }
 
 impl<T, S> GameDisplayState<S>
@@ -22,37 +21,61 @@ where
     ) -> GameDisplayState<S> {
         GameDisplayState {
             grass: sprite_source.create_sprite(),
+
+            viewport_info: Default::default(),
+
             drag_state: Default::default(),
-            viewport_rect: Default::default(),
-            viewport_scale: 1.,
         }
+    }
+
+    // Get a reference to the viewport rectangle
+    pub fn get_viewport_rect<'a>(&'a self) -> Option<&'a Rect> {
+        self.viewport_info.as_ref().map(|vpi| &vpi.viewport_rect)
+    }
+
+    // Get a reference to the top-left corner of the viewport rectangle
+    pub fn get_viewport_top_left<'a>(&'a self) -> Option<&'a Point> {
+        self.get_viewport_rect().map(|vpr| &vpr.top_left)
+    }
+
+    pub fn get_viewport_scale(&self) -> f64 {
+        self.viewport_info.as_ref().map(|vpi| vpi.viewport_scale).unwrap_or(1.)
     }
 
     /// Update the layout of the display based on a change in the size of
     /// screen
-    pub fn layout(&mut self, new_size: Size) {
-        if let Some(ref mut viewport_rect) = self.viewport_rect {
-            let position_shift = Point::new(
-                (viewport_rect.size.width - new_size.width) / 2.,
-                (viewport_rect.size.height - new_size.height) / 2.,
-            );
-            let new_position = Point::new(
-                viewport_rect.top_left.x + position_shift.x,
-                viewport_rect.top_left.y + position_shift.y,
-            );
-
-            viewport_rect.size = new_size;
-            viewport_rect.top_left = new_position;
+    pub fn layout<'a>(&'a mut self, new_size: Size) -> &'a ViewportInfo {
+        if let Some(ref mut viewport_info) = self.viewport_info {
+            viewport_info.resize_screen(new_size);
         } else {
-            let mut viewport_rect = Rect::default();
-            viewport_rect.size = new_size;
-            self.viewport_rect = Some(viewport_rect);
+            self.viewport_info = Some(ViewportInfo::new(new_size));
         }
+
+        self.viewport_info.as_ref().unwrap()
     }
 
     /// change the scale of the area shown by the viewport by the given
-    /// additive amount
-    pub fn change_scale_additive(&mut self, scale_change_additive: f64) {
-        self.viewport_scale *= 1. - scale_change_additive;
+    /// additive amount, and return the new scale
+    pub fn change_scale_additive(&mut self, scale_change_additive: f64) -> f64 {
+        if let Some(ref mut viewport_info) = self.viewport_info {
+           viewport_info.change_scale_additive(scale_change_additive);
+           viewport_info.viewport_scale
+        } else {
+            error!("No viewport rectangle found when scaling");
+            panic!("No viewport rectangle found when scaling");
+        }
+    }
+
+    /// Move the viewport rect's top left to the given point and return a
+    /// ref to the resulting top_left
+    pub fn move_viewport<'a>(&'a mut self, new_top_left: Point) -> &'a Point {
+
+        if let Some(ref mut viewport_info) = self.viewport_info {
+            viewport_info.move_viewport(new_top_left)
+        } else {
+            error!("No viewport rectangle found when panning");
+            panic!("No viewport rectangle found when panning");
+        }
+
     }
 }

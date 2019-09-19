@@ -82,6 +82,15 @@ class GameScene: SKScene {
         // Called before each frame is rendered
         
     }
+    
+    func magnify(scaleChangeAdditive: CGFloat, centerPoint: CGPoint) {
+        DispatchQueue.main.async {
+            print(NSEvent.mouseLocation)
+            self.currentView!.magnify(
+                scaleChangeAdditive: scaleChangeAdditive,
+                centerPoint: centerPoint)
+        }
+    }
 }
 
 extension GameScene {
@@ -148,12 +157,6 @@ extension GameScene {
     
     #if os(OSX)
     
-    override func magnify(with event: NSEvent) {
-        DispatchQueue.main.async {
-            print(NSEvent.mouseLocation)
-            self.currentView!.magnify(event.magnification)
-        }
-    }
     
     override func mouseDown(with event: NSEvent) {
         DispatchQueue.main.async {

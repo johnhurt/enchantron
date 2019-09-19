@@ -1,4 +1,3 @@
-
 use std::ops::{Mul, MulAssign};
 
 #[derive(Default, Debug, Clone)]
@@ -24,7 +23,6 @@ impl Point {
 
         (dx * dx + dy * dy).sqrt()
     }
-
 }
 
 impl Mul<f64> for Point {

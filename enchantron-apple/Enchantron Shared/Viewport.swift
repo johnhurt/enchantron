@@ -57,19 +57,31 @@ public class Viewport : SKCameraNode {
         //self.zeroPosition = CGPoint(x: self.zeroPosition.x * scaleScale, y: self.zeroPosition.y * scaleScale)
     }
     
-    func setScaleAnimated(_ newScale: Float64, _ durationSeconds: Float64) {
+    /**
+      * Take the given top and left positions from the api and turn them into
+      * a location for the viewport (taking scale, zeroPosition offset and inverted
+      * y direction into account)
+      */
+    func apiPositionToViewportPosition(left: Float64, top: Float64) -> CGPoint {
+        return CGPoint(
+            x: CGFloat(left) + zeroPosition.x * scale,
+            y: -CGFloat(top) + zeroPosition.y * scale)
+    }
+    
+    func setScaleAndLocation(
+        _ newScale: Float64,
+        _ newTopLeftX: Float64,
+        _ newTopLeftY: Float64) {
         
-        let rescale = SKAction.group([
-            SKAction.scale(to: CGFloat(newScale), duration: durationSeconds),
-            SKAction.customAction(withDuration: 0, actionBlock: { (_, _) in
-                self.updateScale(newScale: CGFloat(newScale))
-            })])
-        
-        if durationSeconds > 0.0 {
-            rescale.timingMode = .easeInEaseOut
+        DispatchQueue.main.async {
+            self.scale = CGFloat(newScale)
+            self.xScale = self.scale
+            self.yScale = self.scale
+            self.position = self.apiPositionToViewportPosition(
+                left: newTopLeftX,
+                top: newTopLeftY)
         }
         
-        run(rescale)
     }
     
     func setLocationAnimated(_ left: Float64, _ top: Float64, _ durationSeconds: Float64) {
@@ -77,9 +89,7 @@ public class Viewport : SKCameraNode {
         print(CGPoint(x: CGFloat(left) + zeroPosition.x / scale, y: CGFloat(top) + zeroPosition.y / scale))
         
         let move = SKAction.move(
-            to: CGPoint(
-                x: CGFloat(left) + zeroPosition.x * scale,
-                y: -CGFloat(top) + zeroPosition.y * scale),
+            to: apiPositionToViewportPosition(left: left, top: top),
             duration: durationSeconds)
         
         if durationSeconds > 0.0 {

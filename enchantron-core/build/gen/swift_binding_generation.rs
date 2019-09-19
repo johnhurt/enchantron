@@ -182,6 +182,14 @@ lazy_static! {
                     ArgumentDefBuilder::default()
                         .name("scale_change_additive")
                         .data_type(DOUBLE.clone())
+                        .build().unwrap(),
+                    ArgumentDefBuilder::default()
+                        .name("zoom_center_x")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap(),
+                    ArgumentDefBuilder::default()
+                        .name("zoom_center_y")
+                        .data_type(DOUBLE.clone())
                         .build().unwrap()
                 ])
                 .build().unwrap()
@@ -964,7 +972,7 @@ lazy_static! {
                 .build().unwrap(),
 
           MethodDefBuilder::default()
-              .name("set_scale_animated")
+              .name("set_scale_and_location")
               .arguments(vec![
 
                 ArgumentDefBuilder::default()
@@ -973,7 +981,12 @@ lazy_static! {
                     .build().unwrap(),
 
                 ArgumentDefBuilder::default()
-                    .name("duration_seconds")
+                    .name("top_left_x")
+                    .data_type(DOUBLE.clone())
+                    .build().unwrap(),
+
+                ArgumentDefBuilder::default()
+                    .name("top_left_y")
                     .data_type(DOUBLE.clone())
                     .build().unwrap()
               ])

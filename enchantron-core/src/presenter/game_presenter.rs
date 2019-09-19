@@ -60,7 +60,8 @@ where
         let mut display_state = self.get_display_state_mut();
         let viewport_info = display_state.layout(new_size);
 
-        self.view.get_viewport()
+        self.view
+            .get_viewport()
             .set_location_point(&viewport_info.viewport_rect.top_left);
     }
 }
@@ -99,30 +100,30 @@ where
         }
     }
 
-    fn on_magnify(&self, scale_change_additive: f64,
-            zoom_center_x: f64, zoom_center_y: f64) {
-
+    fn on_magnify(
+        &self,
+        scale_change_additive: f64,
+        zoom_center_x: f64,
+        zoom_center_y: f64,
+    ) {
         debug!("Scale changing by {}", scale_change_additive);
 
         let mut display_state = self.get_display_state_mut();
 
-        let center_point_ratio = {
-            if let Some(screen_size) = display_state.get_screen_size() {
-                Point::new(
-                    zoom_center_x / screen_size.width,
-                    zoom_center_y / screen_size.height)
-            }
-            else {
-                Point::new(0.5, 0.5)
-            }
+        let magnify_center_screen_point =
+            Point::new(zoom_center_x, zoom_center_y);
+
+        let viewport_info_opt = display_state.change_scale_additive(
+            scale_change_additive,
+            magnify_center_screen_point,
+        );
+
+        if let Some(ref viewport_info) = viewport_info_opt {
+            self.view.get_viewport().set_scale_and_location_point(
+                viewport_info.viewport_scale,
+                &viewport_info.viewport_rect.top_left,
+            );
         }
-
-        let new_scale = display_state
-                .change_scale_additive(scale_change_additive);
-
-        self.view
-            .get_viewport()
-            .set_scale(new_scale);
     }
 
     fn on_drag_start(&self, drag_point: &Point) {
@@ -148,19 +149,20 @@ where
 
         let new_position =
             if let Some(drag_state) = display_state.drag_state.as_ref() {
-
                 let screen_coord_delta = Point::new(
                     drag_state.start_point.x - drag_x,
-                    drag_state.start_point.y - drag_y);
+                    drag_state.start_point.y - drag_y,
+                );
 
                 let scaled_delta = Point::new(
                     screen_coord_delta.x * scale,
-                    screen_coord_delta.y * scale);
+                    screen_coord_delta.y * scale,
+                );
 
                 Point::new(
                     drag_state.start_viewport_rect.top_left.x + scaled_delta.x,
-                    drag_state.start_viewport_rect.top_left.y + scaled_delta.y)
-
+                    drag_state.start_viewport_rect.top_left.y + scaled_delta.y,
+                )
             } else {
                 error!("Invalid drag state found");
                 panic!("Invalid drag state found");
@@ -171,7 +173,6 @@ where
         self.view
             .get_viewport()
             .set_location(new_position_ref.x, new_position_ref.y);
-
     }
 
     fn on_drag_end(&self) {

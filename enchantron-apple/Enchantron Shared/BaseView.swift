@@ -133,9 +133,12 @@ class BaseView: SKNode {
         }
     }
     
-    func magnify(_ scaleChangeAdditive: CGFloat) {
+    func magnify(scaleChangeAdditive: CGFloat, centerPoint: CGPoint) {
         magnifyHandlers.forEach { (handler) in
-            handler.onMagnify(scaleChangeAdditive: Float64(scaleChangeAdditive))
+            handler.onMagnify(
+                scaleChangeAdditive: Float64(scaleChangeAdditive),
+                zoomCenterX: Float64(centerPoint.x),
+                zoomCenterY: Float64(centerPoint.y))
         }
     }
 }

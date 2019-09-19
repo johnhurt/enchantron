@@ -59,7 +59,8 @@ class GameViewController: NSViewController, NSWindowDelegate {
         
         print("windowLocation: \(windowLocation)")
         
-        self.scene?.magnify(with: event)
+        self.scene?.magnify(scaleChangeAdditive: event.magnification,
+                            centerPoint: windowLocation)
     }
     
 }

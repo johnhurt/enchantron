@@ -16,11 +16,11 @@ class Texture {
   
   init(texture: SKTexture) {
     self.texture = texture
+    self.texture.filteringMode = SKTextureFilteringMode.nearest
     self.size = texture.size()
     texture.preload {
       print("Texture loaded size: \(self.texture.size())")
     }
-    texture.filteringMode = SKTextureFilteringMode.linear
   }
 
   convenience init(resourceName: String) {

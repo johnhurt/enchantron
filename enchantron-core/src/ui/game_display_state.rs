@@ -1,26 +1,28 @@
 use crate::model::{Point, Rect, Size};
 use crate::native::Texture;
-use crate::ui::{DragState, Sprite, SpriteSource, ViewportInfo};
+use crate::ui::{DragState, SpriteSourceFn, TerrainGenerator, ViewportInfo};
+use crate::view_types::ViewTypes;
 
-pub struct GameDisplayState<S>
+pub struct GameDisplayState<T>
 where
-    S: Sprite,
+    T: ViewTypes,
 {
-    pub grass: S,
+    pub sprite_source: SpriteSourceFn<T::Sprite>,
+    pub grass: T::Sprite,
     pub viewport_info: Option<ViewportInfo>,
     pub drag_state: Option<DragState>,
 }
 
-impl<T, S> GameDisplayState<S>
+impl<T> GameDisplayState<T>
 where
-    T: Texture,
-    S: Sprite<T = T>,
+    T: ViewTypes,
 {
-    pub fn new<SS: SpriteSource<T = T, S = S>>(
-        sprite_source: &SS,
-    ) -> GameDisplayState<S> {
+    pub fn new(
+        sprite_source: SpriteSourceFn<T::Sprite>,
+    ) -> GameDisplayState<T> {
         GameDisplayState {
-            grass: sprite_source.create_sprite(),
+            sprite_source: sprite_source,
+            grass: sprite_source(),
 
             viewport_info: Default::default(),
 

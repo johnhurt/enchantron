@@ -21,6 +21,8 @@ pub use self::magnify_handler::MagnifyHandler;
 pub use self::progress_bar::ProgressBar;
 pub use self::sprite::Sprite;
 pub use self::sprite_source::SpriteSource;
+pub use self::sprite_source_fn::SpriteSourceFn;
+pub use self::terrain_generator::TerrainGenerator;
 pub use self::viewport::Viewport;
 pub use self::viewport_info::ViewportInfo;
 
@@ -49,6 +51,8 @@ mod has_viewport;
 mod progress_bar;
 mod sprite;
 mod sprite_source;
+mod sprite_source_fn;
+mod terrain_generator;
 mod viewport;
 mod viewport_info;
 

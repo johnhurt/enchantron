@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard, Weak};
 
 use crate::view_types::ViewTypes;
 
@@ -28,7 +28,9 @@ where
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
     handler_registrations: Mutex<Vec<Box<dyn HandlerRegistration>>>,
 
-    display_state: RwLock<GameDisplayState<T::Sprite>>,
+    weak_self: Option<Box<Weak<GamePresenter<T>>>>,
+
+    display_state: RwLock<GameDisplayState<T>>,
 }
 
 impl<T> HasListenerRegistrations for GamePresenter<T>
@@ -70,12 +72,21 @@ impl<T> GamePresenter<T>
 where
     T: ViewTypes,
 {
+    /// Get a weak arc pointer to this presenter or panic if none has been
+    /// created yet
+    fn weak_self(&self) -> Weak<GamePresenter<T>> {
+        if let Some(weak_self) = self.weak_self {
+            self.weak_self().clone()
+        } else {
+            error!("No weak pointer to game presenter has been created yet");
+            panic!("No weak pointer to game presenter has been created yet");
+        }
+    }
+
     ///
     /// Get a read-lock on the game display state
     ///
-    fn get_display_state(
-        &self,
-    ) -> RwLockReadGuard<GameDisplayState<T::Sprite>> {
+    fn get_display_state(&self) -> RwLockReadGuard<GameDisplayState<T>> {
         self.display_state.read().unwrap_or_else(|err| {
             error!("Failed to get read lock on display state: {:?}", err);
             panic!("Failed to get a read lock on the display state");
@@ -85,9 +96,7 @@ where
     ///
     /// Get a write-lock on the game display state
     ///
-    fn get_display_state_mut(
-        &self,
-    ) -> RwLockWriteGuard<GameDisplayState<T::Sprite>> {
+    fn get_display_state_mut(&self) -> RwLockWriteGuard<GameDisplayState<T>> {
         self.display_state.write().unwrap_or_else(|err| {
             error!("Failed to get write lock on display state: {:?}", err);
             panic!("Failed to get a write lock on the display state");
@@ -185,7 +194,6 @@ where
         let sprite = &this.get_display_state().grass;
         sprite.set_texture(this.runtime_resources.textures().overworld.grass());
         sprite.set_visible(true);
-        //sprite.set_size(64., 64.);
     }
 
     fn bind(self) -> Arc<GamePresenter<T>> {
@@ -201,9 +209,17 @@ where
         )));
 
         let result = Arc::new(self);
-        let result_drag_start = Arc::downgrade(&result);
-        let result_drag_move = result_drag_start.clone();
-        let result_drag_end = result_drag_start.clone();
+        let weak_self = Arc::downgrade(&result);
+
+        if let Some(ref mut inner_self) = Arc::get_mut(&mut result) {
+            inner_self.weak_self = Some(Box::new(weak_self));
+        } else {
+            panic!("Multiple copies of arc result? That shouldn't happen yet");
+        }
+
+        let result_drag_start = result.weak_self();
+        let result_drag_move = result.weak_self();
+        let result_drag_end = result.weak_self();
 
         result.add_handler_registration(Box::new(
             result.view.add_drag_handler(create_drag_handler!(
@@ -222,7 +238,7 @@ where
             )),
         ));
 
-        let result_for_magnify = Arc::downgrade(&result);
+        let result_for_magnify = result.weak_self();
 
         result.add_handler_registration(Box::new(
             result.view.add_magnify_handler(create_magnify_handler!(
@@ -256,6 +272,8 @@ where
             runtime_resources: runtime_resources,
             listener_registrations: Mutex::new(Vec::new()),
             handler_registrations: Mutex::new(Vec::new()),
+
+            weak_self: Default::default(),
 
             display_state: RwLock::new(display_state),
         };

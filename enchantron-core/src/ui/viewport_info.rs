@@ -52,14 +52,16 @@ impl ViewportInfo {
     pub fn change_scale_additive(&mut self, scale_change_additive: f64) {
         let new_scale = self.viewport_scale * ( 1. - scale_change_additive );
 
+        let center_ratio = Point::new(0.5, 0.5);
         self.viewport_scale = new_scale;
 
         let new_size = &self.screen_size * new_scale;
 
         let position_shift = Point::new(
-            (self.viewport_rect.size.width - new_size.width) / 2.,
-            (self.viewport_rect.size.height - new_size.height) / 2.,
+            (self.viewport_rect.size.width - new_size.width) * center_ratio.x,
+            (self.viewport_rect.size.height - new_size.height) * center_ratio.y
         );
+
         let new_position = Point::new(
             self.viewport_rect.top_left.x + position_shift.x,
             self.viewport_rect.top_left.y + position_shift.y,

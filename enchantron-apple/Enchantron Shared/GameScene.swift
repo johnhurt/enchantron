@@ -150,6 +150,7 @@ extension GameScene {
     
     override func magnify(with event: NSEvent) {
         DispatchQueue.main.async {
+            print(NSEvent.mouseLocation)
             self.currentView!.magnify(event.magnification)
         }
     }

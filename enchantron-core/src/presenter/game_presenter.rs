@@ -99,10 +99,23 @@ where
         }
     }
 
-    fn on_magnify(&self, scale_change_additive: f64) {
+    fn on_magnify(&self, scale_change_additive: f64,
+            zoom_center_x: f64, zoom_center_y: f64) {
+
         debug!("Scale changing by {}", scale_change_additive);
 
         let mut display_state = self.get_display_state_mut();
+
+        let center_point_ratio = {
+            if let Some(screen_size) = display_state.get_screen_size() {
+                Point::new(
+                    zoom_center_x / screen_size.width,
+                    zoom_center_y / screen_size.height)
+            }
+            else {
+                Point::new(0.5, 0.5)
+            }
+        }
 
         let new_scale = display_state
                 .change_scale_additive(scale_change_additive);
@@ -212,9 +225,14 @@ where
 
         result.add_handler_registration(Box::new(
             result.view.add_magnify_handler(create_magnify_handler!(
-                on_magnify(scale_change_additive) {
+                on_magnify(scale_change_additive, center_x, center_y) {
                     result_for_magnify.upgrade()
-                        .map(|p| p.on_magnify(scale_change_additive));
+                        .map(|p| {
+                            p.on_magnify(
+                                scale_change_additive,
+                                center_x,
+                                center_y)
+                        });
                 }
             )),
         ));

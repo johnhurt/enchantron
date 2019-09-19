@@ -1,8 +1,8 @@
 macro_rules! create_magnify_handler {
     (
-    on_magnify($scale_change_additive:ident) $magnify_body:block
+    on_magnify($scale_change_additive:ident, $zoom_center_x:ident, $zoom_center_y:ident) $magnify_body:block
   ) => {
-        MagnifyHandler::new(Box::new(move |$scale_change_additive| {
+        MagnifyHandler::new(Box::new(move |$scale_change_additive, $zoom_center_x, $zoom_center_y| {
             $magnify_body
         }))
     };
@@ -19,8 +19,8 @@ impl MagnifyHandler {
         }
     }
 
-    pub fn on_magnify(&self, scale_change_additive: f64) {
-        (self.on_magnify)(scale_change_additive);
+    pub fn on_magnify(&self, scale_change_additive: f64, zoom_center_x: f64, zoom_center_y: f64) {
+        (self.on_magnify)(scale_change_additive, zoom_center_x, zoom_center_y);
     }
 }
 

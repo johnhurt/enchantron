@@ -1,7 +1,7 @@
 use std::any::Any;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use super::{Event, EventKey, EventListener, ListenerRegistration};
 
@@ -124,10 +124,17 @@ impl<K: EventKey> EventBus<K> {
     pub fn register<E: Event<K>, H: EventListener<K, E>>(
         &self,
         event: E,
-        listener_arc: &Arc<H>,
+        listener: Weak<H>,
     ) {
-        let listener_for_registration = listener_arc.clone();
-        let listener = Arc::downgrade(listener_arc);
+        let listener_for_registration = {
+            if let Some(listener_arc) = listener.upgrade() {
+                listener_arc
+            }
+            else {
+                return
+            }
+        };
+
         let inner_clone = self.inner.clone();
 
         self.inner.registration_thread_pool.spawn(move || {

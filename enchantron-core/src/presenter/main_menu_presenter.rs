@@ -67,7 +67,7 @@ impl<V: MainMenuView> MainMenuPresenter<V> {
 
         let result = Arc::new(self);
 
-        result.event_bus.register(StartGame::default(), &result);
+        result.event_bus.register(StartGame::default(), Arc::downgrade(&result));
 
         result
             .view

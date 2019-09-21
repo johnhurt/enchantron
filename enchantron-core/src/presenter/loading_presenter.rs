@@ -72,7 +72,7 @@ where
     fn bind(self) -> Arc<LoadingPresenter<V, S>> {
         let result = Arc::new(self);
 
-        result.event_bus.register(LoadResources::default(), &result);
+        result.event_bus.register(LoadResources::default(), Arc::downgrade(&result));
 
         result
             .view

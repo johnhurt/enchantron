@@ -1,4 +1,3 @@
-
 use std::ops::DerefMut;
 use std::sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard, Weak};
 
@@ -17,7 +16,7 @@ use crate::ui::{
     DragHandler, DragState, GameDisplayState, HandlerRegistration,
     HasDragHandlers, HasLayoutHandlers, HasMagnifyHandlers, HasMutableLocation,
     HasMutableScale, HasMutableVisibility, HasViewport, LayoutHandler,
-    MagnifyHandler, Sprite, SpriteSource
+    MagnifyHandler, Sprite, SpriteSource, SpriteSourceWrapper,
 };
 
 pub struct GamePresenter<T>
@@ -68,7 +67,6 @@ where
                 .get_viewport()
                 .set_location_point(&viewport_info.viewport_rect.top_left);
         });
-
     }
 }
 
@@ -84,7 +82,10 @@ where
             panic!("Failed to get a read lock on weak self pointer");
         });
 
-        weak_self_lock.as_ref().map(Box::as_ref).map(Clone::clone)
+        weak_self_lock
+            .as_ref()
+            .map(Box::as_ref)
+            .map(Clone::clone)
             .unwrap_or_else(|| {
                 error!("No weak self pointer created yet");
                 panic!("No weak self pointer created yet");
@@ -95,16 +96,16 @@ where
     /// Run an action with a read lock on the game display state
     ///
     fn with_display_state(&self, action: impl FnOnce(&GameDisplayState<T>)) {
-        let ref display_state_lock = self.display_state.read().unwrap_or_else(|err| {
-            error!("Failed to get read lock on display state: {:?}", err);
-            panic!("Failed to get a read lock on the display state");
-        });
-
-        let display_state = display_state_lock.as_ref()
-            .unwrap_or_else(|| {
-                error!("No Game State created yet");
-                panic!("No Game State created yet");
+        let ref display_state_lock =
+            self.display_state.read().unwrap_or_else(|err| {
+                error!("Failed to get read lock on display state: {:?}", err);
+                panic!("Failed to get a read lock on the display state");
             });
+
+        let display_state = display_state_lock.as_ref().unwrap_or_else(|| {
+            error!("No Game State created yet");
+            panic!("No Game State created yet");
+        });
 
         action(display_state);
     }
@@ -112,15 +113,17 @@ where
     ///
     /// Run an action with a write lock on the game display state
     ///
-    fn with_display_state_mut(&self, action: impl FnOnce(&mut GameDisplayState<T>)) {
+    fn with_display_state_mut(
+        &self,
+        action: impl FnOnce(&mut GameDisplayState<T>),
+    ) {
+        let ref mut display_state_lock =
+            self.display_state.write().unwrap_or_else(|err| {
+                error!("Failed to get write lock on display state: {:?}", err);
+                panic!("Failed to get a write lock on the display state");
+            });
 
-        let ref mut display_state_lock = self.display_state.write().unwrap_or_else(|err| {
-            error!("Failed to get write lock on display state: {:?}", err);
-            panic!("Failed to get a write lock on the display state");
-        });
-
-        let display_state = display_state_lock.as_mut()
-        .unwrap_or_else(|| {
+        let display_state = display_state_lock.as_mut().unwrap_or_else(|| {
             error!("No Game State created yet");
             panic!("No Game State created yet");
         });
@@ -178,29 +181,29 @@ where
         debug!("Drag moved ({}, {})", drag_x, drag_y);
 
         self.with_display_state_mut(|display_state| {
-
             let scale = display_state.get_viewport_scale();
 
-            let new_position =
-                if let Some(drag_state) = display_state.drag_state.as_ref() {
-                    let screen_coord_delta = Point::new(
-                        drag_state.start_point.x - drag_x,
-                        drag_state.start_point.y - drag_y,
-                    );
+            let new_position = if let Some(drag_state) =
+                display_state.drag_state.as_ref()
+            {
+                let screen_coord_delta = Point::new(
+                    drag_state.start_point.x - drag_x,
+                    drag_state.start_point.y - drag_y,
+                );
 
-                    let scaled_delta = Point::new(
-                        screen_coord_delta.x * scale,
-                        screen_coord_delta.y * scale,
-                    );
+                let scaled_delta = Point::new(
+                    screen_coord_delta.x * scale,
+                    screen_coord_delta.y * scale,
+                );
 
-                    Point::new(
-                        drag_state.start_viewport_rect.top_left.x + scaled_delta.x,
-                        drag_state.start_viewport_rect.top_left.y + scaled_delta.y,
-                    )
-                } else {
-                    error!("Invalid drag state found");
-                    panic!("Invalid drag state found");
-                };
+                Point::new(
+                    drag_state.start_viewport_rect.top_left.x + scaled_delta.x,
+                    drag_state.start_viewport_rect.top_left.y + scaled_delta.y,
+                )
+            } else {
+                error!("Invalid drag state found");
+                panic!("Invalid drag state found");
+            };
 
             let new_position_ref = display_state.move_viewport(new_position);
 
@@ -217,33 +220,31 @@ where
 
     /// Initialize the display state with the initial game state
     fn initialize_game_state(&self) {
-
         let sprite_source_self = self.weak_self();
 
-        let display_state : GameDisplayState<T>
-            = GameDisplayState::new(Box::new(move || {
-                sprite_source_self.upgrade()
+        let display_state: GameDisplayState<T> = GameDisplayState::new(
+            SpriteSourceWrapper::new(move || {
+                sprite_source_self
+                    .upgrade()
                     .map(|p| p.create_sprite())
                     .unwrap_or_else(|| {
-                        panic!();
+                        error!("Failed to create sprite");
+                        panic!("Failed to create sprite");
                     })
-            }));
+            }),
+            self.runtime_resources.clone(),
+        );
 
-        let sprite = &display_state.grass;
-        sprite.set_texture(self.runtime_resources.textures().overworld.grass());
-        sprite.set_visible(true);
-
-        let mut display_state_opt = self.display_state.write()
-            .unwrap_or_else(|err| {
+        let mut display_state_opt =
+            self.display_state.write().unwrap_or_else(|err| {
                 error!("Failed to get write lock on display state: {:?}", err);
                 panic!("Failed to get a write lock on the display state");
             });
 
         *display_state_opt = Some(display_state);
-
     }
 
-    fn bind(&self){
+    fn bind(&self) {
         let copied_event_bus = self.event_bus.clone();
 
         self.add_handler_registration(Box::new(self.view.add_layout_handler(
@@ -259,8 +260,8 @@ where
         let result_drag_move = self.weak_self();
         let result_drag_end = self.weak_self();
 
-        self.add_handler_registration(Box::new(
-            self.view.add_drag_handler(create_drag_handler!(
+        self.add_handler_registration(Box::new(self.view.add_drag_handler(
+            create_drag_handler!(
                 on_drag_start(wx, wy, _lx, _ly) {
                     result_drag_start.upgrade()
                         .map(|p| p.on_drag_start(&Point { x: wx, y: wy }));
@@ -273,13 +274,13 @@ where
                     result_drag_end.upgrade()
                         .map(|p| p.on_drag_end());
                 }
-            )),
-        ));
+            ),
+        )));
 
         let result_for_magnify = self.weak_self();
 
-        self.add_handler_registration(Box::new(
-            self.view.add_magnify_handler(create_magnify_handler!(
+        self.add_handler_registration(Box::new(self.view.add_magnify_handler(
+            create_magnify_handler!(
                 on_magnify(scale_change_additive, center_x, center_y) {
                     result_for_magnify.upgrade()
                         .map(|p| {
@@ -289,8 +290,8 @@ where
                                 center_y)
                         });
                 }
-            )),
-        ));
+            ),
+        )));
 
         self.event_bus.register(Layout::default(), self.weak_self());
     }
@@ -304,7 +305,6 @@ where
         event_bus: EventBus<EnchantronEvent>,
         runtime_resources: Arc<RuntimeResources<T::SystemView>>,
     ) -> Arc<GamePresenter<T>> {
-
         let raw_result = GamePresenter {
             view: view,
             event_bus: event_bus,
@@ -321,10 +321,14 @@ where
 
         {
             let weak_self = Arc::downgrade(&result);
-            let mut weak_self_opt = result.weak_self.write().unwrap_or_else(|e| {
-                error!("Failed to get write lock on weak self pointer: {:?}", e);
-                panic!("Failed to get write lock on weak self pointer");
-            });
+            let mut weak_self_opt =
+                result.weak_self.write().unwrap_or_else(|e| {
+                    error!(
+                        "Failed to get write lock on weak self pointer: {:?}",
+                        e
+                    );
+                    panic!("Failed to get write lock on weak self pointer");
+                });
 
             *weak_self_opt = Some(Box::new(weak_self));
         }

@@ -1,19 +1,21 @@
-use std::sync::{Weak, Arc};
+use std::sync::{Arc, Weak};
 
 use crate::model::{Point, Rect, Size};
-use crate::native::Texture;
-use crate::ui::{DragState, SpriteSource, TerrainGenerator, ViewportInfo};
+use crate::native::{RuntimeResources, Texture};
+use crate::ui::{
+    DragState, SpriteSource, SpriteSourceWrapper, TerrainGenerator,
+    ViewportInfo,
+};
 use crate::view_types::ViewTypes;
 
 pub struct GameDisplayState<T>
 where
     T: ViewTypes,
 {
-    pub sprite_source: Arc<dyn SpriteSource<S = T::Sprite, T = T::Texture>>,
-    pub grass: T::Sprite,
+    pub sprite_source: SpriteSourceWrapper<T>,
     pub viewport_info: Option<ViewportInfo>,
     pub drag_state: Option<DragState>,
-    pub terrain_generator: TerrainGenerator<T>
+    pub terrain_generator: TerrainGenerator<T>,
 }
 
 impl<T> GameDisplayState<T>
@@ -21,16 +23,19 @@ where
     T: ViewTypes,
 {
     pub fn new(
-        sprite_source: Arc<dyn SpriteSource<S = T::Sprite, T = T::Texture>>,
+        sprite_source: SpriteSourceWrapper<T>,
+        runtime_resources: Arc<RuntimeResources<T::SystemView>>,
     ) -> GameDisplayState<T> {
         GameDisplayState {
-            grass: sprite_source.create_sprite(),
             sprite_source: sprite_source.clone(),
 
             viewport_info: Default::default(),
 
             drag_state: Default::default(),
-            terrain_generator: TerrainGenerator::new(sprite_source)
+            terrain_generator: TerrainGenerator::new(
+                sprite_source,
+                runtime_resources,
+            ),
         }
     }
 

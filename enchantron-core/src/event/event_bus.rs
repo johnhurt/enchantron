@@ -129,9 +129,8 @@ impl<K: EventKey> EventBus<K> {
         let listener_for_registration = {
             if let Some(listener_arc) = listener.upgrade() {
                 listener_arc
-            }
-            else {
-                return
+            } else {
+                return;
             }
         };
 

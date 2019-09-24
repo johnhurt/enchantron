@@ -1,3 +1,4 @@
+use std::ops::{Mul, MulAssign};
 
 #[derive(Default, Clone, Debug)]
 pub struct ISize {

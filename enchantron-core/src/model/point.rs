@@ -1,4 +1,4 @@
-use std::ops::{Mul, MulAssign};
+use std::ops::{Mul, MulAssign, Sub, Add};
 
 #[derive(Default, Debug, Clone)]
 pub struct Point {
@@ -46,6 +46,22 @@ impl MulAssign<f64> for Point {
     fn mul_assign(&mut self, rhs: f64) {
         self.x *= rhs;
         self.y *= rhs;
+    }
+}
+
+impl <'a, 'b> Sub<&'a Point> for &'b Point {
+    type Output = Point;
+
+    fn sub(self, rhs: &'a Point) -> Point {
+        Point::new(self.x - rhs.x, self.y - rhs.y)
+    }
+}
+
+impl Add<Point> for &Point {
+    type Output = Point;
+
+    fn add(self, rhs: Point) -> Point {
+        Point::new(self.x + rhs.x, self.y + rhs.y)
     }
 }
 

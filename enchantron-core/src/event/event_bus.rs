@@ -205,8 +205,6 @@ impl<K: EventKey> EventBus<K> {
 
             listener_for_registration.add_listener_registration(lr);
         });
-
-        debug!("Finished registering blah");
     }
 
     /// Post the given event to the event bus.  This event will be distributed

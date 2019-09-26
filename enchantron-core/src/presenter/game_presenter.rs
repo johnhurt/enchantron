@@ -5,7 +5,7 @@ use crate::view_types::ViewTypes;
 
 use crate::event::{
     EnchantronEvent, EventBus, EventListener, HasListenerRegistrations, Layout,
-    ListenerRegistration,
+    ListenerRegistration, ViewportChange
 };
 
 use crate::model::{Point, Rect, Size};
@@ -137,6 +137,11 @@ where
         }
     }
 
+    /// Fire a viewport change event to the event bus
+    fn fire_viewport_change_event(&self, viewport_rect: Rect) {
+        self.event_bus.post( ViewportChange { new_viewport_rect: viewport_rect });
+    }
+
     fn on_magnify(
         &self,
         scale_change_additive: f64,
@@ -149,17 +154,17 @@ where
             let magnify_center_screen_point =
                 Point::new(zoom_center_x, zoom_center_y);
 
-            let viewport_info_opt = display_state.change_scale_additive(
+            let viewport_info = display_state.change_scale_additive(
                 scale_change_additive,
                 magnify_center_screen_point,
             );
 
-            if let Some(ref viewport_info) = viewport_info_opt {
-                self.view.get_viewport().set_scale_and_location_point(
-                    viewport_info.viewport_scale,
-                    &viewport_info.viewport_rect.top_left,
-                );
-            }
+            self.fire_viewport_change_event(
+                viewport_info.viewport_rect.clone());
+            self.view.get_viewport().set_scale_and_location_point(
+                viewport_info.viewport_scale,
+                &viewport_info.viewport_rect.top_left,
+            );
         });
     }
 
@@ -170,9 +175,7 @@ where
             display_state.drag_state = Option::Some(DragState::new(
                 drag_point.clone(),
                 display_state
-                    .get_viewport_rect()
-                    .map(Clone::clone)
-                    .unwrap_or_else(|| Rect::default()),
+                    .get_viewport_rect().clone(),
             ));
         });
     }
@@ -205,7 +208,12 @@ where
                 panic!("Invalid drag state found");
             };
 
-            let new_position_ref = display_state.move_viewport(new_position);
+            let new_viewport_info = display_state.move_viewport(new_position);
+
+            self.fire_viewport_change_event(
+                new_viewport_info.viewport_rect.clone());
+
+            let new_position_ref = &new_viewport_info.viewport_rect.top_left;
 
             self.view
                 .get_viewport()
@@ -223,6 +231,7 @@ where
         let sprite_source_self = self.weak_self();
 
         let display_state: GameDisplayState<T> = GameDisplayState::new(
+            self.event_bus.clone(),
             SpriteSourceWrapper::new(move || {
                 sprite_source_self
                     .upgrade()

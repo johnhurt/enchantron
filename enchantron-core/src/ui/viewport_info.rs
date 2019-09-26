@@ -7,7 +7,16 @@ pub struct ViewportInfo {
     pub viewport_scale: f64,
 }
 
+impl Default for ViewportInfo {
+
+    fn default() -> ViewportInfo {
+        ViewportInfo::new(Default::default())
+    }
+
+}
+
 impl ViewportInfo {
+
     /// Create a new viewport info with the viewport and screen aligned
     pub fn new(screen_size: Size) -> ViewportInfo {
         let mut viewport_rect = Rect::default();
@@ -84,10 +93,8 @@ impl ViewportInfo {
     }
 
     /// Move the viewport to the new given top-left point
-    pub fn move_viewport<'a>(&'a mut self, new_top_left: Point) -> &'a Point {
+    pub fn move_viewport(&mut self, new_top_left: Point) {
         self.viewport_rect.top_left = new_top_left;
         debug!("Viewport changed to {:?}", self);
-
-        &self.viewport_rect.top_left
     }
 }

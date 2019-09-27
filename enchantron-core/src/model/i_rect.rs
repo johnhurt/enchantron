@@ -3,65 +3,65 @@ use super::{IPoint, ISize};
 #[derive(Default, Debug, Clone)]
 pub struct IRect {
     pub top_left: IPoint,
-    pub ISize: ISize,
+    pub i_size: ISize,
 }
 
 impl IRect {
-    pub fn new(left: usize, top: usize, width: usize, height: usize) -> IRect {
+    pub fn new(left: i64, top: i64, width: usize, height: usize) -> IRect {
         IRect {
             top_left: IPoint::new(left, top),
-            ISize: ISize::new(width, height),
+            i_size: ISize::new(width, height),
         }
     }
 
     pub fn center(&self) -> IPoint {
         IPoint {
-            x: self.top_left.x + self.ISize.width / 2,
-            y: self.top_left.y + self.ISize.height / 2,
+            x: self.top_left.x + self.i_size.width as i64 / 2,
+            y: self.top_left.y + self.i_size.height as i64 / 2,
         }
     }
 
     /// Get the minimum distance from this IRect to the given IPoint.  If the given
     /// IPoint is within this IRectangle then 0 is returned
-    pub fn distance_to(&self, IPoint: &IPoint) -> f64 {
-        if self.contains(IPoint) {
+    pub fn distance_to(&self, i_point: &IPoint) -> f64 {
+        if self.contains(i_point) {
             return 0.;
         }
 
-        let right = self.top_left.x + self.ISize.width;
-        let bottom = self.top_left.y + self.ISize.height;
+        let right = self.top_left.x + self.i_size.width as i64;
+        let bottom = self.top_left.y + self.i_size.height as i64;
 
-        if IPoint.x < self.top_left.x {
-            if IPoint.y < self.top_left.y {
-                IPoint.distance_to(&self.top_left)
-            } else if IPoint.y > bottom {
-                IPoint.distance_to(&IPoint::new(self.top_left.x, bottom))
+        if i_point.x < self.top_left.x {
+            if i_point.y < self.top_left.y {
+                i_point.distance_to(&self.top_left)
+            } else if i_point.y > bottom {
+                i_point.distance_to(&IPoint::new(self.top_left.x, bottom))
             } else {
-                (self.top_left.x - IPoint.x) as f64
+                (self.top_left.x - i_point.x) as f64
             }
-        } else if IPoint.x > right {
-            if IPoint.y < self.top_left.y {
-                IPoint.distance_to(&IPoint::new(right, self.top_left.y))
-            } else if IPoint.y > bottom {
-                IPoint.distance_to(&IPoint::new(right, bottom))
+        } else if i_point.x > right {
+            if i_point.y < self.top_left.y {
+                i_point.distance_to(&IPoint::new(right, self.top_left.y))
+            } else if i_point.y > bottom {
+                i_point.distance_to(&IPoint::new(right, bottom))
             } else {
-                (IPoint.x - right) as f64
+                (i_point.x - right) as f64
             }
         } else {
-            if IPoint.y < self.top_left.y {
-                (self.top_left.y - IPoint.y) as f64
+            if i_point.y < self.top_left.y {
+                (self.top_left.y - i_point.y) as f64
             } else {
-                (IPoint.y - bottom) as f64
+                (i_point.y - bottom) as f64
             }
         }
     }
 
     /// Return whether or not the given IPoint is within the given IRectangle
-    pub fn contains(&self, IPoint: &IPoint) -> bool {
-        !(IPoint.x < self.top_left.x
-            || IPoint.x > self.top_left.x + self.ISize.width
-            || IPoint.y < self.top_left.y
-            || IPoint.y > self.top_left.y + self.ISize.height)
+    pub fn contains(&self, i_point: &IPoint) -> bool {
+        !(i_point.x < self.top_left.x
+            || i_point.x > self.top_left.x + self.i_size.width as i64
+            || i_point.y < self.top_left.y
+            || i_point.y > self.top_left.y + self.i_size.height as i64)
     }
 }
 

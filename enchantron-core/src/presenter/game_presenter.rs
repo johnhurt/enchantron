@@ -5,7 +5,7 @@ use crate::view_types::ViewTypes;
 
 use crate::event::{
     EnchantronEvent, EventBus, EventListener, HasListenerRegistrations, Layout,
-    ListenerRegistration, ViewportChange
+    ListenerRegistration, ViewportChange,
 };
 
 use crate::model::{Point, Rect, Size};
@@ -139,7 +139,9 @@ where
 
     /// Fire a viewport change event to the event bus
     fn fire_viewport_change_event(&self, viewport_rect: Rect) {
-        self.event_bus.post( ViewportChange { new_viewport_rect: viewport_rect });
+        self.event_bus.post(ViewportChange {
+            new_viewport_rect: viewport_rect,
+        });
     }
 
     fn on_magnify(
@@ -160,7 +162,8 @@ where
             );
 
             self.fire_viewport_change_event(
-                viewport_info.viewport_rect.clone());
+                viewport_info.viewport_rect.clone(),
+            );
             self.view.get_viewport().set_scale_and_location_point(
                 viewport_info.viewport_scale,
                 &viewport_info.viewport_rect.top_left,
@@ -174,8 +177,7 @@ where
         self.with_display_state_mut(|display_state| {
             display_state.drag_state = Option::Some(DragState::new(
                 drag_point.clone(),
-                display_state
-                    .get_viewport_rect().clone(),
+                display_state.get_viewport_rect().clone(),
             ));
         });
     }
@@ -211,7 +213,8 @@ where
             let new_viewport_info = display_state.move_viewport(new_position);
 
             self.fire_viewport_change_event(
-                new_viewport_info.viewport_rect.clone());
+                new_viewport_info.viewport_rect.clone(),
+            );
 
             let new_position_ref = &new_viewport_info.viewport_rect.top_left;
 

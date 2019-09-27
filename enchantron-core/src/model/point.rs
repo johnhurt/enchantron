@@ -1,4 +1,4 @@
-use std::ops::{Mul, MulAssign, Sub, Add};
+use std::ops::{Add, Mul, MulAssign, Sub};
 
 #[derive(Default, Debug, Clone)]
 pub struct Point {
@@ -49,7 +49,7 @@ impl MulAssign<f64> for Point {
     }
 }
 
-impl <'a, 'b> Sub<&'a Point> for &'b Point {
+impl<'a, 'b> Sub<&'a Point> for &'b Point {
     type Output = Point;
 
     fn sub(self, rhs: &'a Point) -> Point {

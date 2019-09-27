@@ -21,10 +21,17 @@ impl Rect {
         }
     }
 
+    pub fn bottom_right(&self) -> Point {
+        Point {
+            x: self.top_left.x + self.size.width,
+            y: self.top_left.y + self.size.height,
+        }
+    }
+
     /// Get the minimum distance from this rect to the given point.  If the given
     /// point is within this rectangle then 0 is returned
     pub fn distance_to(&self, point: &Point) -> f64 {
-        if self.contains(point) {
+        if self.contains_point(point) {
             return 0.;
         }
 
@@ -57,11 +64,18 @@ impl Rect {
     }
 
     /// Return whether or not the given point is within the given rectangle
-    pub fn contains(&self, point: &Point) -> bool {
+    pub fn contains_point(&self, point: &Point) -> bool {
         !(point.x < self.top_left.x
             || point.x > self.top_left.x + self.size.width
             || point.y < self.top_left.y
             || point.y > self.top_left.y + self.size.height)
+    }
+
+    /// Returns whether or not the given rect is completely within the bounds
+    /// of this rect
+    pub fn contains_rect(&self, rect: &Rect) -> bool {
+        self.contains_point(&rect.top_left)
+            && self.contains_point(&self.bottom_right())
     }
 }
 
@@ -69,8 +83,8 @@ impl Rect {
 fn test_contains() {
     let r = Rect::new(-1., -2., 3., 4.);
 
-    assert_eq!(r.contains(&Point::new(0., 0.)), true);
-    assert_eq!(r.contains(&Point::new(-1.000001, 0.)), false);
+    assert_eq!(r.contains_point(&Point::new(0., 0.)), true);
+    assert_eq!(r.contains_point(&Point::new(-1.000001, 0.)), false);
 }
 
 #[test]

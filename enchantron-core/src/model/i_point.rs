@@ -2,8 +2,8 @@ use std::ops::{Mul, MulAssign};
 
 #[derive(Default, Debug, Clone)]
 pub struct IPoint {
-    pub x: usize,
-    pub y: usize,
+    pub x: i64,
+    pub y: i64,
 }
 
 impl IPoint {
@@ -13,37 +13,37 @@ impl IPoint {
     /// assert_eq!(p.x, 1.0);
     /// assert_eq!(p.y, -2.0);
     /// ```
-    pub fn new(x: usize, y: usize) -> IPoint {
+    pub fn new(x: i64, y: i64) -> IPoint {
         IPoint { x: x, y: y }
     }
 
-    pub fn distance_to(&self, IPoint: &IPoint) -> f64 {
-        let dx = self.x - IPoint.x;
-        let dy = self.y - IPoint.y;
+    pub fn distance_to(&self, i_point: &IPoint) -> f64 {
+        let dx = (self.x - i_point.x) as f64;
+        let dy = (self.y - i_point.y) as f64;
 
-        ((dx * dx + dy * dy) as f64).sqrt()
+        (dx * dx + dy * dy).sqrt()
     }
 }
 
-impl Mul<usize> for IPoint {
+impl Mul<i64> for IPoint {
     type Output = IPoint;
 
-    fn mul(mut self, rhs: usize) -> IPoint {
+    fn mul(mut self, rhs: i64) -> IPoint {
         self *= rhs;
         self
     }
 }
 
-impl Mul<usize> for &IPoint {
+impl Mul<i64> for &IPoint {
     type Output = IPoint;
 
-    fn mul(self, rhs: usize) -> IPoint {
+    fn mul(self, rhs: i64) -> IPoint {
         self.clone() * rhs
     }
 }
 
-impl MulAssign<usize> for IPoint {
-    fn mul_assign(&mut self, rhs: usize) {
+impl MulAssign<i64> for IPoint {
+    fn mul_assign(&mut self, rhs: i64) {
         self.x *= rhs;
         self.y *= rhs;
     }

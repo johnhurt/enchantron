@@ -1,13 +1,16 @@
-use std::sync::{Arc, RwLock, Mutex };
+use std::sync::{Arc, Mutex, RwLock};
 
-use crate::event::{ EventBus, EnchantronEvent, ViewportChange, EventListener, ListenerRegistration, HasListenerRegistrations};
-use crate::model::{IRect, ISize, IPoint, Rect, Size};
+use crate::event::{
+    EnchantronEvent, EventBus, EventListener, HasListenerRegistrations,
+    ListenerRegistration, ViewportChange,
+};
+use crate::model::{IPoint, IRect, ISize, Rect, Size};
 use crate::native::RuntimeResources;
 use crate::view_types::ViewTypes;
 
 use super::{SpriteSource, SpriteSourceWrapper};
 
-pub const DEFAULT_TILE_SIZE : f64 = 32.;
+pub const DEFAULT_TILE_SIZE: usize = 32;
 
 pub struct TerrainGenerator<T>
 where
@@ -25,10 +28,9 @@ where
 {
     vec_size: ISize,
     terrain_tiles: Vec<Vec<T::Sprite>>,
-    tile_size: f64,
+    tile_size: usize,
     top_left_tile: IPoint,
-    top_left_offset_in_tile: Point,
-    currect_viewport_rect: Rect,
+    tile_terrain_coverage: Rect,
 }
 
 impl<T> HasListenerRegistrations for TerrainGenerator<T>
@@ -56,7 +58,6 @@ where
         info!("Viewport changed : {:?}", event.new_viewport_rect);
 
         self.on_viewport_change(&event.new_viewport_rect);
-
     }
 }
 
@@ -105,18 +106,34 @@ where
         action(&mut *inner)
     }
 
-    // Called when the viewport changes to adjust the terrain
-    fn on_viewport_change(&self, veiwport_rect: &Rect) {
-        if self.with_inner(|inner| inner.terrain_updates_required(veiwport_rect)) {
-            self.with_inner_mut(|inner| {
-                inner.increase_size_for(min_size, &self.sprite_source)
-            })
+    /// Called when the viewport changes to adjust the terrain.  This method
+    /// 1. Checks to see if the terrain needs to be updated to contain the
+    ///    given viewport, and if not, the method returns
+    /// 2. checks to see if the size of the terrain tiles is big enough to
+    ///    contain the viewport rect given
+    /// 3. if the terrain tiles needs to be altered, the inner is locked and
+    ///    resized.  Resizing the terrain tiles invalidates the textures on the
+    ///    tiles because it can introduce unpredictable gaps, so the whole
+    ///    terrain needs to be retextured.
+    /// 4. ?
+    fn on_viewport_change(&self, viewport_rect: &Rect) {
+        if !self.with_inner(|inr| inr.terrain_updates_required(viewport_rect)) {
+            return;
         }
-    }
 
-    // ensure that the size of the terrain tiles 2d array is gte the size given
-    fn ensure_size(&self, min_size: &ISize) {
+        let tiles_size = self.with_inner(|inner| {
+            inner.viewport_size_to_tile_size(&viewport_rect.size)
+        });
 
+        if !self.with_inner(|inner| inner.check_size_increased(&tiles_size)) {
+            self.with_inner_mut(|inner| {
+                inner.increase_size_for(&tiles_size, &self.sprite_source)
+            });
+
+            self.with_inner(|inner| {
+                inner.fully_update_terrain_tiles(viewport_rect)
+            });
+        }
     }
 }
 
@@ -124,46 +141,49 @@ impl<T> Inner<T>
 where
     T: ViewTypes,
 {
-    pub fn new(tile_size: f64) -> Inner<T> {
+    pub fn new(tile_size: usize) -> Inner<T> {
         Inner {
             terrain_tiles: Default::default(),
             vec_size: Default::default(),
             tile_size: tile_size,
             top_left_tile: Default::default(),
-            top_left_offset_in_tile: Default::default(),
-            currect_viewport_rect: Default::default(),
+            tile_terrain_coverage: Default::default(),
         }
     }
 
     /// Get the tile size required to support the given viewport size based
     /// on the configured size of the tiles
     fn viewport_size_to_tile_size(&self, viewport_size: &Size) -> ISize {
+        let tile_size_f64 = self.tile_size as f64;
         ISize::new(
-            ((viewport_size.width / self.tile_size).floor() + 1.) as usize,
-            ((viewport_size.height / self.tile_size).floor() + 1.) as usize)
+            ((viewport_size.width / tile_size_f64).floor() + 1.) as usize,
+            ((viewport_size.height / tile_size_f64).floor() + 1.) as usize,
+        )
     }
 
-    /// determine if the terrain tiles need updating
+    /// Determine if the terrain tiles need updating
     fn terrain_updates_required(&self, new_viewport_rect: &Rect) -> bool {
-        let terrain_tile_size
-                = self.viewport_size_to_tile_size(&new_viewport_rect.size);
-
-        self.check_size_increased(&terrain_tile_size)
-                || self.check_top_left_tile_changed(new_viewport_rect)
+        !self.tile_terrain_coverage.contains_rect(new_viewport_rect)
     }
+
+    /// Get the location of the top-left corner of the tile that contains the
+    /// given point
+    fn get_top_left_of_tile_containing(&self, point: &Point) -> Point {
+        let tile_size_f64 = self.tile_size as f64;
+        Point::new(
+            (point.x / tile_size_f64).floor() * tile_size_f64,
+            (point.y / tile_size_f64).floor() * tile_size_f64,
+        );
+    }
+
+    /// Fully update the terrain tiles based on the given size
+    fn fully_update_terrain_tiles(&self, new_viewport_rect: &Rect) {}
 
     /// return true if the current size of the 2d vector array is bigger than
     /// or equal to the size given in both height and width
     fn check_size_increased(&self, min_size: &ISize) -> bool {
         min_size.width > self.vec_size.width
             || min_size.height > self.vec_size.height
-    }
-
-    fn check_top_left_tile_changed(&self, new_viewport_rect: &Rect) -> bool {
-        let top_left_shift = &self.currect_viewport_rect.top_left
-                - &new_viewport_rect.top_left;
-
-
     }
 
     /// Increase the size of the 2d array of terrain tiles to accomodate the
@@ -173,21 +193,24 @@ where
         min_size: &ISize,
         sprite_source: &SpriteSourceWrapper<T>,
     ) {
-        if self.check_size_increased(min_size) {
+        if !self.check_size_increased(min_size) {
             // ^ double checked lock
-
-            if min_size.width > self.vec_size.width {
-                let cols_to_add = min_size.width - self.vec_size.width;
-                self.increase_row_width_by(cols_to_add, sprite_source);
-                self.vec_size.width = min_size.width;
-            }
-
-            if min_size.height > self.vec_size.height {
-                let rows_to_add = min_size.height - self.vec_size.height;
-                self.increase_row_count_by(rows_to_add, sprite_source);
-                self.vec_size.height = min_size.height;
-            }
+            return;
         }
+
+        if min_size.width > self.vec_size.width {
+            let cols_to_add = min_size.width - self.vec_size.width;
+            self.increase_row_width_by(cols_to_add, sprite_source);
+            self.vec_size.width = min_size.width;
+        }
+
+        if min_size.height > self.vec_size.height {
+            let rows_to_add = min_size.height - self.vec_size.height;
+            self.increase_row_count_by(rows_to_add, sprite_source);
+            self.vec_size.height = min_size.height;
+        }
+
+        self.top_left_tile = Default::default();
     }
 
     /// Icnrease the size of all the existing rows in the terrain to the given

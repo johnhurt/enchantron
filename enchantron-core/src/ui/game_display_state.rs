@@ -1,6 +1,6 @@
 use std::sync::{Arc, Weak};
 
-use crate::event::{EventBus, EnchantronEvent};
+use crate::event::{EnchantronEvent, EventBus};
 use crate::model::{Point, Rect, Size};
 use crate::native::{RuntimeResources, Texture};
 use crate::ui::{
@@ -80,7 +80,10 @@ where
 
     /// Move the viewport rect's top left to the given point and return a
     /// ref to the resulting top_left
-    pub fn move_viewport<'a>(&'a mut self, new_top_left: Point) -> &'a ViewportInfo {
+    pub fn move_viewport<'a>(
+        &'a mut self,
+        new_top_left: Point,
+    ) -> &'a ViewportInfo {
         self.viewport_info.move_viewport(new_top_left);
 
         &self.viewport_info

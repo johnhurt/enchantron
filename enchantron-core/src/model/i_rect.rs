@@ -1,8 +1,8 @@
 use super::{IPoint, ISize};
 
-use std::cmp::{min, max};
+use std::cmp::{max, min};
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct IRect {
     pub top_left: IPoint,
     pub size: ISize,
@@ -26,7 +26,7 @@ impl IRect {
     pub fn bottom_right(&self) -> IPoint {
         IPoint {
             x: self.top_left.x + self.size.width as i64,
-            y: self.top_left.y + self.size.height as i64
+            y: self.top_left.y + self.size.height as i64,
         }
     }
 
@@ -84,13 +84,19 @@ impl IRect {
     pub fn intersection(&self, other: &IRect) -> Option<IRect> {
         let new_top_left = IPoint::new(
             max(self.top_left.x, other.top_left.x),
-            max(self.top_left.y, other.top_left.y));
+            max(self.top_left.y, other.top_left.y),
+        );
 
         let new_bottom_right = IPoint::new(
-            min(self.top_left.x + self.size.width as i64,
-                other.top_left.x + other.size.width as i64),
-            min(self.top_left.y + self.size.height as i64,
-                other.top_left.y + other.size.height as i64));
+            min(
+                self.top_left.x + self.size.width as i64,
+                other.top_left.x + other.size.width as i64,
+            ),
+            min(
+                self.top_left.y + self.size.height as i64,
+                other.top_left.y + other.size.height as i64,
+            ),
+        );
 
         let signed_size = &new_top_left - &new_bottom_right;
 
@@ -99,10 +105,12 @@ impl IRect {
         if signed_size.x > 0 && signed_size.y > 0 {
             Some(IRect {
                 top_left: new_top_left,
-                size: ISize::new(signed_size.x as usize, signed_size.y as usize)
+                size: ISize::new(
+                    signed_size.x as usize,
+                    signed_size.y as usize,
+                ),
             })
-        }
-        else {
+        } else {
             None
         }
     }
@@ -110,28 +118,28 @@ impl IRect {
 
 #[test]
 fn test_contains_point() {
-    let r = IRect::new(-1., -2., 3., 4.);
+    let r = IRect::new(-1, -2, 3, 4);
 
-    assert_eq!(r.contains_point(&IPoint::new(0., 0.)), true);
-    assert_eq!(r.contains_point(&IPoint::new(-1.000001, 0.)), false);
+    assert_eq!(r.contains_point(&IPoint::new(0, 0)), true);
+    assert_eq!(r.contains_point(&IPoint::new(-2, 0)), false);
 }
 
 #[test]
 fn test_distance() {
-    let r = IRect::new(-1., -2., 3., 4.);
+    let r = IRect::new(-1, -2, 3, 4);
 
-    assert_eq!(r.distance_to(&IPoint::new(0., 0.)), 0.); // in
-    assert_eq!(r.distance_to(&IPoint::new(0., 3.)), 1.); // above
-    assert_eq!(r.distance_to(&IPoint::new(0., -4.)), 2.); // under
-    assert_eq!(r.distance_to(&IPoint::new(-4., 0.)), 3.); // left
-    assert_eq!(r.distance_to(&IPoint::new(6., 0.)), 4.); //right
+    assert_eq!(r.distance_to(&IPoint::new(0, 0)), 0.); // in
+    assert_eq!(r.distance_to(&IPoint::new(0, 3)), 1.); // above
+    assert_eq!(r.distance_to(&IPoint::new(0, -4)), 2.); // under
+    assert_eq!(r.distance_to(&IPoint::new(-4, 0)), 3.); // left
+    assert_eq!(r.distance_to(&IPoint::new(6, 0)), 4.); //right
 
-    assert_eq!(r.distance_to(&IPoint::new(-5., -5.)), 5.); // under left
-    assert_eq!(r.distance_to(&IPoint::new(-4., -6.)), 5.); // under left
-    assert_eq!(r.distance_to(&IPoint::new(5., -6.)), 5.); // under right
-    assert_eq!(r.distance_to(&IPoint::new(6., -5.)), 5.); // under right
-    assert_eq!(r.distance_to(&IPoint::new(-4., 6.)), 5.); // over left
-    assert_eq!(r.distance_to(&IPoint::new(-5., 5.)), 5.); // over left
-    assert_eq!(r.distance_to(&IPoint::new(5., 6.)), 5.); // over right
-    assert_eq!(r.distance_to(&IPoint::new(6., 5.)), 5.); // over right
+    assert_eq!(r.distance_to(&IPoint::new(-5, -5)), 5.); // under left
+    assert_eq!(r.distance_to(&IPoint::new(-4, -6)), 5.); // under left
+    assert_eq!(r.distance_to(&IPoint::new(5, -6)), 5.); // under right
+    assert_eq!(r.distance_to(&IPoint::new(6, -5)), 5.); // under right
+    assert_eq!(r.distance_to(&IPoint::new(-4, 6)), 5.); // over left
+    assert_eq!(r.distance_to(&IPoint::new(-5, 5)), 5.); // over left
+    assert_eq!(r.distance_to(&IPoint::new(5, 6)), 5.); // over right
+    assert_eq!(r.distance_to(&IPoint::new(6, 5)), 5.); // over right
 }

@@ -1,5 +1,7 @@
 use std::ops::{Add, Mul, MulAssign, Sub};
 
+use super::Size;
+
 #[derive(Default, Debug, Clone)]
 pub struct Point {
     pub x: f64,
@@ -62,6 +64,14 @@ impl Add<Point> for &Point {
 
     fn add(self, rhs: Point) -> Point {
         Point::new(self.x + rhs.x, self.y + rhs.y)
+    }
+}
+
+impl<'a> Add<&'a Size> for &Point {
+    type Output = Point;
+
+    fn add(self, rhs: &'a Size) -> Point {
+        Point::new(self.x + rhs.width, self.y + rhs.height)
     }
 }
 

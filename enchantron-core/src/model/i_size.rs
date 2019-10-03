@@ -1,6 +1,6 @@
 use std::ops::{Mul, MulAssign};
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
 pub struct ISize {
     pub width: usize,
     pub height: usize,

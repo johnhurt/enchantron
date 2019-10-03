@@ -1,4 +1,4 @@
-use super::{UPoint, ISize};
+use super::{ISize, UPoint};
 
 #[derive(Default, Debug, Clone)]
 pub struct URect {
@@ -67,28 +67,28 @@ impl URect {
 
 #[test]
 fn test_contains() {
-    let r = URect::new(-1., -2., 3., 4.);
+    let r = URect::new(9, 8, 13, 14);
 
-    assert_eq!(r.contains(&UPoint::new(0., 0.)), true);
-    assert_eq!(r.contains(&UPoint::new(-1.000001, 0.)), false);
+    assert_eq!(r.contains(&UPoint::new(10, 10)), true);
+    assert_eq!(r.contains(&UPoint::new(8, 0)), false);
 }
 
 #[test]
 fn test_distance() {
-    let r = URect::new(-1., -2., 3., 4.);
+    let r = URect::new(9, 8, 3, 4);
 
-    assert_eq!(r.distance_to(&UPoint::new(0., 0.)), 0.); // in
-    assert_eq!(r.distance_to(&UPoint::new(0., 3.)), 1.); // above
-    assert_eq!(r.distance_to(&UPoint::new(0., -4.)), 2.); // under
-    assert_eq!(r.distance_to(&UPoint::new(-4., 0.)), 3.); // left
-    assert_eq!(r.distance_to(&UPoint::new(6., 0.)), 4.); //right
+    assert_eq!(r.distance_to(&UPoint::new(10, 10)), 0.); // in
+    assert_eq!(r.distance_to(&UPoint::new(10, 13)), 1.); // above
+    assert_eq!(r.distance_to(&UPoint::new(10, 6)), 2.); // under
+    assert_eq!(r.distance_to(&UPoint::new(6, 10)), 3.); // left
+    assert_eq!(r.distance_to(&UPoint::new(16, 10)), 4.); //right
 
-    assert_eq!(r.distance_to(&UPoint::new(-5., -5.)), 5.); // under left
-    assert_eq!(r.distance_to(&UPoint::new(-4., -6.)), 5.); // under left
-    assert_eq!(r.distance_to(&UPoint::new(5., -6.)), 5.); // under right
-    assert_eq!(r.distance_to(&UPoint::new(6., -5.)), 5.); // under right
-    assert_eq!(r.distance_to(&UPoint::new(-4., 6.)), 5.); // over left
-    assert_eq!(r.distance_to(&UPoint::new(-5., 5.)), 5.); // over left
-    assert_eq!(r.distance_to(&UPoint::new(5., 6.)), 5.); // over right
-    assert_eq!(r.distance_to(&UPoint::new(6., 5.)), 5.); // over right
+    assert_eq!(r.distance_to(&UPoint::new(5, 5)), 5.); // under left
+    assert_eq!(r.distance_to(&UPoint::new(6, 4)), 5.); // under left
+    assert_eq!(r.distance_to(&UPoint::new(15, 4)), 5.); // under right
+    assert_eq!(r.distance_to(&UPoint::new(16, 5)), 5.); // under right
+    assert_eq!(r.distance_to(&UPoint::new(6, 16)), 5.); // over left
+    assert_eq!(r.distance_to(&UPoint::new(5, 15)), 5.); // over left
+    assert_eq!(r.distance_to(&UPoint::new(15, 16)), 5.); // over right
+    assert_eq!(r.distance_to(&UPoint::new(16, 15)), 5.); // over right
 }

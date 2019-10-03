@@ -9,19 +9,27 @@ pub struct UPoint {
 impl UPoint {
     /// Create a new UPoint with the given x and y UPoint:
     /// ```
-    /// let p = UPoint::new(1.0, -2.0);
-    /// assert_eq!(p.x, 1.0);
-    /// assert_eq!(p.y, -2.0);
+    /// let p = UPoint::new(11, 8);
+    /// assert_eq!(p.x, 11);
+    /// assert_eq!(p.y, 8);
     /// ```
     pub fn new(x: usize, y: usize) -> UPoint {
         UPoint { x: x, y: y }
     }
 
     pub fn distance_to(&self, i_point: &UPoint) -> f64 {
-        let dx = (self.x - i_point.x) as f64;
-        let dy = (self.y - i_point.y) as f64;
+        let dx = if self.x >= i_point.x {
+            self.x - i_point.x
+        } else {
+            i_point.x - self.x
+        };
+        let dy = if self.y >= i_point.y {
+            self.y - i_point.y
+        } else {
+            i_point.y - self.y
+        };
 
-        (dx * dx + dy * dy).sqrt()
+        ((dx * dx + dy * dy) as f64).sqrt()
     }
 }
 
@@ -51,8 +59,8 @@ impl MulAssign<usize> for UPoint {
 
 #[test]
 fn test_distance_to() {
-    let p1 = UPoint::new(0., 0.);
-    let p2 = UPoint::new(3., 4.);
+    let p1 = UPoint::new(0, 0);
+    let p2 = UPoint::new(3, 4);
 
     assert_eq!(p1.distance_to(&p2), 5.);
 }

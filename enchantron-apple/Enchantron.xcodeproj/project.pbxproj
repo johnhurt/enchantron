@@ -309,7 +309,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0940;
-				LastUpgradeCheck = 0940;
+				LastUpgradeCheck = 1100;
 				ORGANIZATIONNAME = "Rook And Pawn Industries, Inc.";
 				TargetAttributes = {
 					63410985211CC7C000D40139 = {
@@ -630,6 +630,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = N8F6RS8578;
+				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = "Enchantron macOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -654,6 +655,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = N8F6RS8578;
+				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = "Enchantron macOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

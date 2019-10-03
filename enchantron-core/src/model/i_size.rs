@@ -41,4 +41,8 @@ impl ISize {
     pub fn aspect_ratio(&self) -> usize {
         self.width / self.height
     }
+
+    pub fn is_zero(&self) -> bool {
+        self.width == 0 && self.height == 0
+    }
 }

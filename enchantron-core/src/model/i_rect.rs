@@ -1,35 +1,44 @@
 use super::{IPoint, ISize};
 
+use std::cmp::{min, max};
+
 #[derive(Default, Debug, Clone)]
 pub struct IRect {
     pub top_left: IPoint,
-    pub i_size: ISize,
+    pub size: ISize,
 }
 
 impl IRect {
     pub fn new(left: i64, top: i64, width: usize, height: usize) -> IRect {
         IRect {
             top_left: IPoint::new(left, top),
-            i_size: ISize::new(width, height),
+            size: ISize::new(width, height),
         }
     }
 
     pub fn center(&self) -> IPoint {
         IPoint {
-            x: self.top_left.x + self.i_size.width as i64 / 2,
-            y: self.top_left.y + self.i_size.height as i64 / 2,
+            x: self.top_left.x + self.size.width as i64 / 2,
+            y: self.top_left.y + self.size.height as i64 / 2,
+        }
+    }
+
+    pub fn bottom_right(&self) -> IPoint {
+        IPoint {
+            x: self.top_left.x + self.size.width as i64,
+            y: self.top_left.y + self.size.height as i64
         }
     }
 
     /// Get the minimum distance from this IRect to the given IPoint.  If the given
     /// IPoint is within this IRectangle then 0 is returned
     pub fn distance_to(&self, i_point: &IPoint) -> f64 {
-        if self.contains(i_point) {
+        if self.contains_point(i_point) {
             return 0.;
         }
 
-        let right = self.top_left.x + self.i_size.width as i64;
-        let bottom = self.top_left.y + self.i_size.height as i64;
+        let right = self.top_left.x + self.size.width as i64;
+        let bottom = self.top_left.y + self.size.height as i64;
 
         if i_point.x < self.top_left.x {
             if i_point.y < self.top_left.y {
@@ -57,20 +66,54 @@ impl IRect {
     }
 
     /// Return whether or not the given IPoint is within the given IRectangle
-    pub fn contains(&self, i_point: &IPoint) -> bool {
+    pub fn contains_point(&self, i_point: &IPoint) -> bool {
         !(i_point.x < self.top_left.x
-            || i_point.x > self.top_left.x + self.i_size.width as i64
+            || i_point.x > self.top_left.x + self.size.width as i64
             || i_point.y < self.top_left.y
-            || i_point.y > self.top_left.y + self.i_size.height as i64)
+            || i_point.y > self.top_left.y + self.size.height as i64)
+    }
+
+    /// Returns whether or not the given rect is completely within the bounds
+    /// of this rect
+    pub fn contains_rect(&self, rect: &IRect) -> bool {
+        self.contains_point(&rect.top_left)
+            && self.contains_point(&self.bottom_right())
+    }
+
+    /// Get the intersection between two irects
+    pub fn intersection(&self, other: &IRect) -> Option<IRect> {
+        let new_top_left = IPoint::new(
+            max(self.top_left.x, other.top_left.x),
+            max(self.top_left.y, other.top_left.y));
+
+        let new_bottom_right = IPoint::new(
+            min(self.top_left.x + self.size.width as i64,
+                other.top_left.x + other.size.width as i64),
+            min(self.top_left.y + self.size.height as i64,
+                other.top_left.y + other.size.height as i64));
+
+        let signed_size = &new_top_left - &new_bottom_right;
+
+        // If both parts of the signed size are positive, there is a non-trivial
+        // intersection, so return it
+        if signed_size.x > 0 && signed_size.y > 0 {
+            Some(IRect {
+                top_left: new_top_left,
+                size: ISize::new(signed_size.x as usize, signed_size.y as usize)
+            })
+        }
+        else {
+            None
+        }
     }
 }
 
 #[test]
-fn test_contains() {
+fn test_contains_point() {
     let r = IRect::new(-1., -2., 3., 4.);
 
-    assert_eq!(r.contains(&IPoint::new(0., 0.)), true);
-    assert_eq!(r.contains(&IPoint::new(-1.000001, 0.)), false);
+    assert_eq!(r.contains_point(&IPoint::new(0., 0.)), true);
+    assert_eq!(r.contains_point(&IPoint::new(-1.000001, 0.)), false);
 }
 
 #[test]

@@ -39,7 +39,6 @@ class Sprite : SKSpriteNode {
     DispatchQueue.main.async {
       self.currentTexture = texture
       self.texture = texture.texture
-      self.size = texture.texture.size()
     }
   }
   

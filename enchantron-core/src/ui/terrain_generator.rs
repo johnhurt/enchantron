@@ -331,7 +331,6 @@ where
                 tile.set_location_point(
                     &(&terrain_point * self.tile_size as f64),
                 );
-                tile.set_size(32., 32.);
             }
         }
 
@@ -346,7 +345,6 @@ where
                 tile.set_location_point(
                     &(&terrain_point * self.tile_size as f64),
                 );
-                tile.set_size(32., 32.);
             }
         }
     }
@@ -384,7 +382,10 @@ where
             return self.terrain_tiles_size.clone();
         }
 
-        debug!("Increasing terrain tiles cache to {:?}", &new_terrain_rect.size);
+        debug!(
+            "Increasing terrain tiles cache to {:?}",
+            &new_terrain_rect.size
+        );
 
         let width_inc = min_size
             .width
@@ -556,7 +557,9 @@ mod tests {
 
         assert_eq!(new_terrain_rect, Some(IRect::new(-2, -2, 4, 4)));
 
-        this.increase_size_for(new_terrain_rect, Default::default);
+        let terrain_rect = new_terrain_rect.as_ref().map(Clone::clone).unwrap();
+
+        this.increase_size_for(terrain_rect, Default::default);
 
         viewport_rect.top_left.x = -2. * tile_size_f64;
         viewport_rect.top_left.y = -2. * tile_size_f64;
@@ -592,6 +595,8 @@ mod tests {
         viewport_rect.size.width = 4. * tile_size_f64;
         viewport_rect.size.height = 4. * tile_size_f64;
 
-        assert!(this.check_size_increased(&viewport_rect));
+        new_terrain_rect = this.terrain_updates_required(&viewport_rect);
+
+        assert!(this.check_size_increased(&new_terrain_rect.unwrap().size));
     }
 }

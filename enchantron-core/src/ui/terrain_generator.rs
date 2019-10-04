@@ -135,13 +135,15 @@ where
         let valid_tile_size = {
             let min_size = &terrain_rect.size;
 
-            if !self.with_inner(|inner| inner.check_size_increased(min_size)) {
+            if self.with_inner(|inner| inner.check_size_increased(min_size)) {
+                debug!("Size increased");
                 self.with_inner_mut(|inner| {
                     inner.increase_size_for(terrain_rect, || {
                         self.sprite_source.create_sprite()
                     })
                 })
             } else {
+                debug!("Size not increased");
                 let new_valid_rect = self
                     .with_inner(|inner| {
                         inner.calculate_new_valid_tiles(&terrain_rect)
@@ -192,21 +194,6 @@ where
             tile_terrain_coverage: Default::default(),
             top_left_tile: Default::default(),
         }
-    }
-
-    /// Get the tile size required to support the given viewport size based
-    /// on the configured size of the tiles
-    fn viewport_size_to_tile_size(&self, viewport_size: &Size) -> ISize {
-        let tile_size_f64 = self.tile_size as f64;
-
-        if viewport_size.is_zero() {
-            return Default::default();
-        }
-
-        ISize::new(
-            ((viewport_size.width / tile_size_f64).floor() + 1.) as usize,
-            ((viewport_size.height / tile_size_f64).floor() + 1.) as usize,
-        )
     }
 
     /// Get the terrain rect required to cover the given viewport rect based on
@@ -308,18 +295,16 @@ where
         natural_x: &usize,
         natural_y: &usize,
     ) -> &'a T {
-        let real_x =
+        let real_col =
             (self.top_left_tile.x + natural_x) % self.terrain_tiles_size.width;
-        let real_y =
+        let real_row =
             (self.top_left_tile.y + natural_y) % self.terrain_tiles_size.height;
 
-        debug!("Getting Tile {}, {}", real_x, real_y);
-
         self.terrain_tiles
-            .get(real_x)
-            .and_then(|row| row.get(real_y))
+            .get(real_row)
+            .and_then(|row| row.get(real_col))
             .unwrap_or_else(|| {
-                error!("Invalid row, col ({}, {}) ", real_x, real_y);
+                error!("Invalid row, col ({}, {}) ", real_col, real_row);
                 panic!("Index out of bounds error in terrain tiles array");
             })
     }
@@ -342,10 +327,11 @@ where
                 terrain_point.x = top_left.x + x as i64;
                 terrain_point.y = top_left.y + y as i64;
                 let tile = self.get_tile_at(&x, &y);
+                tile_updater(tile, &terrain_point);
                 tile.set_location_point(
                     &(&terrain_point * self.tile_size as f64),
                 );
-                tile_updater(tile, &terrain_point);
+                tile.set_size(32., 32.);
             }
         }
 
@@ -355,7 +341,12 @@ where
             for x in 0..self.terrain_tiles_size.width {
                 terrain_point.x = top_left.x + x as i64;
                 terrain_point.y = top_left.y + y as i64;
-                tile_updater(self.get_tile_at(&x, &y), &terrain_point);
+                let tile = self.get_tile_at(&x, &y);
+                tile_updater(tile, &terrain_point);
+                tile.set_location_point(
+                    &(&terrain_point * self.tile_size as f64),
+                );
+                tile.set_size(32., 32.);
             }
         }
     }
@@ -392,6 +383,8 @@ where
             // ^ double checked lock
             return self.terrain_tiles_size.clone();
         }
+
+        debug!("Increasing terrain tiles cache to {:?}", &new_terrain_rect.size);
 
         let width_inc = min_size
             .width
@@ -522,14 +515,14 @@ mod tests {
     }
 
     #[test]
-    fn test_viewport_rect_to_terrain_rect() {
+    fn test_terrain_updates_required() {
         let mut this = default_test_terrain_generator();
 
         let mut viewport_rect = Rect::default();
-        let mut terrain_rect =
-            this.viewport_rect_to_terrain_rect(&viewport_rect);
+        let mut new_terrain_rect =
+            this.terrain_updates_required(&viewport_rect);
 
-        assert_eq!(terrain_rect, IRect::default());
+        assert_eq!(new_terrain_rect, Some(IRect::default()));
 
         let tile_size_f64 = this.tile_size as f64;
 
@@ -538,18 +531,18 @@ mod tests {
         viewport_rect.top_left.x = 0.5 * tile_size_f64;
         viewport_rect.top_left.y = -1.5 * tile_size_f64;
 
-        terrain_rect = this.viewport_rect_to_terrain_rect(&viewport_rect);
+        new_terrain_rect = this.terrain_updates_required(&viewport_rect);
 
-        assert_eq!(terrain_rect, IRect::new(0, -2, 3, 4));
+        assert_eq!(new_terrain_rect, Some(IRect::new(0, -2, 3, 4)));
 
         viewport_rect.top_left.x = 0.1 * tile_size_f64;
         viewport_rect.top_left.y = 0.9 * tile_size_f64;
         viewport_rect.size.width = 1.91 * tile_size_f64;
         viewport_rect.size.height = 3. * tile_size_f64;
 
-        terrain_rect = this.viewport_rect_to_terrain_rect(&viewport_rect);
+        new_terrain_rect = this.terrain_updates_required(&viewport_rect);
 
-        assert_eq!(terrain_rect, IRect::new(0, 0, 3, 4));
+        assert_eq!(new_terrain_rect, Some(IRect::new(0, 0, 3, 4)));
 
         // verify the centering of smaller viewports in larger tile buffers
         this = default_test_terrain_generator();
@@ -559,22 +552,46 @@ mod tests {
         viewport_rect.size.width = 4. * tile_size_f64;
         viewport_rect.size.height = 4. * tile_size_f64;
 
-        terrain_rect = this.viewport_rect_to_terrain_rect(&viewport_rect);
+        new_terrain_rect = this.terrain_updates_required(&viewport_rect);
 
-        assert_eq!(terrain_rect, IRect::new(-2, -2, 4, 4));
+        assert_eq!(new_terrain_rect, Some(IRect::new(-2, -2, 4, 4)));
 
-        this.increase_size_for(terrain_rect, Default::default);
+        this.increase_size_for(new_terrain_rect, Default::default);
 
-        this = default_test_terrain_generator();
+        viewport_rect.top_left.x = -2. * tile_size_f64;
+        viewport_rect.top_left.y = -2. * tile_size_f64;
+        viewport_rect.size.width = 2. * tile_size_f64;
+        viewport_rect.size.height = 2. * tile_size_f64;
+
+        new_terrain_rect = this.terrain_updates_required(&viewport_rect);
+
+        assert_eq!(new_terrain_rect, None);
+
+        viewport_rect.top_left.x = 1. * tile_size_f64;
+        viewport_rect.top_left.y = 1. * tile_size_f64;
+        viewport_rect.size.width = 2. * tile_size_f64;
+        viewport_rect.size.height = 2. * tile_size_f64;
+
+        new_terrain_rect = this.terrain_updates_required(&viewport_rect);
+
+        assert_eq!(new_terrain_rect, Some(IRect::new(0, 0, 4, 4)));
+    }
+
+    #[test]
+    fn test_check_size_increased() {
+        let mut this = default_test_terrain_generator();
+
+        let mut viewport_rect = Rect::default();
+        let mut new_terrain_rect =
+            this.terrain_updates_required(&viewport_rect);
+
+        let tile_size_f64 = this.tile_size as f64;
 
         viewport_rect.top_left.x = -2. * tile_size_f64;
         viewport_rect.top_left.y = -2. * tile_size_f64;
         viewport_rect.size.width = 4. * tile_size_f64;
         viewport_rect.size.height = 4. * tile_size_f64;
 
-        terrain_rect = this.viewport_rect_to_terrain_rect(&viewport_rect);
+        assert!(this.check_size_increased(&viewport_rect));
     }
-
-    #[test]
-    fn test_terrain_updates_required() {}
 }

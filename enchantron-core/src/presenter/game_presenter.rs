@@ -63,6 +63,10 @@ where
         self.with_display_state_mut(|display_state| {
             let viewport_info = display_state.layout(new_size);
 
+            self.fire_viewport_change_event(
+                viewport_info.viewport_rect.clone(),
+            );
+
             self.view
                 .get_viewport()
                 .set_location_point(&viewport_info.viewport_rect.top_left);

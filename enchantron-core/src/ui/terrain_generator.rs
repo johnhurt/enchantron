@@ -164,10 +164,16 @@ where
         };
 
         let grass = self.runtime_resources.textures().overworld.grass();
+        let dirt = self.runtime_resources.textures().overworld.dirt();
 
         self.with_inner(|inner| {
-            inner.update_terrain_tiles(valid_tile_size, |tile, _| {
-                tile.set_texture(grass)
+            inner.update_terrain_tiles(valid_tile_size, |tile, point| {
+                if point.x % 2 == 0 && point.y % 2 == 0 {
+                    tile.set_texture(grass)
+                }
+                else {
+                    tile.set_texture(dirt)
+                }
             });
         });
     }
@@ -240,7 +246,7 @@ where
         // (in tiles)
         if terrain_rect.size.width <= self.terrain_tiles_size.width {
             let dw = self.terrain_tiles_size.width - terrain_rect.size.width;
-            terrain_rect.top_left.x = dw as i64 / 2;
+            terrain_rect.top_left.x -= dw as i64 / 2;
             terrain_rect.size.width = self.terrain_tiles_size.width;
         }
 
@@ -379,6 +385,7 @@ where
 
         if !self.check_size_increased(min_size) {
             // ^ double checked lock
+            debug!("Double checked lock failed");
             return self.terrain_tiles_size.clone();
         }
 
@@ -419,19 +426,23 @@ where
             );
         }
 
-        self.calculate_new_valid_tiles(&new_terrain_rect)
+        let (new_top_left, valid_size) = self
+            .calculate_new_valid_tiles(&new_terrain_rect)
             .map(|valid_tiles| {
                 let URect {
-                    size,
+                    size: valid_size,
                     top_left: new_top_left,
                 } = valid_tiles;
-                self.update_terrain_tiles_location(
-                    new_terrain_rect,
-                    new_top_left,
-                );
-                size
+                (new_top_left, valid_size)
             })
-            .unwrap_or_default()
+            .unwrap_or_default();
+
+        self.update_terrain_tiles_location(
+            new_terrain_rect,
+            new_top_left,
+        );
+
+        valid_size
     }
 
     /// Icnrease the size of all the existing rows in the terrain to the given
@@ -446,7 +457,7 @@ where
         self.terrain_tiles.iter_mut().for_each(|row| {
             let to_insert = iter::repeat_with(tile_source).take(cols_to_add);
 
-            row.splice(insert_point..insert_point, to_insert);
+            row.splice(insert_point..insert_point, to_insert).for_each(|_|{});
         });
 
         self.top_left_tile.x += cols_to_add;
@@ -473,6 +484,7 @@ where
 
         self.top_left_tile.y += rows_to_add;
         self.terrain_tiles_size.height += rows_to_add;
+
     }
 }
 
@@ -523,7 +535,7 @@ mod tests {
         let mut new_terrain_rect =
             this.terrain_updates_required(&viewport_rect);
 
-        assert_eq!(new_terrain_rect, Some(IRect::default()));
+        assert_eq!(new_terrain_rect, None);
 
         let tile_size_f64 = this.tile_size as f64;
 
@@ -581,12 +593,10 @@ mod tests {
     }
 
     #[test]
-    fn test_check_size_increased() {
+    fn test_size_increased() {
         let mut this = default_test_terrain_generator();
 
         let mut viewport_rect = Rect::default();
-        let mut new_terrain_rect =
-            this.terrain_updates_required(&viewport_rect);
 
         let tile_size_f64 = this.tile_size as f64;
 
@@ -595,8 +605,16 @@ mod tests {
         viewport_rect.size.width = 4. * tile_size_f64;
         viewport_rect.size.height = 4. * tile_size_f64;
 
-        new_terrain_rect = this.terrain_updates_required(&viewport_rect);
+        let mut new_terrain_rect = this.terrain_updates_required(&viewport_rect);
+
+        assert_eq!(new_terrain_rect, Some(IRect::new(-2, -2, 4, 4)));
+
+        let terrain_rect = new_terrain_rect.as_ref().cloned().unwrap();
 
         assert!(this.check_size_increased(&new_terrain_rect.unwrap().size));
+
+        this.increase_size_for(terrain_rect, Default::default);
+
+        assert_eq!(this.tile_terrain_coverage, IRect::new(-2, -2, 4, 4));
     }
 }

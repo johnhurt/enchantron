@@ -77,7 +77,7 @@ impl IRect {
     /// of this rect
     pub fn contains_rect(&self, rect: &IRect) -> bool {
         self.contains_point(&rect.top_left)
-            && self.contains_point(&self.bottom_right())
+            && self.contains_point(&rect.bottom_right())
     }
 
     /// Get the intersection between two irects
@@ -122,6 +122,16 @@ fn test_contains_point() {
 
     assert_eq!(r.contains_point(&IPoint::new(0, 0)), true);
     assert_eq!(r.contains_point(&IPoint::new(-2, 0)), false);
+}
+
+#[test]
+fn test_contains_rect() {
+    let r = IRect {
+        top_left: IPoint { x: -2, y: -2 },
+        size: ISize { width: 4, height: 4 }
+    };
+
+    assert!(r.contains_rect(&r));
 }
 
 #[test]

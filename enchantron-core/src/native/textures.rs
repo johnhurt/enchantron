@@ -68,7 +68,8 @@ macro_rules! define_texture_atlas {
 }
 
 define_texture_atlas!(Overworld(x_tile_count: 40, y_tile_count: 36) {
-  grass(left: 0, top: 0, width: 1, height: 1)
+  grass(left: 0, top: 0, width: 1, height: 1),
+  dirt(left: 2, top: 32, width: 1, height: 1)
 });
 
 pub struct Textures<T: Texture> {

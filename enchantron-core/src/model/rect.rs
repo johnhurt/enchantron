@@ -75,7 +75,7 @@ impl Rect {
     /// of this rect
     pub fn contains_rect(&self, rect: &Rect) -> bool {
         self.contains_point(&rect.top_left)
-            && self.contains_point(&self.bottom_right())
+            && self.contains_point(&rect.bottom_right())
     }
 }
 

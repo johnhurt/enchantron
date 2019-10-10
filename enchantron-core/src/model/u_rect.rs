@@ -1,6 +1,6 @@
 use super::{ISize, UPoint};
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct URect {
     pub top_left: UPoint,
     pub size: ISize,
@@ -54,6 +54,10 @@ impl URect {
                 (u_point.y - bottom) as f64
             }
         }
+    }
+
+    pub fn area(&self) -> usize {
+        self.size.width * self.size.height
     }
 
     /// Return whether or not the given UPoint is within the given URectangle

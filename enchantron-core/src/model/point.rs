@@ -2,7 +2,7 @@ use std::ops::{Add, Mul, MulAssign, Sub};
 
 use super::Size;
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, PartialEq)]
 pub struct Point {
     pub x: f64,
     pub y: f64,

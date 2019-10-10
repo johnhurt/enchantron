@@ -98,7 +98,7 @@ impl IRect {
             ),
         );
 
-        let signed_size = &new_top_left - &new_bottom_right;
+        let signed_size = &new_bottom_right - &new_top_left;
 
         // If both parts of the signed size are positive, there is a non-trivial
         // intersection, so return it
@@ -152,4 +152,23 @@ fn test_distance() {
     assert_eq!(r.distance_to(&IPoint::new(-5, 5)), 5.); // over left
     assert_eq!(r.distance_to(&IPoint::new(5, 6)), 5.); // over right
     assert_eq!(r.distance_to(&IPoint::new(6, 5)), 5.); // over right
+}
+
+#[test]
+fn test_intersection() {
+    let mut rect = IRect::default();
+
+    assert_eq!(rect.intersection(&rect).as_ref(), None);
+
+    rect.size = ISize::new(1, 1);
+
+    assert_eq!(rect.intersection(&rect).as_ref(), Some(&rect));
+
+    let rect1 = IRect::new(0, 0, 4, 4);
+    let rect2 = IRect::new(-1, -2, 4, 4);
+    let itx1 = rect1.intersection(&rect2);
+    let itx2 = rect2.intersection(&rect1);
+
+    assert_eq!(Some(IRect::new(0, 0, 3, 2)), itx1);
+    assert_eq!(itx1, itx2);
 }

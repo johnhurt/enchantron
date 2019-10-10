@@ -1,6 +1,6 @@
 use std::ops::{Mul, MulAssign};
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct UPoint {
     pub x: usize,
     pub y: usize,

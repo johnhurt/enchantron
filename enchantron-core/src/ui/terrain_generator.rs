@@ -15,6 +15,7 @@ use super::{
 };
 
 pub const DEFAULT_TILE_SIZE: usize = 32;
+pub const MARGIN_FRACTION: f64 = 0.1;
 
 pub struct TerrainGenerator<T>
 where
@@ -202,17 +203,21 @@ where
     fn viewport_rect_to_terrain_rect(&self, viewport_rect: &Rect) -> IRect {
         let tile_size_f64 = self.tile_size as f64;
 
+        let margin = MARGIN_FRACTION * f64::max(
+            viewport_rect.size.height,
+            viewport_rect.size.width);
+
         let viewport_top_left = &viewport_rect.top_left;
         let viewport_bottom_right = viewport_top_left + &viewport_rect.size;
 
         let top_left = IPoint {
-            x: (viewport_top_left.x / tile_size_f64).floor() as i64,
-            y: (viewport_top_left.y / tile_size_f64).floor() as i64,
+            x: ((viewport_top_left.x - margin)/ tile_size_f64).floor() as i64,
+            y: ((viewport_top_left.y - margin)/ tile_size_f64).floor() as i64,
         };
 
         let bottom_right = IPoint {
-            x: (viewport_bottom_right.x / tile_size_f64).ceil() as i64,
-            y: (viewport_bottom_right.y / tile_size_f64).ceil() as i64,
+            x: ((viewport_bottom_right.x + margin)/ tile_size_f64).ceil() as i64,
+            y: ((viewport_bottom_right.y + margin)/ tile_size_f64).ceil() as i64,
         };
 
         let size = (bottom_right - &top_left).to_size().expect("bad size");

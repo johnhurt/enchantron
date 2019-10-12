@@ -6,16 +6,7 @@ extern crate log;
 extern crate getset;
 #[macro_use]
 extern crate nom;
-#[macro_use]
-extern crate cached;
 
-/*
-pub use self::application_context::ApplicationContext;
-pub use self::util::RustString;
-pub use self::ui::ClickHandler;
-pub use self::ui::DragHandler;
-pub use self::ui::LayoutHandler;
-*/
 pub use self::lib_gen::*;
 
 mod util;
@@ -25,6 +16,8 @@ pub(crate) mod ui;
 
 #[macro_use]
 mod model;
+
+mod game;
 
 mod application_context;
 mod event;

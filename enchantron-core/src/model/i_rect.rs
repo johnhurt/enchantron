@@ -128,7 +128,10 @@ fn test_contains_point() {
 fn test_contains_rect() {
     let r = IRect {
         top_left: IPoint { x: -2, y: -2 },
-        size: ISize { width: 4, height: 4 }
+        size: ISize {
+            width: 4,
+            height: 4,
+        },
     };
 
     assert!(r.contains_rect(&r));

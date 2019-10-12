@@ -15,7 +15,7 @@ use super::{
 };
 
 pub const DEFAULT_TILE_SIZE: usize = 32;
-pub const MARGIN_FRACTION: f64 = 0.1;
+pub const DEFAULT_MARGIN_FRACTION: f64 = 0.1;
 
 pub struct TerrainGenerator<T>
 where
@@ -34,6 +34,7 @@ where
     terrain_tiles_size: ISize,
     terrain_tiles: Vec<Vec<T>>,
     tile_size: usize,
+    margin_fraction: f64,
     tile_terrain_coverage: IRect,
     top_left_tile: UPoint,
 }
@@ -166,8 +167,7 @@ where
             inner.update_terrain_tiles(valid_tile_rect, |tile, point| {
                 if point.x % 2 == 0 && point.y % 2 == 0 {
                     tile.set_texture(grass)
-                }
-                else {
+                } else {
                     tile.set_texture(dirt)
                 }
             });
@@ -180,7 +180,7 @@ where
     T: Sized + HasMutableLocation + HasMutableSize + HasMutableVisibility,
 {
     fn default() -> Inner<T> {
-        Inner::new(DEFAULT_TILE_SIZE)
+        Inner::new(DEFAULT_TILE_SIZE, DEFAULT_MARGIN_FRACTION)
     }
 }
 
@@ -188,11 +188,12 @@ impl<T> Inner<T>
 where
     T: Sized + HasMutableLocation + HasMutableSize + HasMutableVisibility,
 {
-    pub fn new(tile_size: usize) -> Inner<T> {
+    pub fn new(tile_size: usize, margin_fraction: f64) -> Inner<T> {
         Inner {
             terrain_tiles: Default::default(),
             terrain_tiles_size: Default::default(),
             tile_size: tile_size,
+            margin_fraction: margin_fraction,
             tile_terrain_coverage: Default::default(),
             top_left_tile: Default::default(),
         }
@@ -203,21 +204,22 @@ where
     fn viewport_rect_to_terrain_rect(&self, viewport_rect: &Rect) -> IRect {
         let tile_size_f64 = self.tile_size as f64;
 
-        let margin = MARGIN_FRACTION * f64::max(
-            viewport_rect.size.height,
-            viewport_rect.size.width);
+        let margin = self.margin_fraction
+            * f64::max(viewport_rect.size.height, viewport_rect.size.width);
 
         let viewport_top_left = &viewport_rect.top_left;
         let viewport_bottom_right = viewport_top_left + &viewport_rect.size;
 
         let top_left = IPoint {
-            x: ((viewport_top_left.x - margin)/ tile_size_f64).floor() as i64,
-            y: ((viewport_top_left.y - margin)/ tile_size_f64).floor() as i64,
+            x: ((viewport_top_left.x - margin) / tile_size_f64).floor() as i64,
+            y: ((viewport_top_left.y - margin) / tile_size_f64).floor() as i64,
         };
 
         let bottom_right = IPoint {
-            x: ((viewport_bottom_right.x + margin)/ tile_size_f64).ceil() as i64,
-            y: ((viewport_bottom_right.y + margin)/ tile_size_f64).ceil() as i64,
+            x: ((viewport_bottom_right.x + margin) / tile_size_f64).ceil()
+                as i64,
+            y: ((viewport_bottom_right.y + margin) / tile_size_f64).ceil()
+                as i64,
         };
 
         let size = (bottom_right - &top_left).to_size().expect("bad size");
@@ -261,27 +263,24 @@ where
 
     /// Add the two points together whithin the bounds of the tile grid system
     fn tile_grid_add(&self, lhs: &UPoint, rhs: &IPoint) -> UPoint {
-
         let tile_grid_width = self.terrain_tiles_size.width as i64;
         let tile_grid_height = self.terrain_tiles_size.height as i64;
 
         UPoint::new(
             (lhs.x as i64 + rhs.x).rem_euclid(tile_grid_width) as usize,
-            (lhs.y as i64 + rhs.y).rem_euclid(tile_grid_height) as usize
+            (lhs.y as i64 + rhs.y).rem_euclid(tile_grid_height) as usize,
         )
-
     }
 
     /// Assume that the given point p is a point within the bounds of the
     /// tile grid, get the offset from origin of the tile grid (the top left)
     fn tile_grid_offset_from_origin(&self, p: &UPoint) -> IPoint {
-
         let grid_width = self.terrain_tiles_size.width as i64;
         let grid_height = self.terrain_tiles_size.height as i64;
 
         IPoint::new(
             (p.x as i64 - self.top_left_tile.x as i64).rem_euclid(grid_width),
-            (p.y as i64 - self.top_left_tile.y as i64).rem_euclid(grid_height)
+            (p.y as i64 - self.top_left_tile.y as i64).rem_euclid(grid_height),
         )
     }
 
@@ -302,29 +301,25 @@ where
         self.tile_terrain_coverage
             .intersection(new_terrain_rect)
             .map(|itx_rect| {
-
                 // Determine the top left and size of the valid region
                 let valid_top_left_shift =
                     &itx_rect.top_left - &self.tile_terrain_coverage.top_left;
 
-                let valid_tiles_top_left = self.tile_grid_add(
-                    &self.top_left_tile,
-                    &valid_top_left_shift);
+                let valid_tiles_top_left = self
+                    .tile_grid_add(&self.top_left_tile, &valid_top_left_shift);
 
                 let new_valid_rect = URect {
                     top_left: valid_tiles_top_left,
-                    size: itx_rect.size.clone()
+                    size: itx_rect.size.clone(),
                 };
 
                 // determine the new top left of the viewport rect
 
-                let new_top_left_shift
-                    = &new_terrain_rect.top_left
-                            - &self.tile_terrain_coverage.top_left;
+                let new_top_left_shift = &new_terrain_rect.top_left
+                    - &self.tile_terrain_coverage.top_left;
 
-                let new_top_left = self.tile_grid_add(
-                        &self.top_left_tile,
-                        &new_top_left_shift);
+                let new_top_left = self
+                    .tile_grid_add(&self.top_left_tile, &new_top_left_shift);
 
                 debug!("valid tile area = {}", new_valid_rect.area());
 
@@ -343,14 +338,13 @@ where
     ) -> (&'a T, IPoint) {
         let real_point = UPoint::new(
             (natural_origin.x + natural_x) % self.terrain_tiles_size.width,
-            (natural_origin.y + natural_y) % self.terrain_tiles_size.height
+            (natural_origin.y + natural_y) % self.terrain_tiles_size.height,
         );
 
-        let tile = self.get_tile(&real_point)
-            .unwrap_or_else(|| {
-                error!("Invalid tile_coordinate {:?}", real_point);
-                panic!("Index out of bounds error in terrain tiles array");
-            });
+        let tile = self.get_tile(&real_point).unwrap_or_else(|| {
+            error!("Invalid tile_coordinate {:?}", real_point);
+            panic!("Index out of bounds error in terrain tiles array");
+        });
 
         let terrain_point = &self.tile_terrain_coverage.top_left
             + &self.tile_grid_offset_from_origin(&real_point);
@@ -372,11 +366,10 @@ where
         let valid_top_left = &new_valid_rect.top_left;
 
         let action = |x: usize, y: usize| {
-            let (tile, terrain_point) = self.get_tile_at(valid_top_left, &x, &y);
+            let (tile, terrain_point) =
+                self.get_tile_at(valid_top_left, &x, &y);
             tile_updater(tile, &terrain_point);
-            tile.set_location_point(
-                &(&terrain_point * self.tile_size as f64),
-            );
+            tile.set_location_point(&(&terrain_point * self.tile_size as f64));
         };
 
         for y in 0..new_valid_size.height {
@@ -427,7 +420,7 @@ where
             debug!("Double checked lock failed");
             return URect {
                 top_left: self.top_left_tile.clone(),
-                size: self.terrain_tiles_size.clone()
+                size: self.terrain_tiles_size.clone(),
             };
         }
 
@@ -472,10 +465,7 @@ where
             .calculate_new_valid_tiles(&new_terrain_rect)
             .unwrap_or_default();
 
-        self.update_terrain_tiles_location(
-            new_terrain_rect,
-            new_top_left,
-        );
+        self.update_terrain_tiles_location(new_terrain_rect, new_top_left);
 
         valid_rect
     }
@@ -492,7 +482,8 @@ where
         self.terrain_tiles.iter_mut().for_each(|row| {
             let to_insert = iter::repeat_with(tile_source).take(cols_to_add);
 
-            row.splice(insert_point..insert_point, to_insert).for_each(|_|{});
+            row.splice(insert_point..insert_point, to_insert)
+                .for_each(|_| {});
         });
 
         self.top_left_tile.x += cols_to_add;
@@ -519,19 +510,20 @@ where
 
         self.top_left_tile.y += rows_to_add;
         self.terrain_tiles_size.height += rows_to_add;
-
     }
 
     fn get_tile<'a>(&'a self, point: &UPoint) -> Option<&'a T> {
-        self.terrain_tiles.get(point.y).and_then(|row| row.get(point.x))
+        self.terrain_tiles
+            .get(point.y)
+            .and_then(|row| row.get(point.x))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::cell::RefCell;
     use atomic_counter::*;
+    use std::cell::RefCell;
 
     #[derive(Default)]
     struct TestTile {
@@ -539,7 +531,7 @@ mod tests {
         location: RefCell<Point>,
         visible: RefCell<bool>,
 
-        updated: ConsistentCounter
+        updated: ConsistentCounter,
     }
 
     impl HasMutableLocation for TestTile {
@@ -566,7 +558,7 @@ mod tests {
     }
 
     fn default_test_terrain_generator() -> Inner<TestTile> {
-        Inner::default()
+        Inner::new(DEFAULT_TILE_SIZE, 0.)
     }
 
     #[test]
@@ -686,16 +678,19 @@ mod tests {
         assert_eq!(this.tile_terrain_coverage, IRect::new(-2, -2, 4, 4));
 
         assert_eq!(
-                this.calculate_new_valid_tiles(&this.tile_terrain_coverage),
-                Some((UPoint::default(), URect::new(0, 0, 4, 4))));
+            this.calculate_new_valid_tiles(&this.tile_terrain_coverage),
+            Some((UPoint::default(), URect::new(0, 0, 4, 4)))
+        );
 
         assert_eq!(
-                this.calculate_new_valid_tiles(&IRect::new(2, 2, 4, 4)),
-                None);
+            this.calculate_new_valid_tiles(&IRect::new(2, 2, 4, 4)),
+            None
+        );
 
         assert_eq!(
-                this.calculate_new_valid_tiles(&IRect::new(1, 0, 4, 4)),
-                Some((UPoint::new(3, 2), URect::new(3, 2, 1, 2))));
+            this.calculate_new_valid_tiles(&IRect::new(1, 0, 4, 4)),
+            Some((UPoint::new(3, 2), URect::new(3, 2, 1, 2)))
+        );
 
         let (new_top_left, new_valid_rect) = this
             .calculate_new_valid_tiles(&IRect::new(-3, -4, 4, 4))
@@ -706,46 +701,82 @@ mod tests {
 
         this.update_terrain_tiles_location(
             IRect::new(-3, -4, 4, 4),
-            new_top_left);
+            new_top_left,
+        );
 
         this.update_terrain_tiles(new_valid_rect, |tile, _| {
             tile.updated.inc();
         });
 
-        assert_eq!(this.get_tile(&UPoint::new(0, 0))
-            .map(|t| t.updated.get()), Some(0));
-        assert_eq!(this.get_tile(&UPoint::new(0, 1))
-            .map(|t| t.updated.get()), Some(0));
-        assert_eq!(this.get_tile(&UPoint::new(0, 2))
-            .map(|t| t.updated.get()), Some(1));
-        assert_eq!(this.get_tile(&UPoint::new(0, 3))
-            .map(|t| t.updated.get()), Some(1));
-        assert_eq!(this.get_tile(&UPoint::new(1, 0))
-            .map(|t| t.updated.get()), Some(0));
-        assert_eq!(this.get_tile(&UPoint::new(1, 1))
-            .map(|t| t.updated.get()), Some(0));
-        assert_eq!(this.get_tile(&UPoint::new(1, 2))
-            .map(|t| t.updated.get()), Some(1));
-        assert_eq!(this.get_tile(&UPoint::new(1, 3))
-            .map(|t| t.updated.get()), Some(1));
-        assert_eq!(this.get_tile(&UPoint::new(2, 0))
-            .map(|t| t.updated.get()), Some(0));
-        assert_eq!(this.get_tile(&UPoint::new(2, 1))
-            .map(|t| t.updated.get()), Some(0));
-        assert_eq!(this.get_tile(&UPoint::new(2, 2))
-            .map(|t| t.updated.get()), Some(1));
-        assert_eq!(this.get_tile(&UPoint::new(2, 3))
-            .map(|t| t.updated.get()), Some(1));
-        assert_eq!(this.get_tile(&UPoint::new(3, 0))
-            .map(|t| t.updated.get()), Some(1));
-        assert_eq!(this.get_tile(&UPoint::new(3, 1))
-            .map(|t| t.updated.get()), Some(1));
-        assert_eq!(this.get_tile(&UPoint::new(3, 2))
-            .map(|t| t.updated.get()), Some(1));
-        assert_eq!(this.get_tile(&UPoint::new(3, 3))
-            .map(|t| t.updated.get()), Some(1));
+        assert_eq!(
+            this.get_tile(&UPoint::new(0, 0)).map(|t| t.updated.get()),
+            Some(0)
+        );
+        assert_eq!(
+            this.get_tile(&UPoint::new(0, 1)).map(|t| t.updated.get()),
+            Some(0)
+        );
+        assert_eq!(
+            this.get_tile(&UPoint::new(0, 2)).map(|t| t.updated.get()),
+            Some(1)
+        );
+        assert_eq!(
+            this.get_tile(&UPoint::new(0, 3)).map(|t| t.updated.get()),
+            Some(1)
+        );
+        assert_eq!(
+            this.get_tile(&UPoint::new(1, 0)).map(|t| t.updated.get()),
+            Some(0)
+        );
+        assert_eq!(
+            this.get_tile(&UPoint::new(1, 1)).map(|t| t.updated.get()),
+            Some(0)
+        );
+        assert_eq!(
+            this.get_tile(&UPoint::new(1, 2)).map(|t| t.updated.get()),
+            Some(1)
+        );
+        assert_eq!(
+            this.get_tile(&UPoint::new(1, 3)).map(|t| t.updated.get()),
+            Some(1)
+        );
+        assert_eq!(
+            this.get_tile(&UPoint::new(2, 0)).map(|t| t.updated.get()),
+            Some(0)
+        );
+        assert_eq!(
+            this.get_tile(&UPoint::new(2, 1)).map(|t| t.updated.get()),
+            Some(0)
+        );
+        assert_eq!(
+            this.get_tile(&UPoint::new(2, 2)).map(|t| t.updated.get()),
+            Some(1)
+        );
+        assert_eq!(
+            this.get_tile(&UPoint::new(2, 3)).map(|t| t.updated.get()),
+            Some(1)
+        );
+        assert_eq!(
+            this.get_tile(&UPoint::new(3, 0)).map(|t| t.updated.get()),
+            Some(1)
+        );
+        assert_eq!(
+            this.get_tile(&UPoint::new(3, 1)).map(|t| t.updated.get()),
+            Some(1)
+        );
+        assert_eq!(
+            this.get_tile(&UPoint::new(3, 2)).map(|t| t.updated.get()),
+            Some(1)
+        );
+        assert_eq!(
+            this.get_tile(&UPoint::new(3, 3)).map(|t| t.updated.get()),
+            Some(1)
+        );
 
-        assert_eq!(this.get_tile(&UPoint::new(3, 3))
-            .map(|t| t.location.borrow().clone()), Some(Point::new(-96., -96.)));
+        assert_eq!(
+            this.get_tile(&UPoint::new(3, 3))
+                .map(|t| t.location.borrow().clone()),
+            Some(Point::new(-96., -96.))
+        );
     }
 }

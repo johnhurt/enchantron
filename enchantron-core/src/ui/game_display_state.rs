@@ -5,7 +5,7 @@ use crate::model::{Point, Rect, Size};
 use crate::native::{RuntimeResources, Texture};
 use crate::ui::{
     DragState, SpriteSource, SpriteSourceWrapper, TerrainGenerator,
-    ViewportInfo,
+    TerrainTextureProvider, ViewportInfo,
 };
 use crate::view_types::ViewTypes;
 
@@ -37,7 +37,7 @@ where
             terrain_generator: TerrainGenerator::new(
                 event_bus,
                 sprite_source,
-                runtime_resources,
+                TerrainTextureProvider::new(runtime_resources),
             ),
         }
     }

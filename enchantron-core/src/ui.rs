@@ -23,6 +23,7 @@ pub use self::sprite::Sprite;
 pub use self::sprite_source::SpriteSource;
 pub use self::sprite_source_wrapper::SpriteSourceWrapper;
 pub use self::terrain_generator::TerrainGenerator;
+pub use self::terrain_texture_provider::TerrainTextureProvider;
 pub use self::viewport::Viewport;
 pub use self::viewport_info::ViewportInfo;
 
@@ -53,6 +54,7 @@ mod sprite;
 mod sprite_source;
 mod sprite_source_wrapper;
 mod terrain_generator;
+mod terrain_texture_provider;
 mod viewport;
 mod viewport_info;
 

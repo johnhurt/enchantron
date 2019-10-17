@@ -73,6 +73,34 @@ impl IRect {
             || i_point.y > self.top_left.y + self.size.height as i64)
     }
 
+    /// perform the given action on all 4 corners of this rect starting at the
+    /// top left and going around clockwise (top-left, top-right, bottom-right,
+    /// bottom-left), and returns a 4tuple with the result of the action at each
+    /// corner in the same order
+    pub fn for_each_corner<T>(
+        &self,
+        action: impl Fn(&IPoint) -> T,
+    ) -> (T, T, T, T) {
+        let mut corner = self.top_left.clone();
+
+        // top left
+        let t1 = action(&corner);
+
+        // top right
+        corner.x += self.size.width as i64;
+        let t2 = action(&corner);
+
+        // bottom right
+        corner.y += self.size.height as i64;
+        let t3 = action(&corner);
+
+        // bottom left
+        corner.x = self.top_left.x;
+        let t4 = action(&corner);
+
+        (t1, t2, t3, t4)
+    }
+
     /// Returns whether or not the given rect is completely within the bounds
     /// of this rect
     pub fn contains_rect(&self, rect: &IRect) -> bool {

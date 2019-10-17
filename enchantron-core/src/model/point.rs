@@ -25,6 +25,11 @@ impl Point {
 
         (dx * dx + dy * dy).sqrt()
     }
+
+    /// Perform a dot product operation between this point and the other
+    pub fn dot(&self, other: &Point) -> f64 {
+        self.x * other.x + self.y * other.y
+    }
 }
 
 impl Mul<f64> for Point {

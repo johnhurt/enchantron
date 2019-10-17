@@ -6,12 +6,12 @@ use crate::event::{
     ListenerRegistration, ViewportChange,
 };
 use crate::model::{IPoint, IRect, ISize, Point, Rect, Size, UPoint, URect};
-use crate::native::{RuntimeResources, Textures};
+use crate::native::RuntimeResources;
 use crate::view_types::ViewTypes;
 
 use super::{
     HasMutableLocation, HasMutableSize, HasMutableVisibility, Sprite,
-    SpriteSource, SpriteSourceWrapper,
+    SpriteSource, SpriteSourceWrapper, TerrainTextureProvider,
 };
 
 pub const DEFAULT_TILE_SIZE: usize = 32;
@@ -22,7 +22,7 @@ where
     T: ViewTypes,
 {
     sprite_source: SpriteSourceWrapper<T>,
-    runtime_resources: Arc<RuntimeResources<T::SystemView>>,
+    terrain_texture_provider: TerrainTextureProvider<T>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
     inner: RwLock<Inner<T::Sprite>>,
 }
@@ -74,11 +74,11 @@ where
     pub fn new(
         event_bus: EventBus<EnchantronEvent>,
         sprite_source: SpriteSourceWrapper<T>,
-        runtime_resources: Arc<RuntimeResources<T::SystemView>>,
+        terrain_texture_provider: TerrainTextureProvider<T>,
     ) -> Arc<TerrainGenerator<T>> {
         let result = Arc::new(TerrainGenerator {
             sprite_source: sprite_source,
-            runtime_resources: runtime_resources,
+            terrain_texture_provider: terrain_texture_provider,
 
             listener_registrations: Default::default(),
 
@@ -160,16 +160,11 @@ where
             }
         };
 
-        let grass = self.runtime_resources.textures().overworld.grass();
-        let dirt = self.runtime_resources.textures().overworld.dirt();
-
         self.with_inner(|inner| {
             inner.update_terrain_tiles(valid_tile_rect, |tile, point| {
-                if point.x % 2 == 0 && point.y % 2 == 0 {
-                    tile.set_texture(grass)
-                } else {
-                    tile.set_texture(dirt)
-                }
+                tile.set_texture(
+                    self.terrain_texture_provider.get_texture_at(point),
+                );
             });
         });
     }

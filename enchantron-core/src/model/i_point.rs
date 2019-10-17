@@ -2,7 +2,7 @@ use std::ops::{Add, Mul, MulAssign, Sub};
 
 use super::{ISize, Point};
 
-#[derive(Default, Debug, Clone, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct IPoint {
     pub x: i64,
     pub y: i64,

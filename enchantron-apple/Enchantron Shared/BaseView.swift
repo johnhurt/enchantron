@@ -147,6 +147,11 @@ class BaseView: SKNode {
 extension BaseView {
     
     #if os(iOS) || os(tvOS)
+    private var touchCount = 0
+    private var touch1 : UITouch?
+    private var touch2 : UITouch?
+    
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         
         DispatchQueue.main.async {
@@ -183,6 +188,10 @@ extension BaseView {
                     localY: -Float64(localPoint.y))
             }
         }
+    }
+    
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        touchesEnded(touches, with: event)
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {

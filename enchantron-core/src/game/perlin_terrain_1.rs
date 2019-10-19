@@ -4,17 +4,17 @@ use crate::model::{IPoint, IRect, Point};
 use std::hash::Hasher;
 
 use cached::{cached, SizedCache};
-use fnv::FnvHasher;
+use twox_hash::XxHash64;
 
 const DEFAULT_OCTAVE_SCALE: u8 = 8;
-const DEFAULT_OCTAVE_COUNT: u8 = 3;
+const DEFAULT_OCTAVE_COUNT: u8 = 1;
 
-cached! {
-    PERLIN_VALUES: SizedCache<(u8,IPoint),Point>
-            = SizedCache::with_size(256);
+// cached! {
+//     PERLIN_VALUES: SizedCache<(u8,IPoint),Point>
+//             = SizedCache::with_size(256);
 
-    fn perlin_gradient(octave: u8, position: &IPoint) -> Point = {
-        let mut hasher = FnvHasher::default();
+    fn perlin_gradient(octave: u8, position: &IPoint) -> Point {
+        let mut hasher = XxHash64::default();
 
         hasher.write_u8(octave);
         hasher.write_i64(position.x);
@@ -28,7 +28,7 @@ cached! {
 
         Point::new(gx, gy)
     }
-}
+//}
 
 pub struct PerlinTerrain1 {
     octave_scale: u8,
@@ -58,8 +58,8 @@ impl PerlinTerrain1 {
     ) {
         let octave_side_size = (self.octave_scale as usize) << octave as usize;
 
-        target.top_left.x = point.x / octave_side_size as i64;
-        target.top_left.y = point.y / octave_side_size as i64;
+        target.top_left.x = point.x.div_euclid(octave_side_size as i64) * octave_side_size as i64;
+        target.top_left.y = point.y.div_euclid(octave_side_size as i64) * octave_side_size as i64;
         target.size.width = octave_side_size;
         target.size.height = octave_side_size;
     }
@@ -125,10 +125,33 @@ impl TerrainProvider for PerlinTerrain1 {
     fn get_for(&self, position: &IPoint) -> TerrainType {
         let v = self.get(position);
 
-        if v < 0.5 {
+        if v < 0. {
             TerrainType::Dirt
         } else {
             TerrainType::Grass
         }
     }
+}
+
+#[test]
+fn test_proportional_difference() {
+
+    let p = PerlinTerrain1::default();
+
+    assert_eq!(Point::new(0.125, -0.25),
+        p.proportional_difference(&IPoint::new(100,200), &IPoint::new(101, 198), &8usize));
+}
+
+#[test]
+fn test_perlin_gradient() {
+
+    let p = PerlinTerrain1::default();
+
+    for i in 30..40 {
+        println!("{}\t{}", i, p.get(&IPoint::new(0,i)));
+    }
+
+    println!("blah");
+
+    assert!(true);
 }

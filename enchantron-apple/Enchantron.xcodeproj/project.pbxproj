@@ -14,8 +14,6 @@
 		6341099B211CC7C000D40139 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6341099A211CC7C000D40139 /* AppDelegate.swift */; };
 		6341099D211CC7C000D40139 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6341099C211CC7C000D40139 /* GameViewController.swift */; };
 		634109A0211CC7C000D40139 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6341099E211CC7C000D40139 /* Main.storyboard */; };
-		634109A2211CC7C000D40139 /* Actions.sks in Resources */ = {isa = PBXBuildFile; fileRef = 6341097E211CC7BE00D40139 /* Actions.sks */; };
-		634109A3211CC7C000D40139 /* Actions.sks in Resources */ = {isa = PBXBuildFile; fileRef = 6341097E211CC7BE00D40139 /* Actions.sks */; };
 		634109A4211CC7C000D40139 /* Empty.sks in Resources */ = {isa = PBXBuildFile; fileRef = 6341097F211CC7BE00D40139 /* Empty.sks */; };
 		634109A5211CC7C000D40139 /* Empty.sks in Resources */ = {isa = PBXBuildFile; fileRef = 6341097F211CC7BE00D40139 /* Empty.sks */; };
 		634109A6211CC7C000D40139 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63410980211CC7BE00D40139 /* GameScene.swift */; };
@@ -77,7 +75,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		6341097E211CC7BE00D40139 /* Actions.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Actions.sks; sourceTree = "<group>"; };
 		6341097F211CC7BE00D40139 /* Empty.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Empty.sks; sourceTree = "<group>"; };
 		63410980211CC7BE00D40139 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		63410981211CC7C000D40139 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -165,7 +162,6 @@
 				63F97B12211CCC1400784701 /* Enchantron-Bridging-Header.h */,
 				63D5899C226E59F200A40E2C /* enchantron.h */,
 				6346A2612138921200481721 /* RookAndPawn White.png */,
-				6341097E211CC7BE00D40139 /* Actions.sks */,
 				6341097F211CC7BE00D40139 /* Empty.sks */,
 				63956510212707FF006F2A71 /* BaseView.swift */,
 				63F97AFF211CCB0300784701 /* Button.swift */,
@@ -314,7 +310,7 @@
 				TargetAttributes = {
 					63410985211CC7C000D40139 = {
 						CreatedOnToolsVersion = 9.4.1;
-						LastSwiftMigration = 1010;
+						LastSwiftMigration = 1110;
 					};
 					63410997211CC7C000D40139 = {
 						CreatedOnToolsVersion = 9.4.1;
@@ -349,7 +345,6 @@
 				634109A4211CC7C000D40139 /* Empty.sks in Resources */,
 				63E983832129C9B90056E91C /* Indira_K.ttf in Resources */,
 				6341098F211CC7C000D40139 /* Main.storyboard in Resources */,
-				634109A2211CC7C000D40139 /* Actions.sks in Resources */,
 				63B04A96227F06DC00A40E2C /* overworld.png in Resources */,
 				63410992211CC7C000D40139 /* LaunchScreen.storyboard in Resources */,
 				6346A2622138921200481721 /* RookAndPawn White.png in Resources */,
@@ -367,7 +362,6 @@
 				63E983842129C9B90056E91C /* Indira_K.ttf in Resources */,
 				634109A9211CC7C000D40139 /* Assets.xcassets in Resources */,
 				6346A2632138921200481721 /* RookAndPawn White.png in Resources */,
-				634109A3211CC7C000D40139 /* Actions.sks in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -592,7 +586,7 @@
 				PRODUCT_NAME = Enchantron;
 				SDKROOT = iphoneos;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/Enchantron Shared/Enchantron-Bridging-Header.h";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -616,7 +610,7 @@
 				PRODUCT_NAME = Enchantron;
 				SDKROOT = iphoneos;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/Enchantron Shared/Enchantron-Bridging-Header.h";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};

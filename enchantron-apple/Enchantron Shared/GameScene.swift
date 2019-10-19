@@ -85,7 +85,6 @@ class GameScene: SKScene {
     
     func magnify(scaleChangeAdditive: CGFloat, centerPoint: CGPoint) {
         DispatchQueue.main.async {
-            print(NSEvent.mouseLocation)
             self.currentView!.magnify(
                 scaleChangeAdditive: scaleChangeAdditive,
                 centerPoint: centerPoint)
@@ -95,62 +94,24 @@ class GameScene: SKScene {
 
 extension GameScene {
     
+    
     #if os(iOS) || os(tvOS)
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         
-        DispatchQueue.main.async {
-            
-            let firstTouch = touches.first!
-            
-            let localPoint = firstTouch.location(in: self)
-            let windowPoint = firstTouch.location(in: nil)
-            
-            self.currentView.getDragHandlers().forEach { (handler) in
-                handler.onDragStart(
-                    globalX: Float64(windowPoint.x),
-                    globalY: Float64(windowPoint.y),
-                    localX: Float64(localPoint.x),
-                    localY: -Float64(localPoint.y))
-            }
-        }
+        self.currentView?.touchesBegan(touches, with: event)
+        
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        
-        DispatchQueue.main.async {
-            
-            let firstTouch = touches.first!
-            
-            let localPoint = firstTouch.location(in: self)
-            let windowPoint = firstTouch.location(in: nil)
-            
-            self.dragHandlers.forEach { (handler) in
-                handler.onDragMove(
-                    globalX: Float64(windowPoint.x),
-                    globalY: Float64(windowPoint.y),
-                    localX: Float64(localPoint.x),
-                    localY: -Float64(localPoint.y))
-            }
-        }
+        self.currentView?.touchesMoved(touches, with: event )
+    }
+    
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        self.currentView?.touchesEnded(touches, with: event)
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        
-        DispatchQueue.main.async {
-            
-            let firstTouch = touches.first!
-            
-            let localPoint = firstTouch.location(in: self)
-            let windowPoint = firstTouch.location(in: nil)
-            
-            self.dragHandlers.forEach { (handler) in
-                handler.onDragEnd(
-                    globalX: Float64(windowPoint.x),
-                    globalY: Float64(windowPoint.y),
-                    localX: Float64(localPoint.x),
-                    localY: -Float64(localPoint.y))
-            }
-        }
+        self.currentView?.touchesEnded(touches, with: event)
     }
     
     #endif

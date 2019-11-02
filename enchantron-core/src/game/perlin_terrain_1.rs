@@ -13,21 +13,21 @@ const DEFAULT_OCTAVE_COUNT: u8 = 1;
 //     PERLIN_VALUES: SizedCache<(u8,IPoint),Point>
 //             = SizedCache::with_size(256);
 
-    fn perlin_gradient(octave: u8, position: &IPoint) -> Point {
-        let mut hasher = XxHash64::default();
+fn perlin_gradient(octave: u8, position: &IPoint) -> Point {
+    let mut hasher = XxHash64::default();
 
-        hasher.write_u8(octave);
-        hasher.write_i64(position.x);
-        hasher.write_i64(position.y);
+    hasher.write_u8(octave);
+    hasher.write_i64(position.x);
+    hasher.write_i64(position.y);
 
-        let hash = hasher.finish();
+    let hash = hasher.finish();
 
-        // Take the right of the hash as the dx and the left as the dy
-        let gx = ((hash as i32) as f64) / std::i32::MIN as f64;
-        let gy = (((hash >> 32) as i32) as f64) / std::i32::MIN as f64;
+    // Take the right of the hash as the dx and the left as the dy
+    let gx = ((hash as i32) as f64) / std::i32::MIN as f64;
+    let gy = (((hash >> 32) as i32) as f64) / std::i32::MIN as f64;
 
-        Point::new(gx, gy)
-    }
+    Point::new(gx, gy)
+}
 //}
 
 pub struct PerlinTerrain1 {
@@ -58,8 +58,10 @@ impl PerlinTerrain1 {
     ) {
         let octave_side_size = (self.octave_scale as usize) << octave as usize;
 
-        target.top_left.x = point.x.div_euclid(octave_side_size as i64) * octave_side_size as i64;
-        target.top_left.y = point.y.div_euclid(octave_side_size as i64) * octave_side_size as i64;
+        target.top_left.x = point.x.div_euclid(octave_side_size as i64)
+            * octave_side_size as i64;
+        target.top_left.y = point.y.div_euclid(octave_side_size as i64)
+            * octave_side_size as i64;
         target.size.width = octave_side_size;
         target.size.height = octave_side_size;
     }
@@ -135,20 +137,24 @@ impl TerrainProvider for PerlinTerrain1 {
 
 #[test]
 fn test_proportional_difference() {
-
     let p = PerlinTerrain1::default();
 
-    assert_eq!(Point::new(0.125, -0.25),
-        p.proportional_difference(&IPoint::new(100,200), &IPoint::new(101, 198), &8usize));
+    assert_eq!(
+        Point::new(0.125, -0.25),
+        p.proportional_difference(
+            &IPoint::new(100, 200),
+            &IPoint::new(101, 198),
+            &8usize
+        )
+    );
 }
 
 #[test]
 fn test_perlin_gradient() {
-
     let p = PerlinTerrain1::default();
 
     for i in 30..40 {
-        println!("{}\t{}", i, p.get(&IPoint::new(0,i)));
+        println!("{}\t{}", i, p.get(&IPoint::new(0, i)));
     }
 
     println!("blah");

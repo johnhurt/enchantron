@@ -20,6 +20,11 @@ class BaseView: SKNode {
     private var transitionService : TransitionService?
     private var viewport : Viewport?
     
+    
+    #if os(iOS) || os(tvOS)
+    private var touchTracker : TouchTracker?
+    #endif
+    
     private var size: CGSize?
     
     override init() {
@@ -47,6 +52,9 @@ class BaseView: SKNode {
     }
     
     func setPresenter(presenter: AnyObject) {
+        #if os(iOS) || os(tvOS)
+        self.touchTracker = TouchTracker(self)
+        #endif
         self.presenter = presenter
     }
     
@@ -141,53 +149,45 @@ class BaseView: SKNode {
                 zoomCenterY: Float64(centerPoint.y))
         }
     }
-}
-
-
-extension BaseView {
     
-    #if os(iOS) || os(tvOS)
-    private var touchCount = 0
-    private var touch1 : UITouch?
-    private var touch2 : UITouch?
-    
-    
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        
-        DispatchQueue.main.async {
-            
-            let firstTouch = touches.first!
-            
-            let localPoint = firstTouch.location(in: self)
-            let windowPoint = firstTouch.location(in: nil)
-            
-            self.dragHandlers.forEach { (handler) in
-                handler.onDragStart(
-                    globalX: Float64(windowPoint.x),
-                    globalY: Float64(windowPoint.y),
-                    localX: Float64(localPoint.x),
-                    localY: -Float64(localPoint.y))
-            }
+    func dragStart(windowPoint: CGPoint, localPoint: CGPoint) {
+        self.dragHandlers.forEach { (handler) in
+            handler.onDragStart(
+                globalX: Float64(windowPoint.x),
+                globalY: Float64(windowPoint.y),
+                localX: Float64(localPoint.x),
+                localY: -Float64(localPoint.y))
         }
     }
     
-    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        
-        DispatchQueue.main.async {
-            
-            let firstTouch = touches.first!
-            
-            let localPoint = firstTouch.location(in: self)
-            let windowPoint = firstTouch.location(in: nil)
-            
-            self.dragHandlers.forEach { (handler) in
-                handler.onDragMove(
-                    globalX: Float64(windowPoint.x),
-                    globalY: Float64(windowPoint.y),
-                    localX: Float64(localPoint.x),
-                    localY: -Float64(localPoint.y))
-            }
+    func dragMoved(windowPoint: CGPoint, localPoint: CGPoint) {
+        self.dragHandlers.forEach { (handler) in
+            handler.onDragMove(
+                globalX: Float64(windowPoint.x),
+                globalY: Float64(windowPoint.y),
+                localX: Float64(localPoint.x),
+                localY: -Float64(localPoint.y))
         }
+    }
+    
+    func dragEnded(windowPoint: CGPoint, localPoint: CGPoint) {
+        self.dragHandlers.forEach { (handler) in
+            handler.onDragEnd(
+                globalX: Float64(windowPoint.x),
+                globalY: Float64(windowPoint.y),
+                localX: Float64(localPoint.x),
+                localY: -Float64(localPoint.y))
+        }
+    }
+    
+    #if os(iOS) || os(tvOS)
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        self.touchTracker?.touchesStarted(touches)
+    }
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        self.touchTracker?.touchesMoved(touches)
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -195,22 +195,7 @@ extension BaseView {
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        
-        DispatchQueue.main.async {
-            
-            let firstTouch = touches.first!
-            
-            let localPoint = firstTouch.location(in: self)
-            let windowPoint = firstTouch.location(in: nil)
-            
-            self.dragHandlers.forEach { (handler) in
-                handler.onDragEnd(
-                    globalX: Float64(windowPoint.x),
-                    globalY: Float64(windowPoint.y),
-                    localX: Float64(localPoint.x),
-                    localY: -Float64(localPoint.y))
-            }
-        }
+        touchTracker?.touchesEnded(touches)
     }
     
     #endif

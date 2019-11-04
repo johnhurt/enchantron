@@ -18,22 +18,24 @@ class Texture {
     self.texture = texture
     self.texture.filteringMode = SKTextureFilteringMode.nearest
     self.size = texture.size()
+    
     texture.preload {
       print("Texture loaded size: \(self.texture.size())")
     }
   }
 
   convenience init(resourceName: String) {
-    self.init(texture: SKTexture(imageNamed: resourceName))
+    let rawTexture = SKTexture(imageNamed: resourceName)
+    self.init(texture: rawTexture)
   }
 
   func getSubTexture(_ left: Int64, _ top: Int64, _ width: Int64, _ height: Int64) -> Texture {
     
-    let tWidth = CGFloat(width) / self.size.width
-    let tHeight = CGFloat(height) / self.size.height
+    let tWidth = CGFloat(width) / self.size.width * 0.99
+    let tHeight = CGFloat(height) / self.size.height * 0.99
     
-    let tLeft = CGFloat(left) / self.size.width
-    let tBottom = ( self.size.height - CGFloat(top) - CGFloat(height) ) / self.size.height
+    let tLeft = CGFloat(left) / self.size.width + tWidth * 0.005
+    let tBottom = ( self.size.height - CGFloat(top) - CGFloat(height) ) / self.size.height + tHeight * 0.005
     
     let rect = CGRect(
         origin: CGPoint(x: tLeft, y: tBottom),

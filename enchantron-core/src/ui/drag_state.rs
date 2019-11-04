@@ -1,15 +1,13 @@
 use crate::model::{Point, Rect};
 
 pub struct DragState {
-    pub start_viewport_rect: Rect,
-    pub start_point: Point,
+    pub last_drag_point: Point,
 }
 
 impl DragState {
-    pub fn new(start_point: Point, viewport_rect: Rect) -> DragState {
+    pub fn new(start_point: Point) -> DragState {
         DragState {
-            start_viewport_rect: viewport_rect,
-            start_point: start_point,
+            last_drag_point: start_point,
         }
     }
 }

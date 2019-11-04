@@ -14,8 +14,7 @@ class TouchTracker {
     var count : uint_fast8_t = 0
     var touch1: Touch?
     var touch2: Touch?
-    var distanceBetweenTouches: Double?
-    var midpointTouch: Touch?
+    var syntheticTouch: Touch?
     
     init(_ view: BaseView) {
         self.view = view
@@ -90,10 +89,12 @@ class TouchTracker {
             localPoint: touch.localPoint)
     }
     
-    private func magnify(_ scaleChange: Double, _ touch: Touch) {
+    private func magnify(_ scaleChange: Double) {
+        
+        
         view.magnify(
             scaleChangeAdditive: CGFloat(scaleChange),
-            centerPoint: touch.windowPoint)
+            centerPoint: CGPoint(x: 0.0, y: self.view.size!.height))
     }
     
     private func getTouchFor(_ touch: UITouch) -> Touch? {
@@ -156,11 +157,10 @@ class TouchTracker {
     private func pinchStartedAfterDrag(_ touch2: Touch) {
         self.count = 2
         self.touch2 = touch2
-        self.distanceBetweenTouches = self.touch1!.distanceTo(self.touch2!)
-        self.midpointTouch = self.touch1!.midpoint(self.touch2!)
+        self.syntheticTouch = self.touch1!.midpoint(self.touch2!)
         
         self.endDrag(self.touch1!)
-        self.startDrag(self.midpointTouch!)
+        self.startDrag(self.syntheticTouch!)
     }
     
     /// Indicates that the pinch and drag gesture started at the same time
@@ -168,10 +168,9 @@ class TouchTracker {
         self.count = 2
         self.touch1 = touch1
         self.touch2 = touch2
-        self.distanceBetweenTouches = self.touch1!.distanceTo(self.touch2!)
-        self.midpointTouch = self.touch1!.midpoint(self.touch2!)
+        self.syntheticTouch = self.touch1!.midpoint(self.touch2!)
         
-        self.startDrag(self.midpointTouch!)
+        self.startDrag(self.syntheticTouch!)
     }
     
     /// Signals that the simple drag gesture is ended
@@ -187,40 +186,82 @@ class TouchTracker {
     /// guaranteed to be either self.touch1 or self.touch2
     private func pinchEnded(_ touch: Touch) {
         count = 1
-        distanceBetweenTouches = nil
-        midpointTouch = self.touch1!.midpoint(self.touch2!)
-        endDrag(midpointTouch!)
+        syntheticTouch = self.touch1!.midpoint(self.touch2!)
+        endDrag(syntheticTouch!)
         
         if touch == touch1 {
             touch1 = touch2!
         }
 
         touch2 = nil
-        midpointTouch = nil
+        syntheticTouch = nil
         self.startDrag(touch1!)
     }
     
     /// Signals that both touch1 and touch2 are ending at the same time
     private func pinchAndDragEnded() {
-        midpointTouch = self.touch1!.midpoint(self.touch2!)
+        syntheticTouch = self.touch1!.midpoint(self.touch2!)
         
-        endDrag(midpointTouch!)
+        endDrag(syntheticTouch!)
         
         touch1 = nil
         touch2 = nil
-        distanceBetweenTouches = nil
-        midpointTouch = nil
+        syntheticTouch = nil
         count = 0
+    }
+    
+    /// Use the algorithm defined in https://trepo.tuni.fi/bitstream/handle/123456789/24173/palen.pdf?sequence=3&isAllowed=y to approximate the change in scale and the change in translation (drag point) for the two given touches given that rotation is not allowed
+    private func calculateZoomAndPan(
+        touch1: CGPoint,
+        touch2: CGPoint,
+        prevTouch1: CGPoint,
+        prevTouch2: CGPoint) -> (newScale: CGFloat, deltaX: CGFloat, deltaY: CGFloat) {
+        
+        let n : CGFloat = 2.0
+        let a1 = touch1.x
+        let a2 = touch2.x
+        let b1 = touch1.y
+        let b2 = touch2.y
+        let c1 = prevTouch1.x
+        let c2 = prevTouch2.x
+        let d1 = prevTouch1.y
+        let d2 = prevTouch2.y
+        
+        let u = a1*a1 + a2*a2 + b1*b1 + b2*b2
+        let v = a1 + a2
+        let w = b1 + b2
+        let x = c1 + c2
+        let y = d1 + d2
+        let ac = a1 * c1 + a2 * c2
+        let bd = b1 * d1 + b2 * d2
+        
+        let gr : CGFloat = 1.0 / (n * n * u - n * v * v - n * w * w)
+        
+        let s = gr * ( n * n * ( ac + bd ) - n * ( v * x + w * y) )
+        let t1 = gr * ( -n * v * ac - n * v * bd + n * u * x - w * w * x + v * w * y )
+        let t2 = gr * ( -n * w * ac - n * w * bd + n * u * y - v * v * y + v * w * x )
+        
+        return ( s, t1, t2 )
     }
     
     /// Signals that we are in pinch/drag moved and at least one of the touches moved
     private func pinchDragMoved() {
-        midpointTouch = touch1!.midpoint(touch2!)
-        let oldDistance = distanceBetweenTouches!
-        distanceBetweenTouches = touch1!.distanceTo(touch2!)
+        let midpoint = touch1!.midpoint(touch2!)
         
-        let scaleChange = distanceBetweenTouches! / oldDistance - 1.0
-        self.magnify(scaleChange, midpointTouch!)
+        let (newScale, deltaX, deltaY) = self.calculateZoomAndPan(
+            touch1: touch1!.windowPoint,
+            touch2: touch2!.windowPoint,
+            prevTouch1: touch1!.prevWindowPoint,
+            prevTouch2: touch2!.prevWindowPoint)
+        
+        print("blah \(newScale) \(deltaX) \(deltaY)")
+        
+        let scaleChange = 1.0 - newScale
+        self.syntheticTouch?.windowPoint.x -= deltaX
+        self.syntheticTouch?.windowPoint.y -= deltaY
+        
+        self.moveDrag(syntheticTouch!)
+        self.magnify(Double(scaleChange))
         
     }
     

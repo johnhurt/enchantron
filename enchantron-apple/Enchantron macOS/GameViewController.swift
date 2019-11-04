@@ -55,8 +55,6 @@ class GameViewController: NSViewController, NSWindowDelegate {
         let mouseLocationRect = NSRect(origin: mouseLocation, size: CGSize(width: 0, height: 0))
         var windowLocation = self.view.window!.convertFromScreen(mouseLocationRect).origin
         
-        windowLocation.y = size.height - windowLocation.y
-        
         print("windowLocation: \(windowLocation)")
         
         self.scene?.magnify(scaleChangeAdditive: event.magnification,

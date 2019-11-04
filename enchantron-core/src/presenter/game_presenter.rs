@@ -180,8 +180,7 @@ where
 
         self.with_display_state_mut(|display_state| {
             display_state.drag_state = Option::Some(DragState::new(
-                drag_point.clone(),
-                display_state.get_viewport_rect().clone(),
+                drag_point.clone()
             ));
         });
     }
@@ -192,29 +191,27 @@ where
         self.with_display_state_mut(|display_state| {
             let scale = display_state.get_viewport_scale();
 
-            let new_position = if let Some(drag_state) =
-                display_state.drag_state.as_ref()
+            let position_shift = if let Some(mut drag_state) =
+                display_state.drag_state.as_mut()
             {
                 let screen_coord_delta = Point::new(
-                    drag_state.start_point.x - drag_x,
-                    drag_state.start_point.y - drag_y,
+                    drag_state.last_drag_point.x - drag_x,
+                    drag_state.last_drag_point.y - drag_y,
                 );
 
-                let scaled_delta = Point::new(
-                    screen_coord_delta.x * scale,
-                    screen_coord_delta.y * scale,
-                );
+                drag_state.last_drag_point.x = drag_x;
+                drag_state.last_drag_point.y = drag_y;
 
                 Point::new(
-                    drag_state.start_viewport_rect.top_left.x + scaled_delta.x,
-                    drag_state.start_viewport_rect.top_left.y + scaled_delta.y,
+                    screen_coord_delta.x * scale,
+                    screen_coord_delta.y * scale,
                 )
             } else {
                 error!("Invalid drag state found");
                 panic!("Invalid drag state found");
             };
 
-            let new_viewport_info = display_state.move_viewport(new_position);
+            let new_viewport_info = display_state.move_viewport_by(position_shift);
 
             self.fire_viewport_change_event(
                 new_viewport_info.viewport_rect.clone(),

@@ -25,7 +25,7 @@ class BaseView: SKNode {
     private var touchTracker : TouchTracker?
     #endif
     
-    private var size: CGSize?
+    var size: CGSize?
     
     override init() {
         super.init()
@@ -146,7 +146,7 @@ class BaseView: SKNode {
             handler.onMagnify(
                 scaleChangeAdditive: Float64(scaleChangeAdditive),
                 zoomCenterX: Float64(centerPoint.x),
-                zoomCenterY: Float64(centerPoint.y))
+                zoomCenterY: Float64(self.size!.height - centerPoint.y))
         }
     }
     

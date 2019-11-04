@@ -17,6 +17,7 @@ class Touch {
     let original : UITouch?
     let container : SKNode?
     var windowPoint: CGPoint
+    var prevWindowPoint : CGPoint
     var localPoint: CGPoint
     
     convenience init(_ touch: UITouch, _ container: SKNode) {
@@ -33,6 +34,7 @@ class Touch {
         self.original = original
         self.container = container
         self.windowPoint = windowPoint
+        self.prevWindowPoint = windowPoint
         self.localPoint = localPoint
     }
     
@@ -53,6 +55,7 @@ class Touch {
     }
     
     func update() -> Touch {
+        self.prevWindowPoint = windowPoint
         self.windowPoint = self.original!.location(in: nil)
         self.localPoint = self.original!.location(in: container!)
         return self

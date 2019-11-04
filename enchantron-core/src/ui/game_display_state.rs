@@ -88,4 +88,15 @@ where
 
         &self.viewport_info
     }
+
+    pub fn move_viewport_by<'a>(
+        &'a mut self,
+        delta_top_left: Point,
+    ) -> &'a ViewportInfo {
+        let new_top_left = &self.viewport_info.viewport_rect.top_left + delta_top_left;
+
+        self.viewport_info.move_viewport(new_top_left);
+
+        &self.viewport_info
+    }
 }

@@ -246,15 +246,11 @@ class TouchTracker {
     
     /// Signals that we are in pinch/drag moved and at least one of the touches moved
     private func pinchDragMoved() {
-        let midpoint = touch1!.midpoint(touch2!)
-        
         let (newScale, deltaX, deltaY) = self.calculateZoomAndPan(
             touch1: touch1!.windowPoint,
             touch2: touch2!.windowPoint,
             prevTouch1: touch1!.prevWindowPoint,
             prevTouch2: touch2!.prevWindowPoint)
-        
-        print("blah \(newScale) \(deltaX) \(deltaY)")
         
         let scaleChange = 1.0 - newScale
         self.syntheticTouch?.windowPoint.x -= deltaX

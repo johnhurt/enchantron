@@ -30,6 +30,8 @@
 		63531FC52278BD9E0060D9AD /* libenchantron.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63531FC42278BD9E0060D9AD /* libenchantron.a */; };
 		6364099023181E3C00B46512 /* SpriteSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6364098F23181E3C00B46512 /* SpriteSource.swift */; };
 		63640991231824DC00B46512 /* SpriteSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6364098F23181E3C00B46512 /* SpriteSource.swift */; };
+		638DC4E32373612000DD724F /* character.png in Resources */ = {isa = PBXBuildFile; fileRef = 638DC4E22373612000DD724F /* character.png */; };
+		638DC4E42373612000DD724F /* character.png in Resources */ = {isa = PBXBuildFile; fileRef = 638DC4E22373612000DD724F /* character.png */; };
 		6395650821264645006F2A71 /* ProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6395650721264645006F2A71 /* ProgressBar.swift */; };
 		6395650921264645006F2A71 /* ProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6395650721264645006F2A71 /* ProgressBar.swift */; };
 		6395650B2126469C006F2A71 /* Texture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6395650A2126469C006F2A71 /* Texture.swift */; };
@@ -97,6 +99,7 @@
 		63531FC22278BD850060D9AD /* libenchantron.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libenchantron.a; path = "../enchantron-core/target/universal/debug/libenchantron.a"; sourceTree = "<group>"; };
 		63531FC42278BD9E0060D9AD /* libenchantron.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libenchantron.a; path = "../enchantron-core/target/debug/libenchantron.a"; sourceTree = "<group>"; };
 		6364098F23181E3C00B46512 /* SpriteSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteSource.swift; sourceTree = "<group>"; };
+		638DC4E22373612000DD724F /* character.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = character.png; path = ../../resources/textures/character.png; sourceTree = "<group>"; };
 		6395650721264645006F2A71 /* ProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBar.swift; sourceTree = "<group>"; };
 		6395650A2126469C006F2A71 /* Texture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Texture.swift; sourceTree = "<group>"; };
 		6395650D212646BD006F2A71 /* TextureLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureLoader.swift; sourceTree = "<group>"; };
@@ -241,6 +244,7 @@
 		634589F62126253700D81EAD /* Textures */ = {
 			isa = PBXGroup;
 			children = (
+				638DC4E22373612000DD724F /* character.png */,
 				63B04A95227F06DC00A40E2C /* overworld.png */,
 			);
 			name = Textures;
@@ -353,6 +357,7 @@
 				6341098F211CC7C000D40139 /* Main.storyboard in Resources */,
 				63B04A96227F06DC00A40E2C /* overworld.png in Resources */,
 				63410992211CC7C000D40139 /* LaunchScreen.storyboard in Resources */,
+				638DC4E32373612000DD724F /* character.png in Resources */,
 				6346A2622138921200481721 /* RookAndPawn White.png in Resources */,
 				634109A8211CC7C000D40139 /* Assets.xcassets in Resources */,
 			);
@@ -366,6 +371,7 @@
 				634109A0211CC7C000D40139 /* Main.storyboard in Resources */,
 				634109A5211CC7C000D40139 /* Empty.sks in Resources */,
 				63E983842129C9B90056E91C /* Indira_K.ttf in Resources */,
+				638DC4E42373612000DD724F /* character.png in Resources */,
 				634109A9211CC7C000D40139 /* Assets.xcassets in Resources */,
 				6346A2632138921200481721 /* RookAndPawn White.png in Resources */,
 			);

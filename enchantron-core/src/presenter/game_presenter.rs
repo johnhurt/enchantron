@@ -179,9 +179,8 @@ where
         debug!("Drag started {:?}", drag_point);
 
         self.with_display_state_mut(|display_state| {
-            display_state.drag_state = Option::Some(DragState::new(
-                drag_point.clone()
-            ));
+            display_state.drag_state =
+                Option::Some(DragState::new(drag_point.clone()));
         });
     }
 
@@ -211,7 +210,8 @@ where
                 panic!("Invalid drag state found");
             };
 
-            let new_viewport_info = display_state.move_viewport_by(position_shift);
+            let new_viewport_info =
+                display_state.move_viewport_by(position_shift);
 
             self.fire_viewport_change_event(
                 new_viewport_info.viewport_rect.clone(),
@@ -234,7 +234,7 @@ where
     fn initialize_game_state(&self) {
         let sprite_source_self = self.weak_self();
 
-        let display_state: GameDisplayState<T> = GameDisplayState::new(
+        let mut display_state: GameDisplayState<T> = GameDisplayState::new(
             self.event_bus.clone(),
             SpriteSourceWrapper::new(move || {
                 sprite_source_self
@@ -247,6 +247,8 @@ where
             }),
             self.runtime_resources.clone(),
         );
+
+        display_state.set_character_sprite(self.view.create_sprite());
 
         let mut display_state_opt =
             self.display_state.write().unwrap_or_else(|err| {
@@ -330,7 +332,7 @@ where
             display_state: Default::default(),
         };
 
-        let mut result = Arc::new(raw_result);
+        let result = Arc::new(raw_result);
 
         {
             let weak_self = Arc::downgrade(&result);

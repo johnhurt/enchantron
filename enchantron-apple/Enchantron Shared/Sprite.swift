@@ -42,6 +42,10 @@ class Sprite : SKSpriteNode {
         }
     }
     
+    func setZLevel(_ newZLevel: Double) {
+        self.zPosition = CGFloat(newZLevel)
+    }
+    
     func setSizeAnimated(_ width: Float64, _ height: Float64, _ durationSeconds: Float64) {
         
         

@@ -16,8 +16,7 @@ func createSpriteOn(parent : SKNode) -> Sprite {
     let sprite = Sprite()
     
     let onMain : () -> () = {
-        sprite.zPosition = CGFloat(GameView.z)
-        GameView.z += 1
+        sprite.zPosition = 0.0
         parent.addChild(sprite)
     }
     

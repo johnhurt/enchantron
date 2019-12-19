@@ -72,21 +72,33 @@ define_texture_atlas!(Overworld(x_tile_count: 40, y_tile_count: 36) {
   dirt(left: 2, top: 32, width: 1, height: 1)
 });
 
+define_texture_atlas!(Character(x_tile_count: 16, y_tile_count: 17) {
+    forward_rest(left: 0, top: 0, width: 1, height: 1)
+});
+
 pub struct Textures<T: Texture> {
     pub overworld: Overworld<T>,
+    pub character: Character<T>,
 }
 
 impl<T: Texture> Textures<T> {
     pub fn new(
-        texture_loader: &TextureLoader<T = T>,
-        progress_callback: &Fn(f64),
+        texture_loader: &impl TextureLoader<T = T>,
+        progress_callback: &impl Fn(f64),
     ) -> Textures<T> {
         let overworld = Overworld::new(
             texture_loader.load_texture(String::from("overworld.png")),
             |p| progress_callback(p),
         );
+
+        let character = Character::new(
+            texture_loader.load_texture(String::from("character.png")),
+            |p| progress_callback(p),
+        );
+
         Textures {
             overworld: overworld,
+            character: character,
         }
     }
 }

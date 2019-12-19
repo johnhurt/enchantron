@@ -3,7 +3,11 @@ pub use self::terrain_type::TerrainType;
 
 pub use self::perlin_terrain_1::PerlinTerrain1;
 
+pub mod constants;
+
 mod terrain_provider;
 mod terrain_type;
 
 mod perlin_terrain_1;
+
+// mod ecs_interop;

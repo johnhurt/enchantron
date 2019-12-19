@@ -2,6 +2,7 @@ use crate::native::Texture;
 
 use super::{
     HasDragHandlers, HasMutableLocation, HasMutableSize, HasMutableVisibility,
+    HasMutableZLevel,
 };
 
 pub trait Sprite:
@@ -9,6 +10,7 @@ pub trait Sprite:
     + HasMutableLocation
     + HasMutableVisibility
     + HasDragHandlers
+    + HasMutableZLevel
     + Send
     + Sync
     + 'static

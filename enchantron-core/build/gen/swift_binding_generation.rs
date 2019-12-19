@@ -586,6 +586,11 @@ lazy_static! {
             ImplDefBuilder::default()
                 .trait_name("HasMutableVisibility")
                 .trait_import(Some("crate::ui::HasMutableVisibility"))
+                .build().unwrap(),
+
+            ImplDefBuilder::default()
+                .trait_name("HasMutableZLevel")
+                .trait_import(Some("crate::ui::HasMutableZLevel"))
                 .build().unwrap()
         ])
         .methods(vec![
@@ -700,6 +705,19 @@ lazy_static! {
               ])
               .impl_block(Some(ImplBlockDefBuilder::default()
                   .trait_name("HasMutableVisibility")
+                  .build().unwrap()))
+              .build().unwrap(),
+
+          MethodDefBuilder::default()
+              .name("set_z_level")
+              .arguments(vec![
+                ArgumentDefBuilder::default()
+                    .name("z_level")
+                    .data_type(DOUBLE.clone())
+                    .build().unwrap()
+              ])
+              .impl_block(Some(ImplBlockDefBuilder::default()
+                  .trait_name("HasMutableZLevel")
                   .build().unwrap()))
               .build().unwrap()
         ])
@@ -970,6 +988,20 @@ lazy_static! {
                 .return_type(Some(DataType::swift_generic(Some("S"),
                     DataType::swift_struct("Sprite", None))))
                 .build().unwrap(),
+
+          MethodDefBuilder::default()
+              .name("set_scale")
+              .arguments(vec![
+
+                ArgumentDefBuilder::default()
+                    .name("scale")
+                    .data_type(DOUBLE.clone())
+                    .build().unwrap()
+              ])
+              .impl_block(Some(ImplBlockDefBuilder::default()
+                  .trait_name("HasMutableScale")
+                  .build().unwrap()))
+              .build().unwrap(),
 
           MethodDefBuilder::default()
               .name("set_scale_and_location")

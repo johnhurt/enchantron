@@ -17,6 +17,8 @@ where
     pub viewport_info: ViewportInfo,
     pub drag_state: Option<DragState>,
     pub terrain_generator: Arc<TerrainGenerator<T>>,
+
+    pub character: Option<T::Sprite>,
 }
 
 impl<T> GameDisplayState<T>
@@ -39,7 +41,17 @@ where
                 sprite_source,
                 TerrainTextureProvider::new(runtime_resources),
             ),
+
+            character: None,
         }
+    }
+
+    pub fn set_character_sprite(&mut self, sprite: T::Sprite) {
+        self.character = Some(sprite)
+    }
+
+    pub fn get_character_sprite<'a>(&'a self) -> Option<&'a T::Sprite> {
+        self.character.as_ref()
     }
 
     // Get a reference to the viewport rectangle
@@ -93,7 +105,8 @@ where
         &'a mut self,
         delta_top_left: Point,
     ) -> &'a ViewportInfo {
-        let new_top_left = &self.viewport_info.viewport_rect.top_left + delta_top_left;
+        let new_top_left =
+            &self.viewport_info.viewport_rect.top_left + delta_top_left;
 
         self.viewport_info.move_viewport(new_top_left);
 

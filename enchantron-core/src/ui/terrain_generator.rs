@@ -5,13 +5,14 @@ use crate::event::{
     EnchantronEvent, EventBus, EventListener, HasListenerRegistrations,
     ListenerRegistration, ViewportChange,
 };
+use crate::game::constants;
 use crate::model::{IPoint, IRect, ISize, Point, Rect, Size, UPoint, URect};
 use crate::native::RuntimeResources;
 use crate::view_types::ViewTypes;
 
 use super::{
-    HasMutableLocation, HasMutableSize, HasMutableVisibility, Sprite,
-    SpriteSource, SpriteSourceWrapper, TerrainTextureProvider,
+    HasMutableLocation, HasMutableSize, HasMutableVisibility, HasMutableZLevel,
+    Sprite, SpriteSource, SpriteSourceWrapper, TerrainTextureProvider,
 };
 
 pub const DEFAULT_TILE_SIZE: usize = 32;
@@ -141,7 +142,9 @@ where
                 debug!("Size increased");
                 self.with_inner_mut(|inner| {
                     inner.increase_size_for(terrain_rect, || {
-                        self.sprite_source.create_sprite()
+                        let result = self.sprite_source.create_sprite();
+                        result.set_z_level(constants::TERRAIN_Z_LEVEL);
+                        result
                     })
                 })
             } else {

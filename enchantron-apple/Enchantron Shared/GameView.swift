@@ -11,8 +11,6 @@ import SpriteKit
 
 class GameView : BaseView {
   
-  static var z = 1;
-  
   override init() {
     super.init()
   }

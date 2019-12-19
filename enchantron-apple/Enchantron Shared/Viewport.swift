@@ -68,6 +68,15 @@ public class Viewport : SKCameraNode {
             y: -CGFloat(top) + zeroPosition.y * scale)
     }
     
+    func setScale(_ newScale: Float64) {
+        DispatchQueue.main.async {
+            self.scale = CGFloat(newScale)
+            self.xScale = self.scale
+            self.yScale = self.scale
+        }
+    }
+    
+    
     func setScaleAndLocation(
         _ newScale: Float64,
         _ newTopLeftX: Float64,

@@ -1,6 +1,8 @@
 use crate::model::Point;
 
 pub trait HasMutableScale {
+    fn set_scale(&self, scale: f64);
+
     fn set_scale_and_location(
         &self,
         scale: f64,

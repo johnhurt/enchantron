@@ -3,15 +3,10 @@ use crate::model::{IPoint, IRect, Point};
 
 use std::hash::Hasher;
 
-use cached::{cached, SizedCache};
 use twox_hash::XxHash64;
 
 const DEFAULT_OCTAVE_SCALE: u8 = 8;
 const DEFAULT_OCTAVE_COUNT: u8 = 1;
-
-// cached! {
-//     PERLIN_VALUES: SizedCache<(u8,IPoint),Point>
-//             = SizedCache::with_size(256);
 
 fn perlin_gradient(octave: u8, position: &IPoint) -> Point {
     let mut hasher = XxHash64::default();

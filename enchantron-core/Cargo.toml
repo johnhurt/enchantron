@@ -21,8 +21,8 @@ nom = "5.0.1"
 chashmap = "2.2.2"
 atomic-counter = "1.0.1"
 twox-hash = "1.5.0"
-specs = "0.15.1"
 anymap = "0.12.1"
+tokio = { version = "0.2.6", features = [ "time", "sync", "rt-threaded", "rt-core" ] }
 
 [build-dependencies]
 cbindgen = "0.8.6"

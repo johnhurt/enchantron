@@ -1,6 +1,9 @@
 use crate::event::{EnchantronEvent, EventBus};
 use log::SetLoggerError;
 use simplelog::{CombinedLogger, Config, LevelFilter, SimpleLogger};
+use tokio::runtime::{Runtime, Builder};
+use tokio::prelude::*;
+
 use std::ops::Deref;
 use std::sync::{Arc, RwLock};
 
@@ -26,8 +29,20 @@ impl ApplicationContext {
         if LOGGER_RESULT.is_err() {
             println!("Failed to set logger")
         }
+
+        let runtime = Builder::new()
+            .threaded_scheduler()
+            .build()
+            .unwrap_or_else(|e| {
+                error!("Failed to create tokio runtime, {:?}", e);
+                panic!("Failed to create tokio runtime");
+            });
+
+        let event_bus = EventBus::new(runtime.handle());
+
         ApplicationContext(Arc::new(ApplicationContextInner {
-            event_bus: EventBus::new(),
+            tokio_runtime: runtime,
+            event_bus,
             system_view: Arc::new(system_view),
             runtime_resources: RwLock::new(None),
         }))
@@ -43,6 +58,7 @@ impl Deref for ApplicationContext {
 }
 
 pub struct ApplicationContextInner {
+    tokio_runtime: Runtime,
     event_bus: EventBus<EnchantronEvent>,
     system_view: Arc<SystemView>,
     runtime_resources: RwLock<Option<Arc<RuntimeResources<SystemView>>>>,

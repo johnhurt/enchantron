@@ -8,14 +8,13 @@ use super::{Event, EventKey, EventListener, ListenerRegistration};
 use crate::util::SimpleSlotMap;
 
 use atomic_counter::{AtomicCounter, RelaxedCounter};
-use crossbeam_channel;
-use crossbeam_channel::{Receiver, Sender};
 
 use chashmap::CHashMap;
-use rayon;
-use rayon::{ThreadPool, ThreadPoolBuilder};
 
-const WORKER_COUNT: usize = 8;
+use tokio::runtime::Handle;
+use tokio::sync::mpsc::{UnboundedSender as Sender, UnboundedReceiver as Receiver, unbounded_channel};
+
+const WORKER_COUNT: usize = 16;
 
 type BoxedAny = Box<dyn Any + Send + Sync + 'static>;
 
@@ -31,45 +30,32 @@ struct InnerEventBus<K: EventKey> {
     listeners: CHashMap<K, SimpleSlotMap<Box<dyn Fn(&dyn Any) + Send + Sync>>>,
     sinks: Vec<Sender<(K, BoxedAny)>>,
     event_counter: RelaxedCounter,
-    registration_thread_pool: ThreadPool,
 }
 
-impl<K: EventKey> Default for EventBus<K> {
-    fn default() -> EventBus<K> {
-        let (inner_event_bus, sources): (
-            InnerEventBus<K>,
-            Vec<Receiver<(K, BoxedAny)>>,
-        ) = InnerEventBus::create();
+struct EventBusEvaluator<K: EventKey> {
+    inner_event_bus: Arc<InnerEventBus<K>>,
+    receiver: Receiver<(K, BoxedAny)>
+}
 
-        let inner_event_bus_arc = Arc::new(inner_event_bus);
+impl <K: EventKey> EventBusEvaluator<K> {
 
-        let pool = ThreadPoolBuilder::new()
-            .num_threads(WORKER_COUNT)
-            .build()
-            .unwrap();
-
-        sources.into_iter().enumerate().for_each(|(i, source)| {
-            let copied_event_bus = inner_event_bus_arc.clone();
-
-            pool.spawn(move || loop {
-                debug!("Event loop {} looping", i);
-
-                match source.recv() {
-                    Ok((key, arg)) => {
-                        debug!("Firing {:?} - {:?}", key, arg);
-
-                        copied_event_bus.evaluate(key, arg);
-                        debug!("Fired {:?}", key);
-                    }
-                    Err(_) => info!("Eventbus channel {} closed", i),
-                };
-            })
-        });
-
-        EventBus {
-            inner: inner_event_bus_arc,
+    fn new(inner_event_bus: &Arc<InnerEventBus<K>>, receiver: Receiver<(K, BoxedAny)>)
+            -> EventBusEvaluator<K> {
+        EventBusEvaluator {
+            inner_event_bus: inner_event_bus.clone(),
+            receiver
         }
     }
+
+    async fn run(&self) {
+        while let Some((key, arg)) = self.receiver.recv().await {
+            debug!("Firing {:?} - {:?}", key, arg);
+            self.inner_event_bus.evaluate(key, arg);
+            debug!("Fired {:?}", key);
+        }
+        info!("Eventbus channel closed");
+    }
+
 }
 
 impl<K: EventKey> InnerEventBus<K> {
@@ -81,7 +67,7 @@ impl<K: EventKey> InnerEventBus<K> {
             let (sink, source): (
                 Sender<(K, BoxedAny)>,
                 Receiver<(K, BoxedAny)>,
-            ) = crossbeam_channel::unbounded();
+            ) = unbounded_channel();
             sinks.push(sink);
             sources.push(source);
         }
@@ -90,11 +76,7 @@ impl<K: EventKey> InnerEventBus<K> {
             InnerEventBus {
                 listeners: CHashMap::default(),
                 sinks: sinks,
-                event_counter: RelaxedCounter::new(0),
-                registration_thread_pool: ThreadPoolBuilder::new()
-                    .num_threads(WORKER_COUNT)
-                    .build()
-                    .unwrap(),
+                event_counter: RelaxedCounter::new(0)
             },
             sources,
         )
@@ -113,9 +95,26 @@ impl<K: EventKey> InnerEventBus<K> {
 }
 
 impl<K: EventKey> EventBus<K> {
-    /// Create a new and empty default event bus
-    pub fn new() -> EventBus<K> {
-        EventBus::default()
+
+    pub fn new(tokio_runtime_handle: &Handle) -> EventBus<K> {
+        let (inner_event_bus, sources): (
+            InnerEventBus<K>,
+            Vec<Receiver<(K, BoxedAny)>>,
+        ) = InnerEventBus::create();
+
+        let inner_event_bus_arc = Arc::new(inner_event_bus);
+
+        sources.into_iter().enumerate().for_each(|(i, source)| {
+            let copied_event_bus = inner_event_bus_arc.clone();
+
+            let evaluator = EventBusEvaluator::new(&inner_event_bus_arc, source);
+
+            tokio_runtime_handle.spawn(evaluator.run());
+        });
+
+        EventBus {
+            inner: inner_event_bus_arc,
+        }
     }
 
     /// Register the given event listener to listen for events of the given type, and

@@ -1,8 +1,8 @@
 use crate::event::{EnchantronEvent, EventBus};
 use log::SetLoggerError;
 use simplelog::{CombinedLogger, Config, LevelFilter, SimpleLogger};
-use tokio::runtime::{Runtime, Builder};
 use tokio::prelude::*;
+use tokio::runtime::{Builder, Runtime};
 
 use std::ops::Deref;
 use std::sync::{Arc, RwLock};

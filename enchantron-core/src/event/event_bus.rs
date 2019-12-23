@@ -166,8 +166,9 @@ impl<K: EventKey> EventBus<K> {
         let lr = ListenerRegistration::new(Box::new(move || {
             info!("Deregistering listener for event {:?}", &event_key);
 
-            inner_clone.listeners.alter(event_key, |listeners_opt| {
-                match listeners_opt {
+            inner_clone
+                .listeners
+                .alter(event_key, |listeners_opt| match listeners_opt {
                     None => {
                         warn!(
                             "Attempted to remove a listener from an empty map"
@@ -178,8 +179,8 @@ impl<K: EventKey> EventBus<K> {
                         let _ = listeners.remove(slot_map_key);
                         Some(listeners)
                     }
-                }
-            }).await
+                })
+                .await
         }));
 
         listener_for_registration.add_listener_registration(lr);

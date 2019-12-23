@@ -9,7 +9,7 @@ use crate::util::SimpleSlotMap;
 
 use atomic_counter::{AtomicCounter, RelaxedCounter};
 
-use chashmap::CHashMap;
+use async_chashmap::CHashMap;
 
 use tokio::runtime::Handle;
 use tokio::sync::mpsc::{
@@ -70,7 +70,7 @@ impl<K: EventKey> InnerEventBus<K> {
         while let Some((key, arg)) = receiver.recv().await {
             debug!("Firing {:?} - {:?}", key, arg);
 
-            if let Some(handlers) = self.listeners.get(&key) {
+            if let Some(handlers) = self.listeners.get(&key).await {
                 handlers.iter().for_each(|func| func(&*arg)); // <- Note the deref before borrow
             } else {
                 info!("No handlers found for event key: {:?}", key);
@@ -179,7 +179,7 @@ impl<K: EventKey> EventBus<K> {
                         Some(listeners)
                     }
                 }
-            })
+            }).await
         }));
 
         listener_for_registration.add_listener_registration(lr);

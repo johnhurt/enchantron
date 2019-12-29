@@ -70,11 +70,14 @@ impl<K: EventKey> InnerEventBus<K> {
         while let Some((key, arg)) = receiver.recv().await {
             debug!("Firing {:?} - {:?}", key, arg);
 
-            if let Some(handlers) = self.listeners.get(&key).await {
-                handlers.iter().for_each(|func| func(&*arg)); // <- Note the deref before borrow
-            } else {
-                info!("No handlers found for event key: {:?}", key);
-            }
+            self.listeners.with(&key, |handlers_opt| {
+
+                if let Some(handlers) = handlers_opt {
+                    handlers.iter().for_each(|func| func(&*arg)); // <- Note the deref before borrow
+                } else {
+                    info!("No handlers found for event key: {:?}", key);
+                }
+            });
 
             debug!("Fired {:?}", key);
         }
@@ -163,7 +166,7 @@ impl<K: EventKey> EventBus<K> {
         });
 
         // Create and return the registration
-        let lr = ListenerRegistration::new(Box::new(move || {
+        let lr = ListenerRegistration::new(Box::new(move || async {
             info!("Deregistering listener for event {:?}", &event_key);
 
             inner_clone

@@ -32,6 +32,7 @@ struct InnerEventBus<K: EventKey> {
     listeners: CHashMap<K, SimpleSlotMap<Box<dyn Fn(&dyn Any) + Send + Sync>>>,
     sinks: Vec<Sender<(K, BoxedAny)>>,
     event_counter: RelaxedCounter,
+    threadpool: Handle,
 }
 
 struct EventBusEvaluator<K: EventKey> {
@@ -40,7 +41,7 @@ struct EventBusEvaluator<K: EventKey> {
 }
 
 impl<K: EventKey> InnerEventBus<K> {
-    fn create() -> (InnerEventBus<K>, Vec<Receiver<(K, BoxedAny)>>) {
+    fn create(threadpool: Handle) -> (InnerEventBus<K>, Vec<Receiver<(K, BoxedAny)>>) {
         let mut sinks: Vec<Sender<(K, BoxedAny)>> = Vec::new();
         let mut sources: Vec<Receiver<(K, BoxedAny)>> = Vec::new();
 
@@ -56,8 +57,9 @@ impl<K: EventKey> InnerEventBus<K> {
         (
             InnerEventBus {
                 listeners: CHashMap::default(),
-                sinks: sinks,
+                sinks,
                 event_counter: RelaxedCounter::new(0),
+                threadpool
             },
             sources,
         )
@@ -89,7 +91,7 @@ impl<K: EventKey> EventBus<K> {
         let (inner_event_bus, sources): (
             InnerEventBus<K>,
             Vec<Receiver<(K, BoxedAny)>>,
-        ) = InnerEventBus::create();
+        ) = InnerEventBus::create(tokio_runtime_handle.clone());
 
         let inner_event_bus_arc = Arc::new(inner_event_bus);
 
@@ -109,7 +111,7 @@ impl<K: EventKey> EventBus<K> {
     /// Register the given event listener to listen for events of the given type, and
     /// return a registration that can be used to deregister the listener from this
     /// event type
-    pub fn register<E: Event<K>, H: EventListener<K, E>>(
+    pub async fn register<E: Event<K>, H: EventListener<K, E>>(
         &self,
         event: E,
         listener: Weak<H>,
@@ -155,7 +157,7 @@ impl<K: EventKey> EventBus<K> {
                 info!("There are now {} listeners for {:?} Events", listeners.len(), &event_key);
 
                 Some(listeners)
-            });
+            }).await;
         }
 
         info!("Now the key is {:?}", slot_map_key_opt);
@@ -166,24 +168,29 @@ impl<K: EventKey> EventBus<K> {
         });
 
         // Create and return the registration
-        let lr = ListenerRegistration::new(Box::new(move || async {
+        let lr = ListenerRegistration::new(Box::new(move || {
             info!("Deregistering listener for event {:?}", &event_key);
 
-            inner_clone
-                .listeners
-                .alter(event_key, |listeners_opt| match listeners_opt {
-                    None => {
-                        warn!(
-                            "Attempted to remove a listener from an empty map"
-                        );
-                        None
-                    }
-                    Some(mut listeners) => {
-                        let _ = listeners.remove(slot_map_key);
-                        Some(listeners)
-                    }
-                })
-                .await
+            let another_clone = inner_clone.clone();
+
+            inner_clone.threadpool.spawn(async move {
+
+                another_clone
+                    .listeners
+                    .alter(event_key, |listeners_opt| match listeners_opt {
+                        None => {
+                            warn!(
+                                "Attempted to remove a listener from an empty map"
+                            );
+                            None
+                        }
+                        Some(mut listeners) => {
+                            let _ = listeners.remove(slot_map_key);
+                            Some(listeners)
+                        }
+                    })
+                    .await
+            });
         }));
 
         listener_for_registration.add_listener_registration(lr);

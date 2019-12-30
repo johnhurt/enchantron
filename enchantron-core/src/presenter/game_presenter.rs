@@ -259,7 +259,7 @@ where
         *display_state_opt = Some(display_state);
     }
 
-    fn bind(&self) {
+    async fn bind(&self) {
         let copied_event_bus = self.event_bus.clone();
 
         self.add_handler_registration(Box::new(self.view.add_layout_handler(
@@ -308,14 +308,14 @@ where
             ),
         )));
 
-        self.event_bus.register(Layout::default(), self.weak_self());
+        self.event_bus.register(Layout::default(), self.weak_self()).await;
     }
 
     pub fn create_sprite(&self) -> T::Sprite {
         self.view.create_sprite()
     }
 
-    pub fn new(
+    pub async fn new(
         view: T::GameView,
         event_bus: EventBus<EnchantronEvent>,
         runtime_resources: Arc<RuntimeResources<T::SystemView>>,
@@ -348,7 +348,7 @@ where
             *weak_self_opt = Some(Box::new(weak_self));
         }
 
-        GamePresenter::bind(&result);
+        GamePresenter::bind(&result).await;
         result.initialize_game_state();
 
         result

@@ -64,12 +64,12 @@ where
     V: LoadingView,
     S: SystemView,
 {
-    fn bind(self) -> Arc<LoadingPresenter<V, S>> {
+    async fn bind(self) -> Arc<LoadingPresenter<V, S>> {
         let result = Arc::new(self);
 
         result
             .event_bus
-            .register(LoadResources::default(), Arc::downgrade(&result));
+            .register(LoadResources::default(), Arc::downgrade(&result)).await;
 
         result
             .view
@@ -81,7 +81,7 @@ where
         result
     }
 
-    pub fn new(
+    pub async fn new(
         view: V,
         system_view: Arc<S>,
         event_bus: EventBus<EnchantronEvent>,
@@ -94,7 +94,7 @@ where
             resources_sink: resources_sink,
             listener_registrations: Mutex::new(Vec::new()),
         }
-        .bind()
+        .bind().await
     }
 }
 

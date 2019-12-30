@@ -54,7 +54,7 @@ impl<V: MainMenuView> MainMenuPresenter<V> {
         }
     }
 
-    fn bind(self) -> Arc<MainMenuPresenter<V>> {
+    async fn bind(self) -> Arc<MainMenuPresenter<V>> {
         let copied_event_bus = self.event_bus.clone();
 
         self.add_handler_registration(Box::new(
@@ -69,7 +69,8 @@ impl<V: MainMenuView> MainMenuPresenter<V> {
 
         result
             .event_bus
-            .register(StartGame::default(), Arc::downgrade(&result));
+            .register(StartGame::default(), Arc::downgrade(&result))
+            .await;
 
         result
             .view
@@ -79,7 +80,7 @@ impl<V: MainMenuView> MainMenuPresenter<V> {
         result
     }
 
-    pub fn new(
+    pub async fn new(
         view: V,
         event_bus: EventBus<EnchantronEvent>,
     ) -> Arc<MainMenuPresenter<V>> {
@@ -90,7 +91,7 @@ impl<V: MainMenuView> MainMenuPresenter<V> {
             event_bus: event_bus,
         };
 
-        result.bind()
+        result.bind().await
     }
 }
 

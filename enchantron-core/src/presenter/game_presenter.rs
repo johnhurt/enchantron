@@ -308,7 +308,9 @@ where
             ),
         )));
 
-        self.event_bus.register(Layout::default(), self.weak_self()).await;
+        self.event_bus
+            .register(Layout::default(), self.weak_self())
+            .await;
     }
 
     pub fn create_sprite(&self) -> T::Sprite {

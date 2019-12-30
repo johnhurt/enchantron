@@ -84,6 +84,8 @@ impl<V: MainMenuView> MainMenuPresenter<V> {
         view: V,
         event_bus: EventBus<EnchantronEvent>,
     ) -> Arc<MainMenuPresenter<V>> {
+        info!("Starting to build main menu");
+
         let result = MainMenuPresenter {
             view: view,
             handler_registrations: Mutex::new(Vec::new()),

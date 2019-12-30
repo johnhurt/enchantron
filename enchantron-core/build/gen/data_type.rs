@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 lazy_static! {
     pub static ref LONG: DataType = DataType::Primitive(
         PrimitiveDataTypeBuilder::default()
@@ -39,6 +41,7 @@ pub enum DataType {
     Nil,
     Stringy,
     Primitive(PrimitiveDataType),
+    Future(RustStructDataType),
     RustGeneric(RustGenericDataType),
     RustStruct(RustStructDataType),
     SwiftGeneric(SwiftGenericDataType),
@@ -107,6 +110,16 @@ impl DataType {
             DataType::Nil => Vec::new(),
             DataType::Stringy => vec![String::from("crate::util::RustString")],
             DataType::Primitive(_) => Vec::new(),
+            DataType::Future(output_type) => {
+                let mut result = output_type
+                    .import
+                    .iter()
+                    .map(|import| import.to_string())
+                    .collect_vec();
+
+                result.push("std::future::Future".to_owned());
+                result
+            }
             DataType::RustGeneric(generic_type) => generic_type
                 .bound_type
                 .import
@@ -152,6 +165,19 @@ impl DataType {
         } else {
             panic!("Can only create a rust generic out of a rust struct")
         }
+    }
+
+    pub fn future(
+        output_type_name: &'static str,
+        import: Option<&'static str>,
+    ) -> DataType {
+        DataType::Future(
+            RustStructDataTypeBuilder::default()
+                .name(output_type_name)
+                .import(import)
+                .build()
+                .unwrap(),
+        )
     }
 
     pub fn rust_struct(

@@ -69,7 +69,8 @@ where
 
         result
             .event_bus
-            .register(LoadResources::default(), Arc::downgrade(&result)).await;
+            .register(LoadResources::default(), Arc::downgrade(&result))
+            .await;
 
         result
             .view
@@ -94,7 +95,8 @@ where
             resources_sink: resources_sink,
             listener_registrations: Mutex::new(Vec::new()),
         }
-        .bind().await
+        .bind()
+        .await
     }
 }
 

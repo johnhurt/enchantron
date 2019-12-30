@@ -35,13 +35,10 @@ struct InnerEventBus<K: EventKey> {
     threadpool: Handle,
 }
 
-struct EventBusEvaluator<K: EventKey> {
-    inner_event_bus: Arc<InnerEventBus<K>>,
-    receiver: Receiver<(K, BoxedAny)>,
-}
-
 impl<K: EventKey> InnerEventBus<K> {
-    fn create(threadpool: Handle) -> (InnerEventBus<K>, Vec<Receiver<(K, BoxedAny)>>) {
+    fn create(
+        threadpool: Handle,
+    ) -> (InnerEventBus<K>, Vec<Receiver<(K, BoxedAny)>>) {
         let mut sinks: Vec<Sender<(K, BoxedAny)>> = Vec::new();
         let mut sources: Vec<Receiver<(K, BoxedAny)>> = Vec::new();
 
@@ -59,7 +56,7 @@ impl<K: EventKey> InnerEventBus<K> {
                 listeners: CHashMap::default(),
                 sinks,
                 event_counter: RelaxedCounter::new(0),
-                threadpool
+                threadpool,
             },
             sources,
         )
@@ -72,14 +69,16 @@ impl<K: EventKey> InnerEventBus<K> {
         while let Some((key, arg)) = receiver.recv().await {
             debug!("Firing {:?} - {:?}", key, arg);
 
-            self.listeners.with(&key, |handlers_opt| {
-
-                if let Some(handlers) = handlers_opt {
-                    handlers.iter().for_each(|func| func(&*arg)); // <- Note the deref before borrow
-                } else {
-                    info!("No handlers found for event key: {:?}", key);
-                }
-            });
+            self.listeners
+                .with(&key, |handlers_opt| {
+                    if let Some(handlers) = handlers_opt {
+                        info!("Handling event {:?}", arg);
+                        handlers.iter().for_each(|func| func(&*arg)); // <- Note the deref before borrow
+                    } else {
+                        info!("No handlers found for event key: {:?}", key);
+                    }
+                })
+                .await;
 
             debug!("Fired {:?}", key);
         }

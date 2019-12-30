@@ -18,6 +18,8 @@ fn with_mutable_bindings(to_call: Box<Fn(&mut Bindings)>) {
   }
 }
 
+pub type Future_WrappedLoadingPresenter = dyn Future<Output=WrappedLoadingPresenter>;
+
 #[no_mangle]
 pub extern "C" fn create_application(system_view: *mut Opaque_SystemView)
     -> *mut ApplicationContext {

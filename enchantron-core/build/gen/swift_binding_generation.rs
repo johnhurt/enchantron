@@ -104,7 +104,7 @@ lazy_static! {
                         "LoadingView", None))
                     .build().unwrap()
               ])
-              .return_type(Some(DataType::rust_struct(
+              .return_type(Some(DataType::future(
                   "WrappedLoadingPresenter", None)))
               .build().unwrap(),
 

@@ -1,12 +1,12 @@
 use crate::event::{EnchantronEvent, EventBus};
+use futures::executor::block_on;
 use log::SetLoggerError;
 use simplelog::{CombinedLogger, Config, LevelFilter, SimpleLogger};
-use futures::executor::block_on;
 use tokio::runtime::{Builder, Runtime};
 
+use std::future::Future;
 use std::ops::Deref;
 use std::sync::{Arc, RwLock};
-use std::future::Future;
 
 use crate::{
     GameView, LoadingView, MainMenuView, SystemView, WrappedGamePresenter,
@@ -48,7 +48,6 @@ impl ApplicationContext {
             runtime_resources: RwLock::new(None),
         }))
     }
-
 }
 
 impl Deref for ApplicationContext {
@@ -67,56 +66,65 @@ pub struct ApplicationContextInner {
 }
 
 impl ApplicationContext {
-    pub fn bind_to_loading_view(
+    pub async fn bind_to_loading_view(
         &self,
         view: LoadingView,
     ) -> WrappedLoadingPresenter {
-
         let self_copy = self.0.clone();
 
-        self.block_on(async {
-            WrappedLoadingPresenter::new(LoadingPresenter::new(
+        WrappedLoadingPresenter::new(
+            LoadingPresenter::new(
                 view,
                 self.system_view.clone(),
                 self.event_bus.clone(),
                 Box::new(move |resources| {
                     self_copy.set_runtime_resources(resources);
                 }),
-            ).await)
-        })
+            )
+            .await,
+        )
     }
 
     pub fn bind_to_main_menu_view(
         &self,
         view: MainMenuView,
     ) -> WrappedMainMenuPresenter {
-        self.block_on(async {
-            WrappedMainMenuPresenter::new(MainMenuPresenter::new(
-                view,
-                self.event_bus.clone()).await)
-            })
+        WrappedMainMenuPresenter::new(
+            block_on(
+                (*self).tokio_runtime.spawn(MainMenuPresenter::new(
+                    view,
+                    self.event_bus.clone(),
+                )),
+            )
+            .unwrap(),
+        )
     }
 
     pub fn bind_to_game_view(&self, view: GameView) -> WrappedGamePresenter {
-        WrappedGamePresenter::new(GamePresenter::new(
-            view,
-            self.event_bus.clone(),
-            self.get_runtime_resources(),
-        ))
+        WrappedGamePresenter::new(
+            block_on((*self).tokio_runtime.spawn(GamePresenter::new(
+                view,
+                self.event_bus.clone(),
+                self.get_runtime_resources(),
+            )))
+            .unwrap(),
+        )
     }
 }
 
 impl ApplicationContextInner {
-
-    pub fn block_on<T: Send + 'static>(&self, to_run: impl Future<Output = T> + Send + 'static) -> T {
-        match block_on(async { self.tokio_runtime.spawn(to_run).await } ) {
-            Ok(result) => result,
-            Err(e) => {
-                error!("Failed to wait on tokio join handle, {:?}", e);
-                panic!("Failed to wait on tokio join handle");
-            }
-        }
-    }
+    // pub fn block_on<T: Send + 'static>(
+    //     &self,
+    //     to_run: impl Future<Output = T> + Send + 'static,
+    // ) -> T {
+    //     match block_on(async { self.tokio_runtime.spawn(to_run).await }) {
+    //         Ok(result) => result,
+    //         Err(e) => {
+    //             error!("Failed to wait on tokio join handle, {:?}", e);
+    //             panic!("Failed to wait on tokio join handle");
+    //         }
+    //     }
+    // }
 
     pub fn set_runtime_resources(
         &self,

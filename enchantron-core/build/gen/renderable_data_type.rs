@@ -73,6 +73,29 @@ impl RenderableDataType {
                 .swift_name_internal(String::from(primitive_type.swift_name))
                 .swift_name_incoming(String::from(primitive_type.swift_name))
                 .swift_name_outgoing(String::from(primitive_type.swift_name)),
+            DataType::Future(struct_type) => builder
+                .sanitized_name(format!("Future_{}", struct_type.name))
+                .rust_name_internal(format!(
+                    "Future<Output = {}>",
+                    struct_type.name
+                ))
+                .rust_name_incoming(format!("*mut Future"))
+                .rust_name_outgoing(format!("*mut Future_{}", struct_type.name))
+                .rust_type_coersion_prefix_incoming(String::from("unsafe { &*"))
+                .rust_type_coersion_postfix_incoming(String::from(" }"))
+                .rust_type_coersion_prefix_outgoing(String::from(
+                    "Box::into_raw(Box::new(",
+                ))
+                .rust_type_coersion_postfix_outgoing(String::from("))"))
+                .swift_name_internal(String::from(struct_type.name))
+                .swift_name_incoming(String::from("OpaquePointer?"))
+                .swift_name_outgoing(String::from("OpaquePointer?"))
+                .swift_type_coersion_prefix_incoming(
+                    String::from(struct_type.name) + &String::from("("),
+                )
+                .swift_type_coersion_postfix_incoming(String::from(")"))
+                .swift_type_coersion_prefix_outgoing(String::from(""))
+                .swift_type_coersion_postfix_outgoing(String::from(".ref")),
             DataType::RustGeneric(generic_type) => {
                 render_rust_struct_type(&generic_type.bound_type, builder)
                     .rust_name_internal(

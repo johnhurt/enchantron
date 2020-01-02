@@ -1,4 +1,3 @@
-
 use crate::ui::Button;
 
 pub trait MainMenuView: 'static + Sized + Send + Sync {

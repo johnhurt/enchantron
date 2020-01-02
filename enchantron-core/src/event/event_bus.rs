@@ -5,7 +5,7 @@ use std::sync::{Arc, Weak};
 
 use super::{Event, EventKey, EventListener, ListenerRegistration};
 
-use crate::util::SimpleSlotMap;
+use crate::util::{BoxedAny, SimpleSlotMap};
 
 use atomic_counter::{AtomicCounter, RelaxedCounter};
 
@@ -17,8 +17,6 @@ use tokio::sync::mpsc::{
 };
 
 const WORKER_COUNT: usize = 16;
-
-type BoxedAny = Box<dyn Any + Send + Sync + 'static>;
 
 /// Centeralizable component for blindly passing and receiving messages.
 /// Internally this contains an arc, so this object can be cloned without worry

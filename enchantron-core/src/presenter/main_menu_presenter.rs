@@ -1,8 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use crate::ui::{
-    ClickHandler, HandlerRegistration, HasClickHandlers, HasText
-};
+use crate::ui::{ClickHandler, HandlerRegistration, HasClickHandlers, HasText};
 
 use crate::view::MainMenuView;
 

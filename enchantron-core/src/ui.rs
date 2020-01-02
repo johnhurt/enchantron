@@ -30,7 +30,6 @@ pub use self::viewport_info::ViewportInfo;
 
 pub use self::game_display_state::GameDisplayState;
 
-
 mod button;
 mod drag_state;
 mod handler_registration;
@@ -70,4 +69,3 @@ mod drag_handler;
 
 #[macro_use]
 mod magnify_handler;
-

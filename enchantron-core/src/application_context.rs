@@ -66,10 +66,7 @@ pub struct ApplicationContextInner {
 }
 
 impl ApplicationContext {
-    pub async fn bind_to_loading_view(
-        &self,
-        view: LoadingView,
-    ) {
+    pub async fn bind_to_loading_view(&self, view: LoadingView) {
         let self_copy = self.0.clone();
 
         WrappedLoadingPresenter::new(

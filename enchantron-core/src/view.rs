@@ -1,4 +1,3 @@
-
 pub use self::base_view::BaseView;
 pub use self::game_view::GameView;
 pub use self::loading_view::LoadingView;

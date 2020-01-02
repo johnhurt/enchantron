@@ -36,6 +36,23 @@ impl RenderableDataType {
 
         match data_type {
             DataType::Nil => panic!("Nil data_type not valid ... yet"),
+            DataType::Any => builder
+                .name("Any".to_owned())
+                .sanitized_name("Any".to_owned())
+                .rust_name_internal("BoxedAny".to_owned())
+                .rust_name_incoming("*mut BoxedAny".to_owned())
+                .rust_name_outgoing("*mut BoxedAny".to_owned())
+                .rust_type_coersion_prefix_incoming("unsafe { &*".to_owned())
+                .rust_type_coersion_postfix_incoming(" }".to_owned())
+                .rust_type_coersion_prefix_outgoing("Box::into_raw(".to_owned())
+                .rust_type_coersion_postfix_outgoing(")".to_owned())
+                .swift_name_internal("AnyObject".to_owned())
+                .swift_name_incoming("OpaquePointer?".to_owned())
+                .swift_name_outgoing("OpaquePointer?".to_owned())
+                .swift_type_coersion_prefix_incoming("Any(".to_owned())
+                .swift_type_coersion_postfix_incoming(")".to_owned())
+                .swift_type_coersion_prefix_outgoing("".to_owned())
+                .swift_type_coersion_postfix_outgoing(".ref".to_owned()),
             DataType::Stringy => builder
                 .name(String::from("String"))
                 .sanitized_name(String::from("String"))
@@ -87,7 +104,10 @@ impl RenderableDataType {
                     "Box::into_raw(Box::new(",
                 ))
                 .rust_type_coersion_postfix_outgoing(String::from("))"))
-                .swift_name_internal(format!("RustFuture<{}>", struct_type.name))
+                .swift_name_internal(format!(
+                    "RustFuture<{}>",
+                    struct_type.name
+                ))
                 .swift_name_incoming(String::from("OpaquePointer?"))
                 .swift_name_outgoing(String::from("OpaquePointer?"))
                 .swift_type_coersion_prefix_incoming(

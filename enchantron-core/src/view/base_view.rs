@@ -1,10 +1,7 @@
-
-use std::any::Any;
+use crate::util::BoxedAny;
 
 pub trait BaseView: 'static {
-
     fn initialize_pre_bind(&self);
 
-    fn initialize_post_bind(&self, presenter: dyn 'static + Any + Send);
-
+    fn initialize_post_bind(&self, presenter: BoxedAny);
 }

@@ -39,6 +39,7 @@ lazy_static! {
 #[derive(Serialize, Clone, Copy)]
 pub enum DataType {
     Nil,
+    Any,
     Stringy,
     Primitive(PrimitiveDataType),
     Future(RustStructDataType),
@@ -108,7 +109,7 @@ impl DataType {
     pub fn get_imports(&self) -> Vec<String> {
         match &self {
             DataType::Nil => Vec::new(),
-            DataType::Any => vec![""],
+            DataType::Any => vec!["crate::util::BoxedAny".to_owned()],
             DataType::Stringy => vec![String::from("crate::util::RustString")],
             DataType::Primitive(_) => Vec::new(),
             DataType::Future(output_type) => {

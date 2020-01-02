@@ -741,7 +741,8 @@ lazy_static! {
                 .build().unwrap(),
             ImplDefBuilder::default()
                 .trait_name("view::BaseView")
-                .trait_import("crate::view")
+                .trait_import(Some("crate::view"))
+                .build().unwrap()
         ])
         .fields(vec![
             FieldDefBuilder::default()
@@ -771,7 +772,10 @@ lazy_static! {
                     .impl_block(Some(ImplBlockDefBuilder::default()
                         .trait_name("view::BaseView")
                         .build().unwrap()))
-                    .arguments()
+                    .arguments(vec![ArgumentDefBuilder::default()
+                        .name("presenter")
+                        .data_type(DataType::Any)
+                        .build().unwrap()])
                     .build().unwrap(),
         ])
         .build().unwrap(),

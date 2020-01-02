@@ -69,7 +69,7 @@ impl ApplicationContext {
     pub async fn bind_to_loading_view(
         &self,
         view: LoadingView,
-    ) -> WrappedLoadingPresenter {
+    ) {
         let self_copy = self.0.clone();
 
         WrappedLoadingPresenter::new(
@@ -82,7 +82,7 @@ impl ApplicationContext {
                 }),
             )
             .await,
-        )
+        );
     }
 
     pub fn bind_to_main_menu_view(

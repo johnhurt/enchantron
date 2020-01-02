@@ -4,8 +4,6 @@ extern crate lazy_static;
 extern crate log;
 #[macro_use]
 extern crate getset;
-#[macro_use]
-extern crate nom;
 
 pub use self::lib_gen::*;
 
@@ -23,6 +21,7 @@ mod application_context;
 mod event;
 mod native;
 mod presenter;
+mod view;
 
 mod view_types;
 

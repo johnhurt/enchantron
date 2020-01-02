@@ -30,9 +30,6 @@ pub use self::viewport_info::ViewportInfo;
 
 pub use self::game_display_state::GameDisplayState;
 
-pub use self::game_view::GameView;
-pub use self::loading_view::LoadingView;
-pub use self::main_menu_view::MainMenuView;
 
 mod button;
 mod drag_state;
@@ -74,6 +71,3 @@ mod drag_handler;
 #[macro_use]
 mod magnify_handler;
 
-mod game_view;
-mod loading_view;
-mod main_menu_view;

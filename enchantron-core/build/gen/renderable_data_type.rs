@@ -87,7 +87,7 @@ impl RenderableDataType {
                     "Box::into_raw(Box::new(",
                 ))
                 .rust_type_coersion_postfix_outgoing(String::from("))"))
-                .swift_name_internal(String::from(struct_type.name))
+                .swift_name_internal(format!("RustFuture<{}>", struct_type.name))
                 .swift_name_incoming(String::from("OpaquePointer?"))
                 .swift_name_outgoing(String::from("OpaquePointer?"))
                 .swift_type_coersion_prefix_incoming(

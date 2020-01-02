@@ -7,7 +7,9 @@ use std::sync::{Arc, Mutex};
 
 use crate::native::{RuntimeResources, SystemView, Textures};
 
-use crate::ui::{HasIntValue, HasText, LoadingView};
+use crate::ui::{HasIntValue, HasText};
+
+use crate::view::LoadingView;
 
 pub struct LoadingPresenter<V, S>
 where

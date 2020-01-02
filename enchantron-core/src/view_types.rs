@@ -1,5 +1,6 @@
 use crate::native::{SystemView, Texture, TextureLoader};
-use crate::ui::{GameView, Sprite, Viewport};
+use crate::ui::{Sprite, Viewport};
+use crate::view::GameView;
 
 pub trait ViewTypes: 'static + Send + Sync {
     type Texture: Texture;

@@ -41,6 +41,11 @@ class TransitionService {
         
     }
     
+    func preBindTransition<T: BaseView>(view: T) {
+        let transitionOp = {
+        self.preBindTransition(view)
+    }
+    
     deinit{
         print("Dropping Transition Service")
     }

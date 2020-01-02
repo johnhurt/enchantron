@@ -9,8 +9,11 @@
 import Foundation
 
 class RustFuture<T> {
-    var futureIndex: Int32?
-    var value: T?
     
+    private let ref: OpaquePointer?
+    
+    init(_ ref: OpaquePointer?) {
+        self.ref = ref
+    }
     
 }

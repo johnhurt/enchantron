@@ -1,4 +1,5 @@
-use super::Button;
+
+use crate::ui::Button;
 
 pub trait MainMenuView: 'static + Sized + Send + Sync {
     type B: Button;

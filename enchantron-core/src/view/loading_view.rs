@@ -1,6 +1,7 @@
-use super::ProgressBar;
+use super::BaseView;
+use crate::ui::ProgressBar;
 
-pub trait LoadingView: 'static + Send + Sync + Sized {
+pub trait LoadingView: 'static + Send + Sync + Sized + BaseView {
     type P: ProgressBar;
 
     fn get_progress_indicator(&self) -> Self::P;

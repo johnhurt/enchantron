@@ -104,8 +104,7 @@ lazy_static! {
                         "LoadingView", None))
                     .build().unwrap()
               ])
-              .return_type(Some(DataType::future(
-                  "WrappedLoadingPresenter", None)))
+              .return_type(None)
               .build().unwrap(),
 
           MethodDefBuilder::default()
@@ -731,21 +730,24 @@ lazy_static! {
         .rust_owned(false)
         .impls(vec![
             ImplDefBuilder::default()
-                .trait_name("ui::LoadingView")
-                .trait_import(Some("crate::ui"))
+                .trait_name("view::LoadingView")
+                .trait_import(Some("crate::view"))
                 .generics(vec![
                     GenericDefBuilder::default()
                         .symbol(Some("P"))
                         .bound_type("ProgressBar")
                         .build().unwrap()
                 ])
-                .build().unwrap()
+                .build().unwrap(),
+            ImplDefBuilder::default()
+                .trait_name("view::BaseView")
+                .trait_import("crate::view")
         ])
         .fields(vec![
             FieldDefBuilder::default()
                 .name("progress_indicator")
                 .getter_impl(Some(ImplBlockDefBuilder::default()
-                    .trait_name("ui::LoadingView")
+                    .trait_name("view::LoadingView")
                     .build().unwrap()))
                 .data_type(DataType::swift_generic(Some("P"),
                     DataType::swift_struct("ProgressBar", None)))
@@ -755,9 +757,22 @@ lazy_static! {
             MethodDefBuilder::default()
                 .name("transition_to_main_menu_view")
                 .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("ui::LoadingView")
+                    .trait_name("view::LoadingView")
                     .build().unwrap()))
-                .build().unwrap()
+                .build().unwrap(),
+            MethodDefBuilder::default()
+                .name("initialize_pre_bind")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("view::BaseView")
+                    .build().unwrap()))
+                .build().unwrap(),
+                MethodDefBuilder::default()
+                    .name("initialize_post_bind")
+                    .impl_block(Some(ImplBlockDefBuilder::default()
+                        .trait_name("view::BaseView")
+                        .build().unwrap()))
+                    .arguments()
+                    .build().unwrap(),
         ])
         .build().unwrap(),
 
@@ -766,8 +781,8 @@ lazy_static! {
         .rust_owned(false)
         .impls(vec![
             ImplDefBuilder::default()
-                .trait_name("ui::MainMenuView")
-                .trait_import(Some("crate::ui"))
+                .trait_name("view::MainMenuView")
+                .trait_import(Some("crate::view"))
                 .generics(vec![
                     GenericDefBuilder::default()
                         .symbol(Some("B"))
@@ -780,7 +795,7 @@ lazy_static! {
             FieldDefBuilder::default()
                 .name("start_new_game_button")
                 .getter_impl(Some(ImplBlockDefBuilder::default()
-                    .trait_name("ui::MainMenuView")
+                    .trait_name("view::MainMenuView")
                     .build().unwrap()))
                 .data_type(DataType::swift_generic(Some("B"),
                     DataType::swift_struct("Button", None)))
@@ -790,7 +805,7 @@ lazy_static! {
             MethodDefBuilder::default()
                 .name("transition_to_game_view")
                 .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("ui::MainMenuView")
+                    .trait_name("view::MainMenuView")
                     .build().unwrap()))
                 .build().unwrap()
         ])
@@ -801,7 +816,7 @@ lazy_static! {
         .rust_owned(false)
         .impls(vec![
             ImplDefBuilder::default()
-                .trait_name("ui::GameView")
+                .trait_name("view::GameView")
                 .build().unwrap(),
             ImplDefBuilder::default()
                 .trait_name("ui::SpriteSource")
@@ -863,7 +878,7 @@ lazy_static! {
             // FieldDefBuilder::default()
             //     .name("start_new_game_button")
             //     .getter_impl(Some(ImplBlockDefBuilder::default()
-            //         .trait_name("ui::MainMenuView")
+            //         .trait_name("view::MainMenuView")
             //         .build().unwrap()))
             //     .data_type(DataType::swift_generic(Some("B"),
             //         DataType::swift_struct("Button", None)))

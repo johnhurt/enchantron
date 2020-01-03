@@ -3,8 +3,11 @@ use crate::ui::{
     SpriteSource,
 };
 
+use super::BaseView;
+
 pub trait GameView:
-    SpriteSource
+    BaseView
+    + SpriteSource
     + HasLayoutHandlers
     + HasDragHandlers
     + HasViewport

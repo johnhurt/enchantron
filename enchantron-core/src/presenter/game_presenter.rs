@@ -1,5 +1,7 @@
-use std::ops::DerefMut;
-use std::sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard, Weak};
+use async_std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::future::Future;
+use std::sync::{Arc, Weak};
+use tokio::sync::Mutex;
 
 use crate::view_types::ViewTypes;
 
@@ -7,6 +9,8 @@ use crate::event::{
     EnchantronEvent, EventBus, EventListener, HasListenerRegistrations, Layout,
     ListenerRegistration, ViewportChange,
 };
+
+use crate::view::BaseView;
 
 use crate::model::{Point, Rect, Size};
 
@@ -41,12 +45,12 @@ where
     fn add_listener_registration(
         &self,
         listener_registration: ListenerRegistration,
-    ) {
-        if let Ok(mut locked_list) = self.listener_registrations.lock() {
-            info!("Adding listener registration to Game Presenter");
-            locked_list.push(listener_registration);
-        } else {
-            error!("Failed to add listener registration to Game Presenter");
+    ) -> Future<Output = ()> {
+        async {
+            self.listener_registrations
+                .lock()
+                .await
+                .push(listener_registration);
         }
     }
 }
@@ -231,7 +235,7 @@ where
     }
 
     /// Initialize the display state with the initial game state
-    fn initialize_game_state(&self) {
+    async fn initialize_game_state(&self) {
         let sprite_source_self = self.weak_self();
 
         let mut display_state: GameDisplayState<T> = GameDisplayState::new(
@@ -250,11 +254,7 @@ where
 
         display_state.set_character_sprite(self.view.create_sprite());
 
-        let mut display_state_opt =
-            self.display_state.write().unwrap_or_else(|err| {
-                error!("Failed to get write lock on display state: {:?}", err);
-                panic!("Failed to get a write lock on the display state");
-            });
+        let mut display_state_opt = self.display_state.write().await;
 
         *display_state_opt = Some(display_state);
     }
@@ -322,6 +322,8 @@ where
         event_bus: EventBus<EnchantronEvent>,
         runtime_resources: Arc<RuntimeResources<T::SystemView>>,
     ) -> Arc<GamePresenter<T>> {
+        view.initialize_pre_bind();
+
         let raw_result = GamePresenter {
             view: view,
             event_bus: event_bus,
@@ -334,24 +336,20 @@ where
             display_state: Default::default(),
         };
 
-        let result = Arc::new(raw_result);
+        let result: Arc<GamePresenter<T>> = Arc::new(raw_result);
 
         {
             let weak_self = Arc::downgrade(&result);
-            let mut weak_self_opt =
-                result.weak_self.write().unwrap_or_else(|e| {
-                    error!(
-                        "Failed to get write lock on weak self pointer: {:?}",
-                        e
-                    );
-                    panic!("Failed to get write lock on weak self pointer");
-                });
+            let mut weak_self_opt = result.weak_self.write().await;
 
             *weak_self_opt = Some(Box::new(weak_self));
         }
 
         GamePresenter::bind(&result).await;
-        result.initialize_game_state();
+
+        result.view.initialize_post_bind(Box::new(result.clone()));
+
+        result.initialize_game_state().await;
 
         result
     }

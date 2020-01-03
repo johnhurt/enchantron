@@ -65,12 +65,12 @@ impl<K: EventKey> InnerEventBus<K> {
         mut receiver: Receiver<(K, BoxedAny)>,
     ) {
         while let Some((key, arg)) = receiver.recv().await {
-            debug!("Firing {:?} - {:?}", key, arg);
+            debug!("Firing {:?}", key);
 
             self.listeners
                 .with(&key, |handlers_opt| {
                     if let Some(handlers) = handlers_opt {
-                        info!("Handling event {:?}", arg);
+                        info!("Handling event {:?}", key);
                         handlers.iter().for_each(|func| func(&*arg)); // <- Note the deref before borrow
                     } else {
                         info!("No handlers found for event key: {:?}", key);

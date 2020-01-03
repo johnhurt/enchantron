@@ -39,8 +39,9 @@ class BaseView: SKNode {
         return ctx!
     }
     
-    func transitionTo<T : BaseView>(newView: T, presenterBinder : @escaping (T) -> AnyObject ) {
+    func transitionTo<T : BaseView>(newView: T, binder : @escaping (T) -> ()) {
         newView.initializeCtx(ctx: self.ctx!, transitionService: self.transitionService!)
+        binder(newView)
         self.unsetPresenter()
     }
     

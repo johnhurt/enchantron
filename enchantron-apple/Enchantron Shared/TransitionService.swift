@@ -23,10 +23,21 @@ class TransitionService {
         self.postBindTransition = postBindTransition
     }
     
-    func transition<T: BaseView>(view: T, presenterBinder: @escaping PresenterBinder<T>) {
+    func preBindTransition<T: BaseView>(view: T) {
         let transitionOp = {
             self.preBindTransition(view)
-            view.setPresenter(presenter: presenterBinder(view))
+        }
+        
+        if Thread.isMainThread {
+            transitionOp()
+        }
+        else {
+            DispatchQueue.main.sync { transitionOp() }
+        }
+    }
+    
+    func postBindTransition<T: BaseView>(view: T) {
+        let transitionOp = {
             self.postBindTransition(view)
         }
         
@@ -34,16 +45,8 @@ class TransitionService {
             transitionOp()
         }
         else {
-            DispatchQueue.main.sync { self.preBindTransition(view) }
-            view.setPresenter(presenter: presenterBinder(view))
-            DispatchQueue.main.sync { self.postBindTransition(view) }
+            DispatchQueue.main.sync { transitionOp() }
         }
-        
-    }
-    
-    func preBindTransition<T: BaseView>(view: T) {
-        let transitionOp = {
-        self.preBindTransition(view)
     }
     
     deinit{

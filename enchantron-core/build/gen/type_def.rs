@@ -2,8 +2,6 @@ use std::collections::HashMap;
 
 use heck::SnakeCase;
 
-use itertools::Itertools;
-
 use super::{
     FieldDef, ImplDef, MethodDef, RenderableArgument, RenderableDataType,
     RenderableFunctionBuilder, RenderableImplBlock, RenderableImplBlockBuilder,

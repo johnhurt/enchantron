@@ -15,7 +15,7 @@ class BaseView: SKNode {
     private var layoutHandlers: [LayoutHandler] = []
     private var magnifyHandlers: [MagnifyHandler] = []
     
-    private var presenter : AnyObject?
+    private var presenter : OpaquePointer?
     private var ctx : ApplicationContext?
     private var transitionService : TransitionService?
     private var viewport : Viewport?
@@ -41,7 +41,6 @@ class BaseView: SKNode {
     
     func transitionTo<T : BaseView>(newView: T, presenterBinder : @escaping (T) -> AnyObject ) {
         newView.initializeCtx(ctx: self.ctx!, transitionService: self.transitionService!)
-        transitionService?.transition(view: newView, presenterBinder: presenterBinder)
         self.unsetPresenter()
     }
     
@@ -51,11 +50,16 @@ class BaseView: SKNode {
         self.transitionService = transitionService
     }
     
-    func setPresenter(presenter: AnyObject) {
+    func initializePreBind() {
+        self.transitionService?.preBindTransition(self)
+    }
+    
+    func initializePostBind(_ presenter: OpaquePointer?) {
         #if os(iOS) || os(tvOS)
         self.touchTracker = TouchTracker(self)
         #endif
         self.presenter = presenter
+        self.transitionService?.postBindTransition(self)
     }
     
     func setViewport(viewport: Viewport) {

@@ -1,6 +1,8 @@
 use crate::ui::Button;
 
-pub trait MainMenuView: 'static + Sized + Send + Sync {
+use super::BaseView;
+
+pub trait MainMenuView: 'static + Sized + Send + Sync + BaseView {
     type B: Button;
 
     fn get_start_new_game_button(&self) -> Self::B;

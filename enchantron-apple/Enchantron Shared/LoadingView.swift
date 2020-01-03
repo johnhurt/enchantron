@@ -41,7 +41,7 @@ class LoadingView : BaseView {
   }
   
   func transitionToMainMenuView() {
-    transitionTo(newView: MainMenuView(), presenterBinder: getContext().bindToMainMenuView )
+    getContext().transitionToMainMenuView(view: MainMenuView())
   }
   
   deinit {

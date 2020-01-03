@@ -9,7 +9,7 @@ use crate::native::{RuntimeResources, SystemView, Textures};
 
 use crate::ui::{HasIntValue, HasText};
 
-use crate::view::LoadingView;
+use crate::view::{BaseView, LoadingView};
 
 pub struct LoadingPresenter<V, S>
 where
@@ -90,7 +90,9 @@ where
         event_bus: EventBus<EnchantronEvent>,
         resources_sink: Box<dyn Fn(RuntimeResources<S>) + Send + Sync>,
     ) -> Arc<LoadingPresenter<V, S>> {
-        LoadingPresenter {
+        view.initialize_pre_bind();
+
+        let result = LoadingPresenter {
             view: view,
             system_view: system_view,
             event_bus: event_bus,
@@ -98,7 +100,11 @@ where
             listener_registrations: Mutex::new(Vec::new()),
         }
         .bind()
-        .await
+        .await;
+
+        result.view.initialize_post_bind(Box::new(result.clone()));
+
+        result
     }
 }
 

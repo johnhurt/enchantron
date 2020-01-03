@@ -42,17 +42,11 @@ impl RenderableDataType {
                 .rust_name_internal("BoxedAny".to_owned())
                 .rust_name_incoming("*mut UnboxedAny".to_owned())
                 .rust_name_outgoing("*mut UnboxedAny".to_owned())
-                .rust_type_coersion_prefix_incoming("unsafe { &*".to_owned())
-                .rust_type_coersion_postfix_incoming(" }".to_owned())
                 .rust_type_coersion_prefix_outgoing("Box::into_raw(".to_owned())
                 .rust_type_coersion_postfix_outgoing(")".to_owned())
-                .swift_name_internal("AnyObject".to_owned())
+                .swift_name_internal("OpaquePointer?".to_owned())
                 .swift_name_incoming("OpaquePointer?".to_owned())
-                .swift_name_outgoing("OpaquePointer?".to_owned())
-                .swift_type_coersion_prefix_incoming("Any(".to_owned())
-                .swift_type_coersion_postfix_incoming(")".to_owned())
-                .swift_type_coersion_prefix_outgoing("".to_owned())
-                .swift_type_coersion_postfix_outgoing(".ref".to_owned()),
+                .swift_name_outgoing("OpaquePointer?".to_owned()),
             DataType::Stringy => builder
                 .name(String::from("String"))
                 .sanitized_name(String::from("String"))

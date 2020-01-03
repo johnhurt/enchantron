@@ -49,7 +49,7 @@ class GameScene: SKScene {
         let loadingView = LoadingView()
         
         loadingView.initializeCtx(ctx: ctx, transitionService: transitioner)
-        transitioner.transition(view: loadingView, presenterBinder: ctx.bindToLoadingView )
+        ctx.transitionToLoadingView(view: loadingView)
     }
     
     #if os(watchOS)

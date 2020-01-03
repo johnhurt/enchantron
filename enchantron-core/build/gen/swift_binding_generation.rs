@@ -96,7 +96,7 @@ lazy_static! {
         .rust_owned(true)
         .methods(vec![
           MethodDefBuilder::default()
-              .name("bind_to_loading_view")
+              .name("transition_to_loading_view")
               .arguments(vec![
                 ArgumentDefBuilder::default()
                     .name("view")
@@ -108,7 +108,7 @@ lazy_static! {
               .build().unwrap(),
 
           MethodDefBuilder::default()
-              .name("bind_to_main_menu_view")
+              .name("transition_to_main_menu_view")
               .arguments(vec![
                 ArgumentDefBuilder::default()
                     .name("view")
@@ -116,12 +116,10 @@ lazy_static! {
                         "MainMenuView", None))
                     .build().unwrap()
               ])
-              .return_type(Some(DataType::rust_struct(
-                  "WrappedMainMenuPresenter", None)))
               .build().unwrap(),
 
           MethodDefBuilder::default()
-              .name("bind_to_game_view")
+              .name("transition_to_game_view")
               .arguments(vec![
                 ArgumentDefBuilder::default()
                     .name("view")
@@ -129,8 +127,6 @@ lazy_static! {
                         "GameView", None))
                     .build().unwrap()
               ])
-              .return_type(Some(DataType::rust_struct(
-                  "WrappedGamePresenter", None)))
               .build().unwrap(),
 
         ])
@@ -142,7 +138,7 @@ lazy_static! {
         .name("HandlerRegistration")
         .impls(vec![
             ImplDefBuilder::default()
-                .trait_name("ui::HandlerRegistration")
+                .trait_name("crate::ui::HandlerRegistration")
                 .trait_import(Some("crate::ui"))
                 .build().unwrap()
         ])
@@ -150,12 +146,12 @@ lazy_static! {
             MethodDefBuilder::default()
                 .name("deregister")
                 .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("ui::HandlerRegistration")
+                    .trait_name("crate::ui::HandlerRegistration")
                     .build().unwrap()))
                 .build().unwrap()
         ])
         .rust_owned(false)
-        .custom_rust_drop_code(Some("ui::HandlerRegistration::deregister(self);"))
+        .custom_rust_drop_code(Some("crate::ui::HandlerRegistration::deregister(self);"))
         .build().unwrap(),
 
     TypeDefBuilder::default()
@@ -397,7 +393,7 @@ lazy_static! {
                         .name("click_handler")
                         .data_type(DataType::rust_struct(
                             "ClickHandler",
-                            Some("ui::ClickHandler")))
+                            Some("crate::ui::ClickHandler")))
                         .build().unwrap()
                 ])
                 .return_type(Some(DataType::swift_generic(Some("R"),
@@ -443,7 +439,7 @@ lazy_static! {
                 .trait_import(Some("crate::ui::HasIntValue"))
                 .build().unwrap(),
             ImplDefBuilder::default()
-                .trait_name("ui::ProgressBar")
+                .trait_name("crate::ui::ProgressBar")
                 .build().unwrap()
         ])
         .methods(vec![
@@ -551,7 +547,7 @@ lazy_static! {
         .rust_owned(false)
         .impls(vec![
             ImplDefBuilder::default()
-                .trait_name("ui::Sprite")
+                .trait_name("crate::ui::Sprite")
                 .trait_import(Some("crate::ui"))
                 .generics(vec![
                   GenericDefBuilder::default()
@@ -604,7 +600,7 @@ lazy_static! {
                         .name("drag_handler")
                         .data_type(DataType::rust_struct(
                             "DragHandler",
-                            Some("ui::DragHandler")))
+                            Some("crate::ui::DragHandler")))
                         .build().unwrap()
                 ])
                 .return_type(Some(DataType::swift_generic(Some("R"),
@@ -621,7 +617,7 @@ lazy_static! {
                     .build().unwrap()
               ])
               .impl_block(Some(ImplBlockDefBuilder::default()
-                  .trait_name("ui::Sprite")
+                  .trait_name("crate::ui::Sprite")
                   .build().unwrap()))
               .build().unwrap(),
 
@@ -635,14 +631,14 @@ lazy_static! {
                     .build().unwrap()
               ])
               .impl_block(Some(ImplBlockDefBuilder::default()
-                  .trait_name("ui::Sprite")
+                  .trait_name("crate::ui::Sprite")
                   .build().unwrap()))
               .build().unwrap(),
 
           MethodDefBuilder::default()
               .name("remove_from_parent")
               .impl_block(Some(ImplBlockDefBuilder::default()
-                  .trait_name("ui::Sprite")
+                  .trait_name("crate::ui::Sprite")
                   .build().unwrap()))
               .build().unwrap(),
 
@@ -720,7 +716,7 @@ lazy_static! {
                   .build().unwrap()))
               .build().unwrap()
         ])
-        .custom_rust_drop_code(Some("ui::Sprite::remove_from_parent(self);"))
+        .custom_rust_drop_code(Some("crate::ui::Sprite::remove_from_parent(self);"))
         .build().unwrap(),
 
     // Views
@@ -767,16 +763,16 @@ lazy_static! {
                     .trait_name("view::BaseView")
                     .build().unwrap()))
                 .build().unwrap(),
-                MethodDefBuilder::default()
-                    .name("initialize_post_bind")
-                    .impl_block(Some(ImplBlockDefBuilder::default()
-                        .trait_name("view::BaseView")
-                        .build().unwrap()))
-                    .arguments(vec![ArgumentDefBuilder::default()
-                        .name("presenter")
-                        .data_type(DataType::Any)
-                        .build().unwrap()])
-                    .build().unwrap(),
+            MethodDefBuilder::default()
+                .name("initialize_post_bind")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("view::BaseView")
+                    .build().unwrap()))
+                .arguments(vec![ArgumentDefBuilder::default()
+                    .name("presenter")
+                    .data_type(DataType::Any)
+                    .build().unwrap()])
+                .build().unwrap(),
         ])
         .build().unwrap(),
 
@@ -793,6 +789,10 @@ lazy_static! {
                         .bound_type("Button")
                         .build().unwrap()
                 ])
+                .build().unwrap(),
+            ImplDefBuilder::default()
+                .trait_name("view::BaseView")
+                .trait_import(Some("crate::view"))
                 .build().unwrap()
         ])
         .fields(vec![
@@ -811,6 +811,22 @@ lazy_static! {
                 .impl_block(Some(ImplBlockDefBuilder::default()
                     .trait_name("view::MainMenuView")
                     .build().unwrap()))
+                .build().unwrap(),
+            MethodDefBuilder::default()
+                .name("initialize_pre_bind")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("view::BaseView")
+                    .build().unwrap()))
+                .build().unwrap(),
+            MethodDefBuilder::default()
+                .name("initialize_post_bind")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("view::BaseView")
+                    .build().unwrap()))
+                .arguments(vec![ArgumentDefBuilder::default()
+                    .name("presenter")
+                    .data_type(DataType::Any)
+                    .build().unwrap()])
                 .build().unwrap()
         ])
         .build().unwrap(),
@@ -823,7 +839,7 @@ lazy_static! {
                 .trait_name("view::GameView")
                 .build().unwrap(),
             ImplDefBuilder::default()
-                .trait_name("ui::SpriteSource")
+                .trait_name("crate::ui::SpriteSource")
                 .trait_import(Some("crate::ui"))
                 .generics(vec![
                     GenericDefBuilder::default()
@@ -876,6 +892,10 @@ lazy_static! {
                         .build().unwrap()
                 ])
                 .build().unwrap(),
+            ImplDefBuilder::default()
+                .trait_name("view::BaseView")
+                .trait_import(Some("crate::view"))
+                .build().unwrap()
 
         ])
         .fields(vec![
@@ -899,7 +919,7 @@ lazy_static! {
                         .name("drag_handler")
                         .data_type(DataType::rust_struct(
                             "DragHandler",
-                            Some("ui::DragHandler")))
+                            Some("crate::ui::DragHandler")))
                         .build().unwrap()
                 ])
                 .return_type(Some(DataType::swift_generic(Some("R"),
@@ -916,7 +936,7 @@ lazy_static! {
                         .name("layout_handler")
                         .data_type(DataType::rust_struct(
                             "LayoutHandler",
-                            Some("ui::LayoutHandler")))
+                            Some("crate::ui::LayoutHandler")))
                         .build().unwrap()
                 ])
                 .return_type(Some(DataType::swift_generic(Some("R"),
@@ -933,7 +953,7 @@ lazy_static! {
                         .name("magnify_handler")
                         .data_type(DataType::rust_struct(
                             "MagnifyHandler",
-                            Some("ui::MagnifyHandler")))
+                            Some("crate::ui::MagnifyHandler")))
                         .build().unwrap()
                 ])
                 .return_type(Some(DataType::swift_generic(Some("R"),
@@ -943,7 +963,7 @@ lazy_static! {
             MethodDefBuilder::default()
                 .name("create_sprite")
                 .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("ui::SpriteSource")
+                    .trait_name("crate::ui::SpriteSource")
                     .build().unwrap()))
                 .return_type(Some(DataType::swift_generic(Some("S"),
                     DataType::swift_struct("Sprite", None))))
@@ -956,6 +976,23 @@ lazy_static! {
                     .build().unwrap()))
                 .return_type(Some(DataType::swift_generic(Some("V"),
                     DataType::swift_struct("Viewport", None))))
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("initialize_pre_bind")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("view::BaseView")
+                    .build().unwrap()))
+                .build().unwrap(),
+            MethodDefBuilder::default()
+                .name("initialize_post_bind")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("view::BaseView")
+                    .build().unwrap()))
+                .arguments(vec![ArgumentDefBuilder::default()
+                    .name("presenter")
+                    .data_type(DataType::Any)
+                    .build().unwrap()])
                 .build().unwrap()
         ])
         .build().unwrap(),
@@ -965,11 +1002,11 @@ lazy_static! {
         .rust_owned(false)
         .impls(vec![
             ImplDefBuilder::default()
-                .trait_name("ui::Viewport")
+                .trait_name("crate::ui::Viewport")
                 .trait_import(Some("crate::ui"))
                 .build().unwrap(),
             ImplDefBuilder::default()
-                .trait_name("ui::SpriteSource")
+                .trait_name("crate::ui::SpriteSource")
                 .trait_import(Some("crate::ui"))
                 .generics(vec![
                     GenericDefBuilder::default()
@@ -1002,7 +1039,7 @@ lazy_static! {
             MethodDefBuilder::default()
                 .name("create_sprite")
                 .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("ui::SpriteSource")
+                    .trait_name("crate::ui::SpriteSource")
                     .build().unwrap()))
                 .return_type(Some(DataType::swift_generic(Some("S"),
                     DataType::swift_struct("Sprite", None))))

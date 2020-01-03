@@ -22,10 +22,9 @@ impl MethodDef {
             result.append(&mut return_type.get_imports());
         }
 
-        let _ = self
-            .arguments
+        self.arguments
             .iter()
-            .map(|arg| result.append(&mut arg.data_type.get_imports()));
+            .for_each(|arg| result.append(&mut arg.data_type.get_imports()));
 
         result
     }

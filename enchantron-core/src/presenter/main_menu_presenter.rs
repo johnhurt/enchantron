@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::ui::{ClickHandler, HandlerRegistration, HasClickHandlers, HasText};
 
-use crate::view::MainMenuView;
+use crate::view::{BaseView, MainMenuView};
 
 use crate::event::{
     EnchantronEvent, EventBus, EventListener, HasListenerRegistrations,
@@ -86,6 +86,8 @@ impl<V: MainMenuView> MainMenuPresenter<V> {
     ) -> Arc<MainMenuPresenter<V>> {
         info!("Starting to build main menu");
 
+        view.initialize_pre_bind();
+
         let result = MainMenuPresenter {
             view: view,
             handler_registrations: Mutex::new(Vec::new()),
@@ -93,7 +95,11 @@ impl<V: MainMenuView> MainMenuPresenter<V> {
             event_bus: event_bus,
         };
 
-        result.bind().await
+        let result = result.bind().await;
+
+        result.view.initialize_post_bind(Box::new(result.clone()));
+
+        result
     }
 }
 

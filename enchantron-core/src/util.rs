@@ -1,7 +1,7 @@
 pub use self::rust_string::RustString;
 pub use self::simple_slot_map::SimpleSlotMap;
 
-pub use self::boxed_any::BoxedAny;
+pub use self::boxed_any::*;
 pub use self::has_slot_map_key_data::HasSlotMapKeyData;
 pub use self::slot_map_key::SlotMapKey;
 pub use self::slot_map_key_data::SlotMapKeyData;

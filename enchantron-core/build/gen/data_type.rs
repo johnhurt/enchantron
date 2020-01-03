@@ -109,7 +109,7 @@ impl DataType {
     pub fn get_imports(&self) -> Vec<String> {
         match &self {
             DataType::Nil => Vec::new(),
-            DataType::Any => vec!["crate::util::BoxedAny".to_owned()],
+            DataType::Any => vec!["crate::util::BoxedAny".to_owned(), "crate::util::UnboxedAny".to_owned()],
             DataType::Stringy => vec![String::from("crate::util::RustString")],
             DataType::Primitive(_) => Vec::new(),
             DataType::Future(output_type) => {

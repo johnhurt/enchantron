@@ -89,6 +89,11 @@ lazy_static! {
         ])
         .build().unwrap(),
 
+    TypeDefBuilder::default()
+            .name("UnboxedAny")
+            .rust_owned(true)
+            .build().unwrap(),
+
     // Application Root Object
 
     TypeDefBuilder::default()

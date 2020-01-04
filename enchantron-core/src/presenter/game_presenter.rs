@@ -1,13 +1,12 @@
 use async_std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use std::future::Future;
 use std::sync::{Arc, Weak};
 use tokio::sync::Mutex;
 
 use crate::view_types::ViewTypes;
 
 use crate::event::{
-    EnchantronEvent, EventBus, EventListener, HasListenerRegistrations, Layout,
-    ListenerRegistration, ViewportChange,
+    EnchantronEvent, EventBus, EventListener, Layout, ListenerRegistration,
+    ViewportChange,
 };
 
 use crate::view::BaseView;
@@ -36,23 +35,6 @@ where
     weak_self: RwLock<Option<Box<Weak<GamePresenter<T>>>>>,
 
     display_state: RwLock<Option<GameDisplayState<T>>>,
-}
-
-impl<T> HasListenerRegistrations for GamePresenter<T>
-where
-    T: ViewTypes,
-{
-    fn add_listener_registration(
-        &self,
-        listener_registration: ListenerRegistration,
-    ) -> Future<Output = ()> {
-        async {
-            self.listener_registrations
-                .lock()
-                .await
-                .push(listener_registration);
-        }
-    }
 }
 
 impl<T> EventListener<EnchantronEvent, Layout> for GamePresenter<T>
@@ -84,11 +66,8 @@ where
 {
     /// Get a weak arc pointer to this presenter or panic if none has been
     /// created yet
-    fn weak_self(&self) -> Weak<GamePresenter<T>> {
-        let ref weak_self_lock = self.weak_self.read().unwrap_or_else(|err| {
-            error!("Failed to get read lock on weak self pointer: {:?}", err);
-            panic!("Failed to get a read lock on weak self pointer");
-        });
+    async fn weak_self(&self) -> Weak<GamePresenter<T>> {
+        let ref weak_self_lock = self.weak_self.read().await;
 
         weak_self_lock
             .as_ref()
@@ -100,36 +79,36 @@ where
             })
     }
 
+    async fn add_listener_registration(
+        &self,
+        listener_registration: ListenerRegistration,
+    ) {
+        self.listener_registrations
+            .lock()
+            .await
+            .push(listener_registration);
+    }
+
     ///
     /// Run an action with a read lock on the game display state
     ///
-    fn with_display_state(&self, action: impl FnOnce(&GameDisplayState<T>)) {
-        let ref display_state_lock =
-            self.display_state.read().unwrap_or_else(|err| {
-                error!("Failed to get read lock on display state: {:?}", err);
-                panic!("Failed to get a read lock on the display state");
-            });
-
-        let display_state = display_state_lock.as_ref().unwrap_or_else(|| {
-            error!("No Game State created yet");
-            panic!("No Game State created yet");
-        });
-
-        action(display_state);
+    async fn with_display_state(
+        &self,
+        action: impl FnOnce(&GameDisplayState<T>),
+    ) {
+        if let Some(display_state) = self.display_state.read().await.as_ref() {
+            action(display_state)
+        }
     }
 
     ///
     /// Run an action with a write lock on the game display state
     ///
-    fn with_display_state_mut(
+    async fn with_display_state_mut(
         &self,
         action: impl FnOnce(&mut GameDisplayState<T>),
     ) {
-        let ref mut display_state_lock =
-            self.display_state.write().unwrap_or_else(|err| {
-                error!("Failed to get write lock on display state: {:?}", err);
-                panic!("Failed to get a write lock on the display state");
-            });
+        let ref mut display_state_lock = self.display_state.write().await;
 
         let display_state = display_state_lock.as_mut().unwrap_or_else(|| {
             error!("No Game State created yet");
@@ -139,10 +118,8 @@ where
         action(display_state);
     }
 
-    fn add_handler_registration(&self, hr: Box<dyn HandlerRegistration>) {
-        if let Ok(mut locked_list) = self.handler_registrations.lock() {
-            locked_list.push(hr);
-        }
+    async fn add_handler_registration(&self, hr: Box<dyn HandlerRegistration>) {
+        self.handler_registrations.lock().await.push(hr);
     }
 
     /// Fire a viewport change event to the event bus
@@ -236,7 +213,7 @@ where
 
     /// Initialize the display state with the initial game state
     async fn initialize_game_state(&self) {
-        let sprite_source_self = self.weak_self();
+        let sprite_source_self = self.weak_self().await;
 
         let mut display_state: GameDisplayState<T> = GameDisplayState::new(
             self.event_bus.clone(),
@@ -250,7 +227,8 @@ where
                     })
             }),
             self.runtime_resources.clone(),
-        );
+        )
+        .await;
 
         display_state.set_character_sprite(self.view.create_sprite());
 
@@ -271,9 +249,9 @@ where
             }),
         )));
 
-        let result_drag_start = self.weak_self();
-        let result_drag_move = self.weak_self();
-        let result_drag_end = self.weak_self();
+        let result_drag_start = self.weak_self().await;
+        let result_drag_move = self.weak_self().await;
+        let result_drag_end = self.weak_self().await;
 
         self.add_handler_registration(Box::new(self.view.add_drag_handler(
             create_drag_handler!(
@@ -292,7 +270,7 @@ where
             ),
         )));
 
-        let result_for_magnify = self.weak_self();
+        let result_for_magnify = self.weak_self().await;
 
         self.add_handler_registration(Box::new(self.view.add_magnify_handler(
             create_magnify_handler!(
@@ -309,7 +287,7 @@ where
         )));
 
         self.event_bus
-            .register(Layout::default(), self.weak_self())
+            .register(Layout::default(), self.weak_self().await)
             .await;
     }
 

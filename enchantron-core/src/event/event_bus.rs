@@ -112,15 +112,7 @@ impl<K: EventKey> EventBus<K> {
         &self,
         event: E,
         listener: Weak<H>,
-    ) {
-        let listener_for_registration = {
-            if let Some(listener_arc) = listener.upgrade() {
-                listener_arc
-            } else {
-                return;
-            }
-        };
-
+    ) -> ListenerRegistration {
         let inner_clone = self.inner.clone();
 
         let event_key = event.get_event_key();
@@ -165,7 +157,7 @@ impl<K: EventKey> EventBus<K> {
         });
 
         // Create and return the registration
-        let lr = ListenerRegistration::new(Box::new(move || {
+        ListenerRegistration::new(Box::new(move || {
             info!("Deregistering listener for event {:?}", &event_key);
 
             let another_clone = inner_clone.clone();
@@ -188,9 +180,7 @@ impl<K: EventKey> EventBus<K> {
                     })
                     .await
             });
-        }));
-
-        listener_for_registration.add_listener_registration(lr);
+        }))
     }
 
     /// Post the given event to the event bus.  This event will be distributed

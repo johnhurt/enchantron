@@ -2,8 +2,8 @@ use std::iter;
 use std::sync::{Arc, Mutex, RwLock};
 
 use crate::event::{
-    EnchantronEvent, EventBus, EventListener, HasListenerRegistrations,
-    ListenerRegistration, ViewportChange,
+    EnchantronEvent, EventBus, EventListener, ListenerRegistration,
+    ViewportChange,
 };
 use crate::game::constants;
 use crate::model::{IPoint, IRect, ISize, Point, Rect, Size, UPoint, URect};
@@ -40,23 +40,6 @@ where
     top_left_tile: UPoint,
 }
 
-impl<T> HasListenerRegistrations for TerrainGenerator<T>
-where
-    T: ViewTypes,
-{
-    fn add_listener_registration(
-        &self,
-        listener_registration: ListenerRegistration,
-    ) {
-        if let Ok(mut locked_list) = self.listener_registrations.lock() {
-            info!("Adding listener registration");
-            locked_list.push(listener_registration);
-        } else {
-            error!("Failed to add listener registration");
-        }
-    }
-}
-
 impl<T> EventListener<EnchantronEvent, ViewportChange> for TerrainGenerator<T>
 where
     T: ViewTypes,
@@ -72,7 +55,19 @@ impl<T> TerrainGenerator<T>
 where
     T: ViewTypes,
 {
-    pub fn new(
+    fn add_listener_registration(
+        &self,
+        listener_registration: ListenerRegistration,
+    ) {
+        if let Ok(mut locked_list) = self.listener_registrations.lock() {
+            info!("Adding listener registration");
+            locked_list.push(listener_registration);
+        } else {
+            error!("Failed to add listener registration");
+        }
+    }
+
+    pub async fn new(
         event_bus: EventBus<EnchantronEvent>,
         sprite_source: SpriteSourceWrapper<T>,
         terrain_texture_provider: TerrainTextureProvider<T>,
@@ -86,7 +81,11 @@ where
             inner: RwLock::new(Inner::default()),
         });
 
-        event_bus.register(ViewportChange::default(), Arc::downgrade(&result));
+        result.add_listener_registration(
+            event_bus
+                .register(ViewportChange::default(), Arc::downgrade(&result))
+                .await,
+        );
 
         result
     }

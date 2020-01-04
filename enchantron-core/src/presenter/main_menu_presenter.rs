@@ -5,8 +5,7 @@ use crate::ui::{ClickHandler, HandlerRegistration, HasClickHandlers, HasText};
 use crate::view::{BaseView, MainMenuView};
 
 use crate::event::{
-    EnchantronEvent, EventBus, EventListener, HasListenerRegistrations,
-    ListenerRegistration, StartGame,
+    EnchantronEvent, EventBus, EventListener, ListenerRegistration, StartGame,
 };
 
 pub struct MainMenuPresenter<V: MainMenuView> {
@@ -21,23 +20,6 @@ impl<V: MainMenuView> EventListener<EnchantronEvent, StartGame>
 {
     fn on_event(&self, _: &StartGame) {
         self.view.transition_to_game_view()
-    }
-}
-
-impl<V> HasListenerRegistrations for MainMenuPresenter<V>
-where
-    V: MainMenuView,
-{
-    fn add_listener_registration(
-        &self,
-        listener_registration: ListenerRegistration,
-    ) {
-        if let Ok(mut locked_list) = self.listener_registrations.lock() {
-            info!("Adding listener registration to loading presenter");
-            locked_list.push(listener_registration);
-        } else {
-            error!("Failed to add listener registration");
-        }
     }
 }
 
@@ -67,10 +49,12 @@ impl<V: MainMenuView> MainMenuPresenter<V> {
 
         let result = Arc::new(self);
 
-        result
-            .event_bus
-            .register(StartGame::default(), Arc::downgrade(&result))
-            .await;
+        result.add_listener_registration(
+            result
+                .event_bus
+                .register(StartGame::default(), Arc::downgrade(&result))
+                .await,
+        );
 
         result
             .view

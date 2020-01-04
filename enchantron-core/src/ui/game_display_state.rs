@@ -25,7 +25,7 @@ impl<T> GameDisplayState<T>
 where
     T: ViewTypes,
 {
-    pub fn new(
+    pub async fn new(
         event_bus: EventBus<EnchantronEvent>,
         sprite_source: SpriteSourceWrapper<T>,
         runtime_resources: Arc<RuntimeResources<T::SystemView>>,
@@ -40,7 +40,8 @@ where
                 event_bus,
                 sprite_source,
                 TerrainTextureProvider::new(runtime_resources),
-            ),
+            )
+            .await,
 
             character: None,
         }

@@ -1,6 +1,6 @@
 use crate::event::{
-    EnchantronEvent, EventBus, EventListener, HasListenerRegistrations,
-    ListenerRegistration, LoadResources,
+    EnchantronEvent, EventBus, EventListener, ListenerRegistration,
+    LoadResources,
 };
 
 use std::sync::{Arc, Mutex};
@@ -43,7 +43,7 @@ where
     }
 }
 
-impl<V, S> HasListenerRegistrations for LoadingPresenter<V, S>
+impl<V, S> LoadingPresenter<V, S>
 where
     V: LoadingView,
     S: SystemView,
@@ -59,20 +59,16 @@ where
             error!("Failed to add listener registration");
         }
     }
-}
 
-impl<V, S> LoadingPresenter<V, S>
-where
-    V: LoadingView,
-    S: SystemView,
-{
     async fn bind(self) -> Arc<LoadingPresenter<V, S>> {
         let result = Arc::new(self);
 
-        result
-            .event_bus
-            .register(LoadResources::default(), Arc::downgrade(&result))
-            .await;
+        result.add_listener_registration(
+            result
+                .event_bus
+                .register(LoadResources::default(), Arc::downgrade(&result))
+                .await,
+        );
 
         result
             .view

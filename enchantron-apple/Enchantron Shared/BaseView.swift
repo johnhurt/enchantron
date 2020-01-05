@@ -15,7 +15,7 @@ class BaseView: SKNode {
     private var layoutHandlers: [LayoutHandler] = []
     private var magnifyHandlers: [MagnifyHandler] = []
     
-    private var presenter : OpaquePointer?
+    private var presenter : UnboxedAny?
     private var ctx : ApplicationContext?
     private var transitionService : TransitionService?
     private var viewport : Viewport?
@@ -55,7 +55,7 @@ class BaseView: SKNode {
         self.transitionService?.preBindTransition(self)
     }
     
-    func initializePostBind(_ presenter: OpaquePointer?) {
+    func initializePostBind(_ presenter: UnboxedAny) {
         #if os(iOS) || os(tvOS)
         self.touchTracker = TouchTracker(self)
         #endif

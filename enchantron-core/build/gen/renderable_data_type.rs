@@ -40,16 +40,18 @@ impl RenderableDataType {
                 .name("Any".to_owned())
                 .sanitized_name("Any".to_owned())
                 .rust_name_internal("BoxedAny".to_owned())
-                .rust_name_incoming("*mut UnboxedAny".to_owned())
-                .rust_name_outgoing("*mut UnboxedAny".to_owned())
+                .rust_name_incoming("*mut BoxedAny".to_owned())
+                .rust_name_outgoing("*mut BoxedAny".to_owned())
                 .rust_type_coersion_prefix_incoming("unsafe { &*".to_owned())
                 .rust_type_coersion_postfix_incoming(" }".to_owned())
-                .rust_type_coersion_prefix_outgoing("Box::into_raw(".to_owned())
-                .rust_type_coersion_postfix_outgoing(")".to_owned())
+                .rust_type_coersion_prefix_outgoing(
+                    "Box::into_raw(Box::new(".to_owned(),
+                )
+                .rust_type_coersion_postfix_outgoing("))".to_owned())
                 .swift_name_internal("RustAny".to_owned())
                 .swift_name_incoming("OpaquePointer?".to_owned())
                 .swift_name_outgoing("OpaquePointer?".to_owned())
-                .swift_type_coersion_prefix_incoming("UnboxedAny(".to_owned())
+                .swift_type_coersion_prefix_incoming("BoxedAny(".to_owned())
                 .swift_type_coersion_postfix_incoming(")".to_owned())
                 .swift_type_coersion_prefix_outgoing("".to_owned())
                 .swift_type_coersion_postfix_outgoing(".ref".to_owned()),

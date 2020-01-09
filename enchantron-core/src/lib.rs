@@ -4,6 +4,8 @@ extern crate lazy_static;
 extern crate log;
 #[macro_use]
 extern crate getset;
+#[macro_use]
+extern crate async_trait;
 
 pub use self::lib_gen::*;
 

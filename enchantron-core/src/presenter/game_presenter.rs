@@ -4,10 +4,7 @@ use tokio::sync::Mutex;
 
 use crate::view_types::ViewTypes;
 
-use crate::event::{
-    EnchantronEvent, EventBus, EventListener, Layout, ListenerRegistration,
-    ViewportChange,
-};
+use crate::event::*;
 
 use crate::view::BaseView;
 
@@ -57,6 +54,16 @@ where
                 .get_viewport()
                 .set_location_point(&viewport_info.viewport_rect.top_left);
         });
+    }
+}
+
+#[async_trait]
+impl<T> EventListener<EnchantronEvent, DragStart> for GamePresenter<T>
+where
+    T: ViewTypes,
+{
+    async fn on_event(&self, event: &DragStart) {
+        self.on_drag_start(&event.global_point).await;
     }
 }
 
@@ -129,7 +136,7 @@ where
         });
     }
 
-    fn on_magnify(
+    async fn on_magnify(
         &self,
         scale_change_additive: f64,
         zoom_center_x: f64,
@@ -153,19 +160,21 @@ where
                 viewport_info.viewport_scale,
                 &viewport_info.viewport_rect.top_left,
             );
-        });
+        })
+        .await;
     }
 
-    fn on_drag_start(&self, drag_point: &Point) {
+    async fn on_drag_start(&self, drag_point: &Point) {
         debug!("Drag started {:?}", drag_point);
 
         self.with_display_state_mut(|display_state| {
             display_state.drag_state =
                 Option::Some(DragState::new(drag_point.clone()));
-        });
+        })
+        .await;
     }
 
-    fn on_drag_move(&self, drag_x: f64, drag_y: f64) {
+    async fn on_drag_move(&self, drag_x: f64, drag_y: f64) {
         debug!("Drag moved ({}, {})", drag_x, drag_y);
 
         self.with_display_state_mut(|display_state| {
@@ -203,12 +212,14 @@ where
             self.view
                 .get_viewport()
                 .set_location(new_position_ref.x, new_position_ref.y);
-        });
+        })
+        .await;
     }
 
-    fn on_drag_end(&self) {
+    async fn on_drag_end(&self) {
         debug!("Drag ended");
-        self.with_display_state_mut(|ds| ds.drag_state = Option::None);
+        self.with_display_state_mut(|ds| ds.drag_state = Option::None)
+            .await;
     }
 
     /// Initialize the display state with the initial game state
@@ -242,12 +253,16 @@ where
 
         self.add_handler_registration(Box::new(self.view.add_layout_handler(
             create_layout_handler!(|w, h| {
-                copied_event_bus.post(Layout {
-                    width: w,
-                    height: h,
-                })
+                copied_event_bus.post_with_partition(
+                    Layout {
+                        width: w,
+                        height: h,
+                    },
+                    0,
+                )
             }),
-        )));
+        )))
+        .await;
 
         let result_drag_start = self.weak_self().await;
         let result_drag_move = self.weak_self().await;
@@ -255,40 +270,63 @@ where
 
         self.add_handler_registration(Box::new(self.view.add_drag_handler(
             create_drag_handler!(
-                on_drag_start(wx, wy, _lx, _ly) {
-                    result_drag_start.upgrade()
-                        .map(|p| p.on_drag_start(&Point { x: wx, y: wy }));
+                on_drag_start(wx, wy, lx, ly) {
+                    result_drag_start.upgrade().map(|p| {
+                        p.event_bus.post_with_partition(DragStart {
+                            global_point: Point { x: wx, y: wy },
+                            local_point: Point { x: lx, y: ly }
+                        }, 0);
+                    });
                 },
-                on_drag_move(wx, wy, _lx, _ly) {
-                    result_drag_move.upgrade()
-                        .map(|p| p.on_drag_move(wx, wy));
+                on_drag_move(wx, wy, lx, ly) {
+                    result_drag_move.upgrade().map(|p| {
+                        p.event_bus.post_with_partition(DragMove {
+                            global_point: Point { x: wx, y: wy },
+                            local_point: Point { x: lx, y: ly }
+                        }, 0);
+                    });
                 },
-                on_drag_end(_wx, _wy, _lx, _ly) {
-                    result_drag_end.upgrade()
-                        .map(|p| p.on_drag_end());
+                on_drag_end(wx, wy, lx, ly) {
+                    result_drag_end.upgrade().map(|p| {
+                        p.event_bus.post_with_partition(DragEnd {
+                            global_point: Point { x: wx, y: wy },
+                            local_point: Point { x: lx, y: ly }
+                        }, 0);
+                    });
                 }
             ),
-        )));
+        )))
+        .await;
 
         let result_for_magnify = self.weak_self().await;
 
         self.add_handler_registration(Box::new(self.view.add_magnify_handler(
             create_magnify_handler!(
                 on_magnify(scale_change_additive, center_x, center_y) {
-                    result_for_magnify.upgrade()
-                        .map(|p| {
-                            p.on_magnify(
-                                scale_change_additive,
-                                center_x,
-                                center_y)
-                        });
+                    result_for_magnify.upgrade().map(|p| {
+                        p.event_bus.post_with_partition(Magnify {
+                            scale_change_additive,
+                            global_center: Point { x: center_x, y: center_y }
+                        }, 0);
+                    });
                 }
             ),
-        )));
+        )))
+        .await;
 
-        self.event_bus
-            .register(Layout::default(), self.weak_self().await)
-            .await;
+        self.add_listener_registration(
+            self.event_bus
+                .register(Layout::default(), self.weak_self().await)
+                .await,
+        )
+        .await;
+
+        self.add_listener_registration(
+            self.event_bus
+                .register(DragStart::default(), self.weak_self().await)
+                .await,
+        )
+        .await;
     }
 
     pub fn create_sprite(&self) -> T::Sprite {

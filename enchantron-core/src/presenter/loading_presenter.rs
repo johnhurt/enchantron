@@ -4,6 +4,7 @@ use crate::event::{
 };
 
 use std::sync::{Arc, Mutex};
+use std::thread;
 
 use crate::native::{RuntimeResources, SystemView, Textures};
 
@@ -85,7 +86,7 @@ where
         system_view: Arc<S>,
         event_bus: EventBus<EnchantronEvent>,
         resources_sink: Box<dyn Fn(RuntimeResources<S>) + Send + Sync>,
-    ) -> Arc<LoadingPresenter<V, S>> {
+    ) {
         view.initialize_pre_bind();
 
         let result = LoadingPresenter {
@@ -99,8 +100,6 @@ where
         .await;
 
         result.view.initialize_post_bind(Box::new(result.clone()));
-
-        result
     }
 }
 

@@ -1,6 +1,9 @@
+use futures::future::{join_all, ready};
+use itertools::Itertools;
 use std::any::Any;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
+use std::pin::Pin;
 use std::sync::{Arc, Weak};
 
 use super::{Event, EventKey, EventListener, ListenerRegistration};
@@ -27,7 +30,19 @@ pub struct EventBus<K: EventKey> {
 
 /// Impl details for event bus
 struct InnerEventBus<K: EventKey> {
-    listeners: CHashMap<K, SimpleSlotMap<Box<dyn Fn(&dyn Any) + Send + Sync>>>,
+    listeners: CHashMap<
+        K,
+        SimpleSlotMap<
+            Box<
+                dyn Fn(
+                        &dyn Any,
+                    )
+                        -> Pin<Box<dyn std::future::Future<Output = ()>>>
+                    + Send
+                    + Sync,
+            >,
+        >,
+    >,
     sinks: Vec<Sender<(K, BoxedAny)>>,
     event_counter: RelaxedCounter,
     threadpool: Handle,
@@ -71,9 +86,10 @@ impl<K: EventKey> InnerEventBus<K> {
                 .with(&key, |handlers_opt| {
                     if let Some(handlers) = handlers_opt {
                         info!("Handling event {:?}", key);
-                        handlers.iter().for_each(|func| func(&*arg)); // <- Note the deref before borrow
+                        handlers.iter().map(|func| func(&*arg)).collect_vec() // <- Note the deref before borrow
                     } else {
                         info!("No handlers found for event key: {:?}", key);
+                        Vec::new()
                     }
                 })
                 .await;
@@ -133,12 +149,15 @@ impl<K: EventKey> EventBus<K> {
                     if let Some(handler) = listener.upgrade() {
 
                         if let Some(arg) = arg.downcast_ref::<E>() {
-                            handler.on_event(arg);
+                            handler.on_event(arg)
                         }
                         else {
                             error!("Unable to downcast any ref to correct event type");
                             panic!("Unable to downcast any ref to correct event type");
-                        };
+                        }
+                    }
+                    else {
+                        unimplemented!();
                     }
                 })));
 

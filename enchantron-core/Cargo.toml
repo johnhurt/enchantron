@@ -23,6 +23,7 @@ anymap = "0.12.1"
 tokio = { version = "0.2.6", features = [ "time", "sync", "rt-threaded", "rt-core" ] }
 futures = "0.3.1"
 async-std = "1.4.0"
+async-trait = "0.1.22"
 
 [build-dependencies]
 cbindgen = "0.8.6"

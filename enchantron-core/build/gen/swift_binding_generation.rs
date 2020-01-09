@@ -90,7 +90,7 @@ lazy_static! {
         .build().unwrap(),
 
     TypeDefBuilder::default()
-            .name("UnboxedAny")
+            .name("BoxedAny")
             .rust_owned(true)
             .build().unwrap(),
 

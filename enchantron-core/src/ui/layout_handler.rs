@@ -4,10 +4,10 @@ macro_rules! create_layout_handler {
     };
 }
 
-pub struct LayoutHandler(Box<Fn(i64, i64) + 'static>);
+pub struct LayoutHandler(Box<dyn Fn(i64, i64) + 'static + Send>);
 
 impl LayoutHandler {
-    pub fn new(_self: Box<Fn(i64, i64) + 'static>) -> LayoutHandler {
+    pub fn new(_self: Box<dyn Fn(i64, i64) + 'static + Send>) -> LayoutHandler {
         LayoutHandler(_self)
     }
 

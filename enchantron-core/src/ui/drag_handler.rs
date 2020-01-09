@@ -28,16 +28,16 @@ macro_rules! create_drag_handler {
 }
 
 pub struct DragHandler {
-    on_drag_start: Box<Fn(f64, f64, f64, f64) + 'static>,
-    on_drag_move: Box<Fn(f64, f64, f64, f64) + 'static>,
-    on_drag_end: Box<Fn(f64, f64, f64, f64) + 'static>,
+    on_drag_start: Box<dyn Fn(f64, f64, f64, f64) + Send + 'static>,
+    on_drag_move: Box<dyn Fn(f64, f64, f64, f64) + Send + 'static>,
+    on_drag_end: Box<dyn Fn(f64, f64, f64, f64) + Send + 'static>,
 }
 
 impl DragHandler {
     pub fn new(
-        on_drag_start: Box<Fn(f64, f64, f64, f64) + 'static>,
-        on_drag_move: Box<Fn(f64, f64, f64, f64) + 'static>,
-        on_drag_end: Box<Fn(f64, f64, f64, f64) + 'static>,
+        on_drag_start: Box<dyn Fn(f64, f64, f64, f64) + Send + 'static>,
+        on_drag_move: Box<dyn Fn(f64, f64, f64, f64) + Send + 'static>,
+        on_drag_end: Box<dyn Fn(f64, f64, f64, f64) + Send + 'static>,
     ) -> DragHandler {
         DragHandler {
             on_drag_start: on_drag_start,

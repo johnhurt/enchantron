@@ -11,12 +11,12 @@ macro_rules! create_magnify_handler {
 }
 
 pub struct MagnifyHandler {
-    on_magnify: Box<dyn Fn(f64, f64, f64) + 'static>,
+    on_magnify: Box<dyn Fn(f64, f64, f64) + Send + 'static>,
 }
 
 impl MagnifyHandler {
     pub fn new(
-        on_magnify: Box<dyn Fn(f64, f64, f64) + 'static>,
+        on_magnify: Box<dyn Fn(f64, f64, f64) + Send + 'static>,
     ) -> MagnifyHandler {
         MagnifyHandler {
             on_magnify: on_magnify,

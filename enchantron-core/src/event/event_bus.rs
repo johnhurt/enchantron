@@ -1,4 +1,4 @@
-use futures::future::{join_all, ready};
+
 use itertools::Itertools;
 use std::any::Any;
 use std::collections::hash_map::DefaultHasher;
@@ -18,6 +18,7 @@ use tokio::runtime::Handle;
 use tokio::sync::mpsc::{
     unbounded_channel, UnboundedReceiver as Receiver, UnboundedSender as Sender,
 };
+use tokio::stream::StreamExt;
 
 const WORKER_COUNT: usize = 16;
 
@@ -30,20 +31,7 @@ pub struct EventBus<K: EventKey> {
 
 /// Impl details for event bus
 struct InnerEventBus<K: EventKey> {
-    listeners: CHashMap<
-        K,
-        SimpleSlotMap<
-            Box<
-                dyn Fn(
-                        &dyn Any,
-                    )
-                        -> Pin<Box<dyn std::future::Future<Output = ()>>>
-                    + Send
-                    + Sync,
-            >,
-        >,
-    >,
-    sinks: Vec<Sender<(K, BoxedAny)>>,
+    listeners: CHashMap<K,SimpleSlotMap<Sender<BoxedAny>>>,
     event_counter: RelaxedCounter,
     threadpool: Handle,
 }
@@ -51,70 +39,22 @@ struct InnerEventBus<K: EventKey> {
 impl<K: EventKey> InnerEventBus<K> {
     fn create(
         threadpool: Handle,
-    ) -> (InnerEventBus<K>, Vec<Receiver<(K, BoxedAny)>>) {
-        let mut sinks: Vec<Sender<(K, BoxedAny)>> = Vec::new();
-        let mut sources: Vec<Receiver<(K, BoxedAny)>> = Vec::new();
-
-        for _ in 0..WORKER_COUNT {
-            let (sink, source): (
-                Sender<(K, BoxedAny)>,
-                Receiver<(K, BoxedAny)>,
-            ) = unbounded_channel();
-            sinks.push(sink);
-            sources.push(source);
+    ) -> InnerEventBus<K>) {
+        InnerEventBus {
+            listeners: CHashMap::default(),
+            event_counter: RelaxedCounter::new(0),
+            threadpool,
         }
 
-        (
-            InnerEventBus {
-                listeners: CHashMap::default(),
-                sinks,
-                event_counter: RelaxedCounter::new(0),
-                threadpool,
-            },
-            sources,
-        )
     }
 
-    async fn run_evaluator(
-        self: Arc<InnerEventBus<K>>,
-        mut receiver: Receiver<(K, BoxedAny)>,
-    ) {
-        while let Some((key, arg)) = receiver.recv().await {
-            debug!("Firing {:?}", key);
-
-            self.listeners
-                .with(&key, |handlers_opt| {
-                    if let Some(handlers) = handlers_opt {
-                        info!("Handling event {:?}", key);
-                        handlers.iter().map(|func| func(&*arg)).collect_vec() // <- Note the deref before borrow
-                    } else {
-                        info!("No handlers found for event key: {:?}", key);
-                        Vec::new()
-                    }
-                })
-                .await;
-
-            debug!("Fired {:?}", key);
-        }
-    }
 }
 
 impl<K: EventKey> EventBus<K> {
     pub fn new(tokio_runtime_handle: &Handle) -> EventBus<K> {
-        let (inner_event_bus, sources): (
-            InnerEventBus<K>,
-            Vec<Receiver<(K, BoxedAny)>>,
-        ) = InnerEventBus::create(tokio_runtime_handle.clone());
+        let inner_event_bus = InnerEventBus::create(tokio_runtime_handle.clone());
 
         let inner_event_bus_arc = Arc::new(inner_event_bus);
-
-        sources.into_iter().enumerate().for_each(|(i, source)| {
-            let local_inner_event_bus_arc = inner_event_bus_arc.clone();
-            tokio_runtime_handle.spawn(InnerEventBus::run_evaluator(
-                local_inner_event_bus_arc,
-                source,
-            ));
-        });
 
         EventBus {
             inner: inner_event_bus_arc,
@@ -124,14 +64,12 @@ impl<K: EventKey> EventBus<K> {
     /// Register the given event listener to listen for events of the given type, and
     /// return a registration that can be used to deregister the listener from this
     /// event type
-    pub async fn register<E: Event<K>, H: EventListener<K, E>>(
+    pub async fn register<E: Event<K>>(
         &self,
-        event: E,
-        listener: Weak<H>,
-    ) -> ListenerRegistration {
+        event_key: K,
+    ) -> (ListenerRegistration, Receiver<E>) {
         let inner_clone = self.inner.clone();
 
-        let event_key = event.get_event_key();
         let mut slot_map_key_opt: Option<usize> = None;
 
         {
@@ -139,27 +77,16 @@ impl<K: EventKey> EventBus<K> {
 
             info!("Adding a listener for {:?}", &event_key);
 
+            let (sender, receiver) : (Sender<BoxedAny>, Receiver<BoxedAny>)
+                = unbounded_channel();
+
             inner_clone.listeners.alter(event_key, move | listeners_opt | {
                 let mut listeners = match listeners_opt {
                     None => SimpleSlotMap::new(),
                     Some(existing_listeners) => existing_listeners
                 };
 
-                *slot_map_key_opt_ref = Some(listeners.insert( Box::new(move |arg| {
-                    if let Some(handler) = listener.upgrade() {
-
-                        if let Some(arg) = arg.downcast_ref::<E>() {
-                            handler.on_event(arg)
-                        }
-                        else {
-                            error!("Unable to downcast any ref to correct event type");
-                            panic!("Unable to downcast any ref to correct event type");
-                        }
-                    }
-                    else {
-                        unimplemented!();
-                    }
-                })));
+                *slot_map_key_opt_ref = Some(listeners.insert(sender));
 
                 info!("Got key {:?}", *slot_map_key_opt_ref);
                 info!("There are now {} listeners for {:?} Events", listeners.len(), &event_key);
@@ -176,7 +103,7 @@ impl<K: EventKey> EventBus<K> {
         });
 
         // Create and return the registration
-        ListenerRegistration::new(Box::new(move || {
+        ( ListenerRegistration::new(Box::new(move || {
             info!("Deregistering listener for event {:?}", &event_key);
 
             let another_clone = inner_clone.clone();
@@ -199,7 +126,7 @@ impl<K: EventKey> EventBus<K> {
                     })
                     .await
             });
-        }))
+        })), )
     }
 
     /// Post the given event to the event bus.  This event will be distributed

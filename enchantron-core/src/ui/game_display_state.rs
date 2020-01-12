@@ -26,7 +26,7 @@ where
     T: ViewTypes,
 {
     pub async fn new(
-        event_bus: EventBus<EnchantronEvent>,
+        event_bus: EventBus,
         sprite_source: SpriteSourceWrapper<T>,
         runtime_resources: Arc<RuntimeResources<T::SystemView>>,
     ) -> GameDisplayState<T> {

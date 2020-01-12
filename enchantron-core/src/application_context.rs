@@ -1,4 +1,4 @@
-use crate::event::{EnchantronEvent, EventBus};
+use crate::event::EventBus;
 use log::SetLoggerError;
 use simplelog::{CombinedLogger, Config, LevelFilter, SimpleLogger};
 use tokio::runtime::{Builder, Runtime};
@@ -55,7 +55,7 @@ impl Deref for ApplicationContext {
 
 pub struct ApplicationContextInner {
     tokio_runtime: Runtime,
-    event_bus: EventBus<EnchantronEvent>,
+    event_bus: EventBus,
     system_view: Arc<SystemView>,
     runtime_resources: RwLock<Option<Arc<RuntimeResources<SystemView>>>>,
 }

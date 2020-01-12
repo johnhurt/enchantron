@@ -2,8 +2,7 @@ use std::iter;
 use std::sync::{Arc, Mutex, RwLock};
 
 use crate::event::{
-    EnchantronEvent, EventBus, EventListener, ListenerRegistration,
-    ViewportChange,
+    EnchantronEvent, EventBus, ListenerRegistration, ViewportChange,
 };
 use crate::game::constants;
 use crate::model::{IPoint, IRect, ISize, Point, Rect, Size, UPoint, URect};
@@ -40,16 +39,16 @@ where
     top_left_tile: UPoint,
 }
 
-impl<T> EventListener<EnchantronEvent, ViewportChange> for TerrainGenerator<T>
-where
-    T: ViewTypes,
-{
-    fn on_event(&self, event: &ViewportChange) {
-        info!("Viewport changed : {:?}", event.new_viewport_rect);
+// impl<T> EventListener<EnchantronEvent, ViewportChange> for TerrainGenerator<T>
+// where
+//     T: ViewTypes,
+// {
+//     fn on_event(&self, event: &ViewportChange) {
+//         info!("Viewport changed : {:?}", event.new_viewport_rect);
 
-        self.on_viewport_change(&event.new_viewport_rect);
-    }
-}
+//         self.on_viewport_change(&event.new_viewport_rect);
+//     }
+// }
 
 impl<T> TerrainGenerator<T>
 where
@@ -68,7 +67,7 @@ where
     }
 
     pub async fn new(
-        event_bus: EventBus<EnchantronEvent>,
+        event_bus: EventBus,
         sprite_source: SpriteSourceWrapper<T>,
         terrain_texture_provider: TerrainTextureProvider<T>,
     ) -> Arc<TerrainGenerator<T>> {
@@ -81,11 +80,11 @@ where
             inner: RwLock::new(Inner::default()),
         });
 
-        result.add_listener_registration(
-            event_bus
-                .register(ViewportChange::default(), Arc::downgrade(&result))
-                .await,
-        );
+        // result.add_listener_registration(
+        //     event_bus
+        //         .register(ViewportChange::default(), Arc::downgrade(&result))
+        //         .await,
+        // );
 
         result
     }

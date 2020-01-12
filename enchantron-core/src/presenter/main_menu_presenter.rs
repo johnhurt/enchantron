@@ -5,23 +5,23 @@ use crate::ui::{ClickHandler, HandlerRegistration, HasClickHandlers, HasText};
 use crate::view::{BaseView, MainMenuView};
 
 use crate::event::{
-    EnchantronEvent, EventBus, EventListener, ListenerRegistration, StartGame,
+    EnchantronEvent, EventBus, ListenerRegistration, StartGame,
 };
 
 pub struct MainMenuPresenter<V: MainMenuView> {
     view: V,
     handler_registrations: Mutex<Vec<Box<dyn HandlerRegistration>>>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
-    event_bus: EventBus<EnchantronEvent>,
+    event_bus: EventBus,
 }
 
-impl<V: MainMenuView> EventListener<EnchantronEvent, StartGame>
-    for MainMenuPresenter<V>
-{
-    fn on_event(&self, _: &StartGame) {
-        self.view.transition_to_game_view()
-    }
-}
+// impl<V: MainMenuView> EventListener<EnchantronEvent, StartGame>
+//     for MainMenuPresenter<V>
+// {
+//     fn on_event(&self, _: &StartGame) {
+//         self.view.transition_to_game_view()
+//     }
+// }
 
 impl<V: MainMenuView> MainMenuPresenter<V> {
     fn add_listener_registration(&self, lr: ListenerRegistration) {
@@ -49,12 +49,12 @@ impl<V: MainMenuView> MainMenuPresenter<V> {
 
         let result = Arc::new(self);
 
-        result.add_listener_registration(
-            result
-                .event_bus
-                .register(StartGame::default(), Arc::downgrade(&result))
-                .await,
-        );
+        // result.add_listener_registration(
+        //     result
+        //         .event_bus
+        //         .register(StartGame::default(), Arc::downgrade(&result))
+        //         .await,
+        // );
 
         result
             .view
@@ -66,7 +66,7 @@ impl<V: MainMenuView> MainMenuPresenter<V> {
 
     pub async fn new(
         view: V,
-        event_bus: EventBus<EnchantronEvent>,
+        event_bus: EventBus,
     ) -> Arc<MainMenuPresenter<V>> {
         info!("Starting to build main menu");
 

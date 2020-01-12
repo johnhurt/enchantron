@@ -24,7 +24,7 @@ where
     T: ViewTypes,
 {
     view: T::GameView,
-    event_bus: EventBus<EnchantronEvent>,
+    event_bus: EventBus,
     runtime_resources: Arc<RuntimeResources<T::SystemView>>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
     handler_registrations: Mutex<Vec<Box<dyn HandlerRegistration>>>,
@@ -34,38 +34,38 @@ where
     display_state: RwLock<Option<GameDisplayState<T>>>,
 }
 
-impl<T> EventListener<EnchantronEvent, Layout> for GamePresenter<T>
-where
-    T: ViewTypes,
-{
-    fn on_event(&self, event: &Layout) {
-        info!("Game view resized to : {}, {}", event.width, event.height);
+// impl<T> EventListener<EnchantronEvent, Layout> for GamePresenter<T>
+// where
+//     T: ViewTypes,
+// {
+//     fn on_event(&self, event: &Layout) {
+//         info!("Game view resized to : {}, {}", event.width, event.height);
 
-        let new_size = Size::new(event.width as f64, event.height as f64);
+//         let new_size = Size::new(event.width as f64, event.height as f64);
 
-        self.with_display_state_mut(|display_state| {
-            let viewport_info = display_state.layout(new_size);
+//         self.with_display_state_mut(|display_state| {
+//             let viewport_info = display_state.layout(new_size);
 
-            self.fire_viewport_change_event(
-                viewport_info.viewport_rect.clone(),
-            );
+//             self.fire_viewport_change_event(
+//                 viewport_info.viewport_rect.clone(),
+//             );
 
-            self.view
-                .get_viewport()
-                .set_location_point(&viewport_info.viewport_rect.top_left);
-        });
-    }
-}
+//             self.view
+//                 .get_viewport()
+//                 .set_location_point(&viewport_info.viewport_rect.top_left);
+//         });
+//     }
+// }
 
-#[async_trait]
-impl<T> EventListener<EnchantronEvent, DragStart> for GamePresenter<T>
-where
-    T: ViewTypes,
-{
-    async fn on_event(&self, event: &DragStart) {
-        self.on_drag_start(&event.global_point).await;
-    }
-}
+// #[async_trait]
+// impl<T> EventListener<EnchantronEvent, DragStart> for GamePresenter<T>
+// where
+//     T: ViewTypes,
+// {
+//     async fn on_event(&self, event: &DragStart) {
+//         self.on_drag_start(&event.global_point).await;
+//     }
+// }
 
 impl<T> GamePresenter<T>
 where
@@ -253,13 +253,10 @@ where
 
         self.add_handler_registration(Box::new(self.view.add_layout_handler(
             create_layout_handler!(|w, h| {
-                copied_event_bus.post_with_partition(
-                    Layout {
-                        width: w,
-                        height: h,
-                    },
-                    0,
-                )
+                copied_event_bus.post(Layout {
+                    width: w,
+                    height: h,
+                })
             }),
         )))
         .await;
@@ -272,26 +269,26 @@ where
             create_drag_handler!(
                 on_drag_start(wx, wy, lx, ly) {
                     result_drag_start.upgrade().map(|p| {
-                        p.event_bus.post_with_partition(DragStart {
+                        p.event_bus.post(DragStart {
                             global_point: Point { x: wx, y: wy },
                             local_point: Point { x: lx, y: ly }
-                        }, 0);
+                        });
                     });
                 },
                 on_drag_move(wx, wy, lx, ly) {
                     result_drag_move.upgrade().map(|p| {
-                        p.event_bus.post_with_partition(DragMove {
+                        p.event_bus.post(DragMove {
                             global_point: Point { x: wx, y: wy },
                             local_point: Point { x: lx, y: ly }
-                        }, 0);
+                        });
                     });
                 },
                 on_drag_end(wx, wy, lx, ly) {
                     result_drag_end.upgrade().map(|p| {
-                        p.event_bus.post_with_partition(DragEnd {
+                        p.event_bus.post(DragEnd {
                             global_point: Point { x: wx, y: wy },
                             local_point: Point { x: lx, y: ly }
-                        }, 0);
+                        });
                     });
                 }
             ),
@@ -304,29 +301,29 @@ where
             create_magnify_handler!(
                 on_magnify(scale_change_additive, center_x, center_y) {
                     result_for_magnify.upgrade().map(|p| {
-                        p.event_bus.post_with_partition(Magnify {
+                        p.event_bus.post(Magnify {
                             scale_change_additive,
                             global_center: Point { x: center_x, y: center_y }
-                        }, 0);
+                        });
                     });
                 }
             ),
         )))
         .await;
 
-        self.add_listener_registration(
-            self.event_bus
-                .register(Layout::default(), self.weak_self().await)
-                .await,
-        )
-        .await;
+        // self.add_listener_registration(
+        //     self.event_bus
+        //         .register::<Layout>(EnchantronEvent::Layout)
+        //         .await,
+        // )
+        // .await;
 
-        self.add_listener_registration(
-            self.event_bus
-                .register(DragStart::default(), self.weak_self().await)
-                .await,
-        )
-        .await;
+        // self.add_listener_registration(
+        //     self.event_bus
+        //         .register(DragStart::default(), self.weak_self().await)
+        //         .await,
+        // )
+        // .await;
     }
 
     pub fn create_sprite(&self) -> T::Sprite {
@@ -335,7 +332,7 @@ where
 
     pub async fn new(
         view: T::GameView,
-        event_bus: EventBus<EnchantronEvent>,
+        event_bus: EventBus,
         runtime_resources: Arc<RuntimeResources<T::SystemView>>,
     ) -> Arc<GamePresenter<T>> {
         view.initialize_pre_bind();

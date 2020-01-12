@@ -17,9 +17,7 @@ macro_rules! define_events {
         #[derive(Debug, Clone, Default)]
         pub struct $e $body
 
-        impl Event<$events_name> for $e {
-            fn get_event_key(&self) -> $events_name { $events_name::$e }
-        }
+        impl Event for $e {}
 
         )*
     }

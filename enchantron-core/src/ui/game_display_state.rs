@@ -1,6 +1,6 @@
 use std::sync::{Arc, Weak};
 
-use crate::event::{EnchantronEvent, EventBus};
+use crate::event::EventBus;
 use crate::model::{Point, Rect, Size};
 use crate::native::{RuntimeResources, Texture};
 use crate::ui::{

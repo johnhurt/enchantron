@@ -1,9 +1,7 @@
 use std::iter;
 use std::sync::{Arc, Mutex, RwLock};
 
-use crate::event::{
-    EnchantronEvent, EventBus, ListenerRegistration, ViewportChange,
-};
+use crate::event::{EventBus, ListenerRegistration, ViewportChange};
 use crate::game::constants;
 use crate::model::{IPoint, IRect, ISize, Point, Rect, Size, UPoint, URect};
 use crate::native::RuntimeResources;

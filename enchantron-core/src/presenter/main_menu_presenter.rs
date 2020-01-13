@@ -4,9 +4,7 @@ use crate::ui::{ClickHandler, HandlerRegistration, HasClickHandlers, HasText};
 
 use crate::view::{BaseView, MainMenuView};
 
-use crate::event::{
-    EnchantronEvent, EventBus, ListenerRegistration, StartGame,
-};
+use crate::event::{EventBus, ListenerRegistration, StartGame};
 
 pub struct MainMenuPresenter<V: MainMenuView> {
     view: V,

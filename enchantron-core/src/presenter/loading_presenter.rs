@@ -1,6 +1,4 @@
-use crate::event::{
-    EnchantronEvent, EventBus, ListenerRegistration, LoadResources,
-};
+use crate::event::{EventBus, ListenerRegistration, LoadResources};
 
 use std::sync::{Arc, Mutex};
 use std::thread;

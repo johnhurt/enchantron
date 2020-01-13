@@ -54,8 +54,8 @@ macro_rules! define_event_bus {
                 )*
 
 
-                pub fn register<E>() -> MpscReceiver<E> where E: Event {
-
+                pub fn register<E: Registerable<E>>(&self) -> MpscReceiver<E> where E: Event {
+                    E::register(self)
                 }
             }
 
@@ -75,6 +75,17 @@ macro_rules! define_event_bus {
                     }
                 }
 
+                $(
+                    fn $e(self: Arc<Inner>) -> MpscReceiver<super::$e> {
+
+                    }
+                )*
+
+            }
+
+            trait Registerable<E: Event> {
+
+                fn register(event_bus: &EventBus) -> MpscReceiver<E>;
 
             }
 
@@ -84,9 +95,16 @@ macro_rules! define_event_bus {
 
             $(
                 impl Event for super::$e {}
+
                 impl Postable for super::$e {
                     fn post(self, event_bus: &EventBus) {
                         event_bus.$e(self)
+                    }
+                }
+
+                impl Registerable<super::$e> for super::$e {
+                    fn register(event_bus: &EventBus) -> MpscReceiver<super::$e> {
+                        Inner::$e(event_bus.inner.clone())
                     }
                 }
             )*

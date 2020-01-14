@@ -8,8 +8,12 @@ macro_rules! define_event_bus {
 
             use crate::event::Event;
             use std::sync::Arc;
+            use std::future::Future;
+            use futures::future::select;
 
+            use tokio::stream::StreamExt;
             use tokio::runtime::Handle;
+            use tokio::task::JoinHandle;
             use tokio::sync::broadcast::{
                 channel as broadcast_channel,
                 Sender as BroadcastSender,
@@ -17,8 +21,12 @@ macro_rules! define_event_bus {
             };
             use tokio::sync::mpsc::{
                 channel as mpsc_channel,
-                Sender as MpscSender,
                 Receiver as MpscReceiver
+            };
+            use tokio::sync::oneshot::{
+                channel as oneshot_channel,
+                Sender as OneshotSender,
+                Receiver as OneshotReceiver
             };
 
             #[derive(Clone)]
@@ -28,11 +36,13 @@ macro_rules! define_event_bus {
 
             struct Inner {
                 runtime_handle: Handle,
+                senders: Senders
+            }
 
+            struct Senders {
                 $(
                     $e : BroadcastSender<super::$e>,
                 )*
-
             }
 
             impl EventBus {
@@ -43,19 +53,32 @@ macro_rules! define_event_bus {
                     }
                 }
 
-                pub fn post<E: Postable>(&self, event: E) {
+                pub fn post<E: EventBusEventTrait>(&self, event: E) {
                     event.post(self)
                 }
 
                 $(
                     fn $e(&self, event: super::$e) {
-                        let _ = self.inner.$e.send(event);
+                        debug!("Posting {} event: {:?}", stringify!($e), event);
+
+                        let _ = self.inner.senders.$e.send(event);
                     }
                 )*
 
 
-                pub fn register<E: Registerable<E>>(&self) -> MpscReceiver<E> where E: Event {
+                pub fn register<E: EventBusEventTrait>(&self)
+                    -> impl StreamExt<Item = E> where E: Event
+                {
                     E::register(self)
+                }
+
+                /// Convienient passthrough to the tokio spawner
+                pub fn spawn<F>(&self, future: F) -> JoinHandle<F::Output>
+                where
+                    F: Future + Send + 'static,
+                    F::Output: Send + 'static,
+                {
+                    self.inner.runtime_handle.spawn(future)
                 }
             }
 
@@ -68,16 +91,34 @@ macro_rules! define_event_bus {
 
                     Inner{
                         runtime_handle,
-                        $(
+                        senders: Senders {$(
                             $e,
-                        )*
+                        )*}
 
                     }
                 }
 
                 $(
-                    fn $e(self: Arc<Inner>) -> MpscReceiver<super::$e> {
+                    fn $e(
+                        self: Arc<Inner>,
+                        mut main_receiver: BroadcastReceiver<super::$e>
+                    )
+                        -> MpscReceiver<super::$e>
+                    {
+                        info!("Registering a listener for {} events",
+                            stringify!($e));
 
+                        let (mut sender, receiver) = mpsc_channel(512);
+
+                        let _ = self.runtime_handle.spawn(async move {
+                            while let Ok(event) = main_receiver.recv().await {
+                                let _ = sender.send(event).await;
+                            }
+
+                            debug!("Receiver for {} closed", stringify!($e));
+                        });
+
+                        receiver
                     }
                 )*
 
@@ -85,26 +126,26 @@ macro_rules! define_event_bus {
 
             trait Registerable<E: Event> {
 
-                fn register(event_bus: &EventBus) -> MpscReceiver<E>;
 
             }
 
-            pub trait Postable : Event {
+            pub trait EventBusEventTrait : Event {
                 fn post(self, event_bus: &EventBus);
+                fn register(event_bus: &EventBus) -> MpscReceiver<Self>;
             }
 
             $(
                 impl Event for super::$e {}
 
-                impl Postable for super::$e {
+                impl EventBusEventTrait for super::$e {
                     fn post(self, event_bus: &EventBus) {
                         event_bus.$e(self)
                     }
-                }
 
-                impl Registerable<super::$e> for super::$e {
                     fn register(event_bus: &EventBus) -> MpscReceiver<super::$e> {
-                        Inner::$e(event_bus.inner.clone())
+                        Inner::$e(
+                            event_bus.inner.clone(),
+                            event_bus.inner.senders.$e.subscribe())
                     }
                 }
             )*

@@ -66,14 +66,16 @@ impl ApplicationContext {
 
         let self_copy = self.0.clone();
 
-        (*self).tokio_runtime.handle().spawn(LoadingPresenter::new(
-            view,
-            self.system_view.clone(),
-            self.event_bus.clone(),
-            Box::new(move |resources| {
-                self_copy.set_runtime_resources(resources);
-            }),
-        ));
+        (*self).tokio_runtime.handle().spawn(
+            LoadingPresenter::<ViewTypes>::new(
+                view,
+                self.system_view.clone(),
+                self.event_bus.clone(),
+                Box::new(move |resources| {
+                    self_copy.set_runtime_resources(resources);
+                }),
+            ),
+        );
     }
 
     pub fn transition_to_main_menu_view(&self, view: MainMenuView) {

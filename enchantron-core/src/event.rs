@@ -1,4 +1,3 @@
-use std::any::Any;
 use std::fmt::Debug;
 
 pub use self::event_bus::*;
@@ -10,4 +9,4 @@ mod define_event_bus;
 mod event_bus;
 mod listener_registration;
 
-pub trait Event: Any + Sync + Send + Debug + Clone + 'static {}
+pub trait Event: Sync + Send + Debug + Clone + 'static {}

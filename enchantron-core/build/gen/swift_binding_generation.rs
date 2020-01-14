@@ -30,15 +30,6 @@ lazy_static! {
         .build().unwrap(),
 
     WrappedTypeDefBuilder::default()
-        .wrapper_name("WrappedLoadingPresenter")
-        .wrapped_type_name("Arc<LoadingPresenter<LoadingView,SystemView>>")
-        .wrapped_type_imports(vec![
-            "std::sync::Arc",
-            "crate::presenter::LoadingPresenter"
-        ])
-        .build().unwrap(),
-
-    WrappedTypeDefBuilder::default()
         .wrapper_name("WrappedGamePresenter")
         .wrapped_type_name("Arc<GamePresenter<ViewTypes>>")
         .wrapped_type_imports(vec![
@@ -311,6 +302,16 @@ lazy_static! {
                     GenericDefBuilder::default()
                         .symbol(Some("Sprite"))
                         .bound_type("Sprite")
+                        .build().unwrap(),
+
+                    GenericDefBuilder::default()
+                        .symbol(Some("ProgressBar"))
+                        .bound_type("ProgressBar")
+                        .build().unwrap(),
+
+                    GenericDefBuilder::default()
+                        .symbol(Some("LoadingView"))
+                        .bound_type("LoadingView")
                         .build().unwrap(),
 
                     GenericDefBuilder::default()

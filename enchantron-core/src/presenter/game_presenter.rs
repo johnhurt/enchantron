@@ -1,6 +1,5 @@
-use async_std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::sync::{Arc, Weak};
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::view_types::ViewTypes;
 
@@ -344,9 +343,9 @@ where
             listener_registrations: Mutex::new(Vec::new()),
             handler_registrations: Mutex::new(Vec::new()),
 
-            weak_self: Default::default(),
+            weak_self: RwLock::new(Default::default()),
 
-            display_state: Default::default(),
+            display_state: RwLock::new(Default::default()),
         };
 
         let result: Arc<GamePresenter<T>> = Arc::new(raw_result);

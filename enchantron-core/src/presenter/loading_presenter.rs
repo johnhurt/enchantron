@@ -1,7 +1,6 @@
-use crate::event::{EventBus, ListenerRegistration, LoadResources};
+use crate::event::{EventBus, LoadResources};
 
-use std::sync::{Arc, Mutex};
-use std::thread;
+use std::sync::{Arc, Weak};
 
 use crate::native::{RuntimeResources, SystemView, Textures};
 
@@ -9,64 +8,76 @@ use crate::ui::{HasIntValue, HasText};
 
 use crate::view::{BaseView, LoadingView};
 
-pub struct LoadingPresenter<V, S>
+use crate::view_types::ViewTypes;
+
+use tokio::runtime::Handle;
+use tokio::stream::StreamExt;
+use tokio::sync::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
+
+pub struct LoadingPresenter<T>
 where
-    V: LoadingView,
-    S: SystemView,
+    T: ViewTypes,
 {
-    view: V,
-    system_view: Arc<S>,
-    resources_sink: Box<dyn Fn(RuntimeResources<S>) + Send + Sync>,
+    view: T::LoadingView,
+    system_view: Arc<T::SystemView>,
+    resources_sink: Box<dyn Fn(RuntimeResources<T::SystemView>) + Send + Sync>,
+    weak_self: RwLock<Option<Box<Weak<LoadingPresenter<T>>>>>,
     event_bus: EventBus,
-    listener_registrations: Mutex<Vec<ListenerRegistration>>,
 }
 
-// impl<V, S> EventListener<EnchantronEvent, LoadResources>
-//     for LoadingPresenter<V, S>
-// where
-//     V: LoadingView,
-//     S: SystemView,
-// {
-//     fn on_event(&self, _: &LoadResources) {
-//         let textures =
-//             Textures::new(&self.system_view.get_texture_loader(), &|p| {
-//                 self.view
-//                     .get_progress_indicator()
-//                     .set_int_value((p * 100.) as i64);
-//             });
-
-//         (self.resources_sink)(RuntimeResources::new(textures));
-
-//         self.view.transition_to_main_menu_view();
-//     }
-// }
-
-impl<V, S> LoadingPresenter<V, S>
+impl<T> LoadingPresenter<T>
 where
-    V: LoadingView,
-    S: SystemView,
+    T: ViewTypes,
 {
-    fn add_listener_registration(
-        &self,
-        listener_registration: ListenerRegistration,
-    ) {
-        if let Ok(mut locked_list) = self.listener_registrations.lock() {
-            info!("Adding listener registration to loading presenter");
-            locked_list.push(listener_registration);
-        } else {
-            error!("Failed to add listener registration");
-        }
+    /// Get a weak arc pointer to this presenter or panic if none has been
+    /// created yet
+    async fn weak_self(&self) -> Weak<LoadingPresenter<T>> {
+        let ref weak_self_lock = self.weak_self.read().await;
+
+        weak_self_lock
+            .as_ref()
+            .map(Box::as_ref)
+            .map(Clone::clone)
+            .unwrap_or_else(|| {
+                error!("No weak self pointer created yet");
+                panic!("No weak self pointer created yet");
+            })
     }
 
-    async fn bind(self) -> Arc<LoadingPresenter<V, S>> {
+    async fn load_resources(&self) {
+        let textures =
+            Textures::new(&self.system_view.get_texture_loader(), &|p| {
+                self.view
+                    .get_progress_indicator()
+                    .set_int_value((p * 100.) as i64);
+            });
+
+        (self.resources_sink)(RuntimeResources::new(textures));
+
+        self.view.transition_to_main_menu_view();
+    }
+
+    async fn bind(self) -> Arc<LoadingPresenter<T>> {
         let result = Arc::new(self);
 
-        // result.add_listener_registration(
-        //     result
-        //         .event_bus
-        //         .register(LoadResources::default(), Arc::downgrade(&result))
-        //         .await,
-        // );
+        {
+            let weak_self = Arc::downgrade(&result);
+            let mut weak_self_opt = result.weak_self.write().await;
+
+            *weak_self_opt = Some(Box::new(weak_self));
+        }
+
+        let weak_self = result.weak_self().await;
+        let mut load_resources_events =
+            result.event_bus.register::<LoadResources>();
+
+        let _ = result.event_bus.spawn(async move {
+            while let Some(_) = load_resources_events.next().await {
+                if let Some(arc_self) = weak_self.upgrade() {
+                    arc_self.load_resources().await
+                }
+            }
+        });
 
         result
             .view
@@ -79,19 +90,21 @@ where
     }
 
     pub async fn new(
-        view: V,
-        system_view: Arc<S>,
+        view: T::LoadingView,
+        system_view: Arc<T::SystemView>,
         event_bus: EventBus,
-        resources_sink: Box<dyn Fn(RuntimeResources<S>) + Send + Sync>,
+        resources_sink: Box<
+            dyn Fn(RuntimeResources<T::SystemView>) + Send + Sync,
+        >,
     ) {
         view.initialize_pre_bind();
 
-        let result = LoadingPresenter {
+        let result: Arc<LoadingPresenter<T>> = LoadingPresenter {
             view: view,
             system_view: system_view,
             event_bus: event_bus,
             resources_sink: resources_sink,
-            listener_registrations: Mutex::new(Vec::new()),
+            weak_self: RwLock::new(None),
         }
         .bind()
         .await;
@@ -100,10 +113,9 @@ where
     }
 }
 
-impl<V, S> Drop for LoadingPresenter<V, S>
+impl<T> Drop for LoadingPresenter<T>
 where
-    V: LoadingView,
-    S: SystemView,
+    T: ViewTypes,
 {
     fn drop(&mut self) {
         info!("Dropping Loading Presenter")

@@ -1,4 +1,4 @@
-use crate::event::{EventBus, LoadResources};
+use crate::event::{EventBus, ListenerRegistration, LoadResources};
 
 use std::sync::{Arc, Weak};
 
@@ -23,6 +23,7 @@ where
     resources_sink: Box<dyn Fn(RuntimeResources<T::SystemView>) + Send + Sync>,
     weak_self: RwLock<Option<Box<Weak<LoadingPresenter<T>>>>>,
     event_bus: EventBus,
+    listener_registrations: Mutex<Vec<ListenerRegistration>>,
 }
 
 impl<T> LoadingPresenter<T>
@@ -68,8 +69,14 @@ where
         }
 
         let weak_self = result.weak_self().await;
-        let mut load_resources_events =
+        let (listener_registration, mut load_resources_events) =
             result.event_bus.register::<LoadResources>();
+
+        result
+            .listener_registrations
+            .lock()
+            .await
+            .push(listener_registration);
 
         let _ = result.event_bus.spawn(async move {
             while let Some(_) = load_resources_events.next().await {
@@ -105,6 +112,7 @@ where
             event_bus: event_bus,
             resources_sink: resources_sink,
             weak_self: RwLock::new(None),
+            listener_registrations: Default::default(),
         }
         .bind()
         .await;

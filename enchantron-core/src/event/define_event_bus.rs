@@ -1,15 +1,16 @@
 macro_rules! define_event_bus {
     ($event_bus_name:ident, $($e:ident $body:tt ), *) => {
 
-        pub type $event_bus_name = hidden::EventBus;
+        pub type $event_bus_name = event_bus_hidden::EventBus;
 
-        mod hidden {
+        mod event_bus_hidden {
             #![allow(non_snake_case)]
 
-            use crate::event::Event;
+            use crate::event::{ Event, ListenerRegistration };
             use std::sync::Arc;
             use std::future::Future;
-            use futures::future::select;
+
+            use atomic_counter::{ AtomicCounter, ConsistentCounter };
 
             use tokio::stream::StreamExt;
             use tokio::runtime::Handle;
@@ -23,11 +24,6 @@ macro_rules! define_event_bus {
                 channel as mpsc_channel,
                 Receiver as MpscReceiver
             };
-            use tokio::sync::oneshot::{
-                channel as oneshot_channel,
-                Sender as OneshotSender,
-                Receiver as OneshotReceiver
-            };
 
             #[derive(Clone)]
             pub struct EventBus {
@@ -36,12 +32,13 @@ macro_rules! define_event_bus {
 
             struct Inner {
                 runtime_handle: Handle,
+                registration_counter: ConsistentCounter,
                 senders: Senders
             }
 
             struct Senders {
                 $(
-                    $e : BroadcastSender<super::$e>,
+                    $e : BroadcastSender<event_bus_enums::$e>,
                 )*
             }
 
@@ -61,13 +58,15 @@ macro_rules! define_event_bus {
                     fn $e(&self, event: super::$e) {
                         debug!("Posting {} event: {:?}", stringify!($e), event);
 
-                        let _ = self.inner.senders.$e.send(event);
+                        let _ = self.inner.senders.$e.send(
+                            event_bus_enums::$e::Event(event));
                     }
                 )*
 
 
                 pub fn register<E: EventBusEventTrait>(&self)
-                    -> impl StreamExt<Item = E> where E: Event
+                    -> (ListenerRegistration, impl StreamExt<Item = E>)
+                where E: Event
                 {
                     E::register(self)
                 }
@@ -91,6 +90,7 @@ macro_rules! define_event_bus {
 
                     Inner{
                         runtime_handle,
+                        registration_counter: Default::default(),
                         senders: Senders {$(
                             $e,
                         )*}
@@ -101,37 +101,70 @@ macro_rules! define_event_bus {
                 $(
                     fn $e(
                         self: Arc<Inner>,
-                        mut main_receiver: BroadcastReceiver<super::$e>
+                        mut main_receiver: BroadcastReceiver<event_bus_enums::$e>
                     )
-                        -> MpscReceiver<super::$e>
+                        -> ( ListenerRegistration, MpscReceiver<super::$e> )
                     {
                         info!("Registering a listener for {} events",
                             stringify!($e));
 
+                        let listener_id = self.registration_counter.inc();
+
                         let (mut sender, receiver) = mpsc_channel(512);
 
                         let _ = self.runtime_handle.spawn(async move {
-                            while let Ok(event) = main_receiver.recv().await {
-                                let _ = sender.send(event).await;
+                            while let Ok(event_enum) = main_receiver.recv().await {
+                                match event_enum {
+                                    event_bus_enums::$e::Event(event) => {
+                                        let _ = sender.send(event).await;
+                                    },
+                                    event_bus_enums::$e::ListenerClosed(closed_listener_id) => {
+                                        if listener_id == closed_listener_id {
+                                            break;
+                                        }
+                                    }
+                                }
                             }
 
                             debug!("Receiver for {} closed", stringify!($e));
                         });
 
-                        receiver
+                        let deregister_inner = self.clone();
+
+
+                        let listener_registration = ListenerRegistration::new(
+                            Box::new(move || {
+                                let deregister_sender = deregister_inner.senders.$e.clone();
+                                let _ = deregister_inner.runtime_handle.spawn(async move {
+                                    let _ = deregister_sender.send(
+                                        event_bus_enums::$e::ListenerClosed(
+                                            listener_id));
+                                });
+                            })
+                        );
+
+                        (listener_registration, receiver)
                     }
                 )*
 
             }
 
-            trait Registerable<E: Event> {
+            type ListenerKey = usize;
 
-
+            mod event_bus_enums {
+                $(
+                    #[derive(Clone, Debug)]
+                    pub enum $e {
+                        Event(super::super::$e),
+                        ListenerClosed(super::ListenerKey)
+                    }
+                )*
             }
 
             pub trait EventBusEventTrait : Event {
                 fn post(self, event_bus: &EventBus);
-                fn register(event_bus: &EventBus) -> MpscReceiver<Self>;
+                fn register(event_bus: &EventBus)
+                    -> ( ListenerRegistration, MpscReceiver<Self> );
             }
 
             $(
@@ -142,7 +175,9 @@ macro_rules! define_event_bus {
                         event_bus.$e(self)
                     }
 
-                    fn register(event_bus: &EventBus) -> MpscReceiver<super::$e> {
+                    fn register(event_bus: &EventBus)
+                        -> ( ListenerRegistration, MpscReceiver<super::$e> )
+                    {
                         Inner::$e(
                             event_bus.inner.clone(),
                             event_bus.inner.senders.$e.subscribe())
@@ -153,7 +188,7 @@ macro_rules! define_event_bus {
 
         $(
 
-        #[derive(Debug, Clone, Default)]
+        #[derive(Debug, Clone)]
         pub struct $e $body
 
         )*

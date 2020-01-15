@@ -18,6 +18,25 @@ use crate::ui::{
     MagnifyHandler, Sprite, SpriteSource, SpriteSourceWrapper,
 };
 
+use tokio::stream::StreamExt;
+
+macro_rules! handle_event {
+    ($event_type:ident => $self_id:ident.$method_name:ident) => {
+        let weak_self = $self_id.weak_self().await;
+        let mut event_stream = $self_id.register_event::<$event_type>().await;
+
+        $self_id.event_bus.spawn(async move {
+            while let Some(event) = event_stream.next().await {
+                if let Some(presenter) = weak_self.upgrade() {
+                    presenter.$method_name(event).await;
+                } else {
+                    break;
+                }
+            }
+        });
+    };
+}
+
 pub struct GamePresenter<T>
 where
     T: ViewTypes,
@@ -32,39 +51,6 @@ where
 
     display_state: RwLock<Option<GameDisplayState<T>>>,
 }
-
-// impl<T> EventListener<EnchantronEvent, Layout> for GamePresenter<T>
-// where
-//     T: ViewTypes,
-// {
-//     fn on_event(&self, event: &Layout) {
-//         info!("Game view resized to : {}, {}", event.width, event.height);
-
-//         let new_size = Size::new(event.width as f64, event.height as f64);
-
-//         self.with_display_state_mut(|display_state| {
-//             let viewport_info = display_state.layout(new_size);
-
-//             self.fire_viewport_change_event(
-//                 viewport_info.viewport_rect.clone(),
-//             );
-
-//             self.view
-//                 .get_viewport()
-//                 .set_location_point(&viewport_info.viewport_rect.top_left);
-//         });
-//     }
-// }
-
-// #[async_trait]
-// impl<T> EventListener<EnchantronEvent, DragStart> for GamePresenter<T>
-// where
-//     T: ViewTypes,
-// {
-//     async fn on_event(&self, event: &DragStart) {
-//         self.on_drag_start(&event.global_point).await;
-//     }
-// }
 
 impl<T> GamePresenter<T>
 where
@@ -85,14 +71,16 @@ where
             })
     }
 
-    async fn add_listener_registration(
-        &self,
-        listener_registration: ListenerRegistration,
-    ) {
+    async fn register_event<E: Event>(&self) -> impl StreamExt<Item = E> {
+        let (listener_registration, event_stream) =
+            self.event_bus.register::<E>();
+
         self.listener_registrations
             .lock()
             .await
             .push(listener_registration);
+
+        event_stream
     }
 
     ///
@@ -135,12 +123,35 @@ where
         });
     }
 
-    async fn on_magnify(
-        &self,
-        scale_change_additive: f64,
-        zoom_center_x: f64,
-        zoom_center_y: f64,
-    ) {
+    async fn on_layout(&self, event: Layout) {
+        info!("Game view resized to : {}, {}", event.width, event.height);
+
+        let new_size = Size::new(event.width as f64, event.height as f64);
+
+        self.with_display_state_mut(|display_state| {
+            let viewport_info = display_state.layout(new_size);
+
+            self.fire_viewport_change_event(
+                viewport_info.viewport_rect.clone(),
+            );
+
+            self.view
+                .get_viewport()
+                .set_location_point(&viewport_info.viewport_rect.top_left);
+        })
+        .await;
+    }
+
+    async fn on_magnify(&self, magnify_event: Magnify) {
+        let Magnify {
+            scale_change_additive,
+            global_center:
+                Point {
+                    x: zoom_center_x,
+                    y: zoom_center_y,
+                },
+        } = magnify_event;
+
         debug!("Scale changing by {}", scale_change_additive);
 
         self.with_display_state_mut(|display_state| {
@@ -163,7 +174,12 @@ where
         .await;
     }
 
-    async fn on_drag_start(&self, drag_point: &Point) {
+    async fn on_drag_start(&self, drag_start_event: DragStart) {
+        let DragStart {
+            global_point: drag_point,
+            local_point: _,
+        } = drag_start_event;
+
         debug!("Drag started {:?}", drag_point);
 
         self.with_display_state_mut(|display_state| {
@@ -173,7 +189,16 @@ where
         .await;
     }
 
-    async fn on_drag_move(&self, drag_x: f64, drag_y: f64) {
+    async fn on_drag_move(&self, drag_move_event: DragMove) {
+        let DragMove {
+            global_point:
+                Point {
+                    x: drag_x,
+                    y: drag_y,
+                },
+            local_point: _,
+        } = drag_move_event;
+
         debug!("Drag moved ({}, {})", drag_x, drag_y);
 
         self.with_display_state_mut(|display_state| {
@@ -195,8 +220,8 @@ where
                     screen_coord_delta.y * scale,
                 )
             } else {
-                error!("Invalid drag state found");
-                panic!("Invalid drag state found");
+                warn!("Invalid drag state found");
+                return;
             };
 
             let new_viewport_info =
@@ -215,7 +240,7 @@ where
         .await;
     }
 
-    async fn on_drag_end(&self) {
+    async fn on_drag_end(&self, _: DragEnd) {
         debug!("Drag ended");
         self.with_display_state_mut(|ds| ds.drag_state = Option::None)
             .await;
@@ -310,19 +335,13 @@ where
         )))
         .await;
 
-        // self.add_listener_registration(
-        //     self.event_bus
-        //         .register::<Layout>(EnchantronEvent::Layout)
-        //         .await,
-        // )
-        // .await;
+        handle_event!(Layout => self.on_layout);
 
-        // self.add_listener_registration(
-        //     self.event_bus
-        //         .register(DragStart::default(), self.weak_self().await)
-        //         .await,
-        // )
-        // .await;
+        handle_event!(DragStart => self.on_drag_start);
+        handle_event!(DragMove => self.on_drag_move);
+        handle_event!(DragEnd => self.on_drag_end);
+
+        handle_event!(Magnify => self.on_magnify);
     }
 
     pub fn create_sprite(&self) -> T::Sprite {
@@ -357,11 +376,11 @@ where
             *weak_self_opt = Some(Box::new(weak_self));
         }
 
+        result.initialize_game_state().await;
+
         GamePresenter::bind(&result).await;
 
         result.view.initialize_post_bind(Box::new(result.clone()));
-
-        result.initialize_game_state().await;
 
         result
     }

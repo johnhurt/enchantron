@@ -81,10 +81,9 @@ impl ApplicationContext {
     pub fn transition_to_main_menu_view(&self, view: MainMenuView) {
         debug!("Transition to main menu view");
 
-        (*self)
-            .tokio_runtime
-            .handle()
-            .spawn(MainMenuPresenter::new(view, self.event_bus.clone()));
+        (*self).tokio_runtime.handle().spawn(
+            MainMenuPresenter::<ViewTypes>::new(view, self.event_bus.clone()),
+        );
     }
 
     pub fn transition_to_game_view(&self, view: GameView) {

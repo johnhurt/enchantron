@@ -2,13 +2,15 @@ macro_rules! define_event_bus {
     ($event_bus_name:ident, $($e:ident $body:tt ), *) => {
 
         pub type $event_bus_name = event_bus_hidden::EventBus;
+        pub use event_bus_hidden::Event;
 
         mod event_bus_hidden {
             #![allow(non_snake_case)]
 
-            use crate::event::{ Event, ListenerRegistration };
+            use crate::event::{ ListenerRegistration };
             use std::sync::Arc;
             use std::future::Future;
+            use std::fmt::Debug;
 
             use atomic_counter::{ AtomicCounter, ConsistentCounter };
 
@@ -50,7 +52,7 @@ macro_rules! define_event_bus {
                     }
                 }
 
-                pub fn post<E: EventBusEventTrait>(&self, event: E) {
+                pub fn post<E: Event>(&self, event: E) {
                     event.post(self)
                 }
 
@@ -64,7 +66,7 @@ macro_rules! define_event_bus {
                 )*
 
 
-                pub fn register<E: EventBusEventTrait>(&self)
+                pub fn register<E: Event>(&self)
                     -> (ListenerRegistration, impl StreamExt<Item = E>)
                 where E: Event
                 {
@@ -161,16 +163,14 @@ macro_rules! define_event_bus {
                 )*
             }
 
-            pub trait EventBusEventTrait : Event {
+            pub trait Event: Send + Debug + Clone + 'static {
                 fn post(self, event_bus: &EventBus);
                 fn register(event_bus: &EventBus)
                     -> ( ListenerRegistration, MpscReceiver<Self> );
             }
 
             $(
-                impl Event for super::$e {}
-
-                impl EventBusEventTrait for super::$e {
+                impl Event for super::$e {
                     fn post(self, event_bus: &EventBus) {
                         event_bus.$e(self)
                     }

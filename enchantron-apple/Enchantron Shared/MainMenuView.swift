@@ -38,7 +38,7 @@ class MainMenuView : BaseView {
     transitionTo(newView: GameView(), binder: getContext().transitionToGameView)
   }
   
-  override func layout(size: CGSize) {
+  override func localLayout(size: CGSize) {
     let maxHeight = size.height * MainMenuView.HEIGHT_FRAC
     let maxWidth = size.width * MainMenuView.MAX_WIDTH_FRAC
     

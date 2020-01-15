@@ -1,5 +1,5 @@
 use std::iter;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::Arc;
 
 use crate::event::{EventBus, ListenerRegistration, ViewportChange};
 use crate::game::constants;
@@ -11,6 +11,9 @@ use super::{
     HasMutableLocation, HasMutableSize, HasMutableVisibility, HasMutableZLevel,
     Sprite, SpriteSource, SpriteSourceWrapper, TerrainTextureProvider,
 };
+
+use tokio::stream::StreamExt;
+use tokio::sync::{Mutex, RwLock};
 
 pub const DEFAULT_TILE_SIZE: usize = 32;
 pub const DEFAULT_MARGIN_FRACTION: f64 = 0.1;
@@ -37,31 +40,18 @@ where
     top_left_tile: UPoint,
 }
 
-// impl<T> EventListener<EnchantronEvent, ViewportChange> for TerrainGenerator<T>
-// where
-//     T: ViewTypes,
-// {
-//     fn on_event(&self, event: &ViewportChange) {
-//         info!("Viewport changed : {:?}", event.new_viewport_rect);
-
-//         self.on_viewport_change(&event.new_viewport_rect);
-//     }
-// }
-
 impl<T> TerrainGenerator<T>
 where
     T: ViewTypes,
 {
-    fn add_listener_registration(
+    async fn add_listener_registration(
         &self,
         listener_registration: ListenerRegistration,
     ) {
-        if let Ok(mut locked_list) = self.listener_registrations.lock() {
-            info!("Adding listener registration");
-            locked_list.push(listener_registration);
-        } else {
-            error!("Failed to add listener registration");
-        }
+        self.listener_registrations
+            .lock()
+            .await
+            .push(listener_registration);
     }
 
     pub async fn new(
@@ -78,38 +68,44 @@ where
             inner: RwLock::new(Inner::default()),
         });
 
-        // result.add_listener_registration(
-        //     event_bus
-        //         .register(ViewportChange::default(), Arc::downgrade(&result))
-        //         .await,
-        // );
+        let weak_self = Arc::downgrade(&result);
+
+        let (listener_registration, mut event_stream) =
+            event_bus.register::<ViewportChange>();
+
+        result
+            .add_listener_registration(listener_registration)
+            .await;
+
+        event_bus.spawn(async move {
+            while let Some(event) = event_stream.next().await {
+                if let Some(arc_self) = weak_self.upgrade() {
+                    arc_self.on_viewport_change(&event.new_viewport_rect).await
+                } else {
+                    break;
+                }
+            }
+        });
 
         result
     }
 
     /// Run the given action with a read-only reference to the inner terrain
     /// generator
-    fn with_inner<R>(&self, action: impl FnOnce(&Inner<T::Sprite>) -> R) -> R {
-        let ref inner = self.inner.read().unwrap_or_else(|err| {
-            error!("Failed to get read lock on inner terrain map: {:?}", err);
-            panic!("Failed to get a read lock on the inner state");
-        });
-
-        action(&*inner)
+    async fn with_inner<R>(
+        &self,
+        action: impl FnOnce(&Inner<T::Sprite>) -> R,
+    ) -> R {
+        action(&(*self.inner.read().await))
     }
 
     /// Run the given action with a rw reference to the inner terrain
     /// generator
-    fn with_inner_mut<R>(
+    async fn with_inner_mut<R>(
         &self,
         action: impl FnOnce(&mut Inner<T::Sprite>) -> R,
     ) -> R {
-        let ref mut inner = self.inner.write().unwrap_or_else(|err| {
-            error!("Failed to get write lock on inner terrain map: {:?}", err);
-            panic!("Failed to get a write lock on the inner state");
-        });
-
-        action(&mut *inner)
+        action(&mut (*self.inner.write().await))
     }
 
     /// Called when the viewport changes to adjust the terrain.  This method
@@ -120,9 +116,10 @@ where
     /// 3. if the terrain tiles needs to be altered, increase the size of the
     ///    terrain tiles array and updates
     /// 4. ?
-    fn on_viewport_change(&self, viewport_rect: &Rect) {
+    async fn on_viewport_change(&self, viewport_rect: &Rect) {
         let terrain_rect_opt = self
-            .with_inner(|inner| inner.terrain_updates_required(viewport_rect));
+            .with_inner(|inner| inner.terrain_updates_required(viewport_rect))
+            .await;
 
         if terrain_rect_opt.is_none() {
             debug!("No terrain updates");
@@ -134,7 +131,10 @@ where
         let valid_tile_rect = {
             let min_size = &terrain_rect.size;
 
-            if self.with_inner(|inner| inner.check_size_increased(min_size)) {
+            if self
+                .with_inner(|inner| inner.check_size_increased(min_size))
+                .await
+            {
                 debug!("Size increased");
                 self.with_inner_mut(|inner| {
                     inner.increase_size_for(terrain_rect, || {
@@ -143,17 +143,20 @@ where
                         result
                     })
                 })
+                .await
             } else {
                 debug!("Size not increased");
                 let (top_left, new_valid_rect) = self
                     .with_inner(|inner| {
                         inner.calculate_new_valid_tiles(&terrain_rect)
                     })
+                    .await
                     .unwrap_or_default();
 
                 self.with_inner_mut(|inner| {
                     inner.update_terrain_tiles_location(terrain_rect, top_left);
-                });
+                })
+                .await;
 
                 new_valid_rect
             }
@@ -165,7 +168,8 @@ where
                     self.terrain_texture_provider.get_texture_at(point),
                 );
             });
-        });
+        })
+        .await;
     }
 }
 

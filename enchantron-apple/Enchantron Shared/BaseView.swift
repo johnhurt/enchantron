@@ -141,10 +141,16 @@ class BaseView: SKNode {
         }
     }
     
-    func layout(size: CGSize) {
+    final func layout(size: CGSize) {
         layoutHandlers.forEach { (handler) in
             handler.onLayout(width: Int64(size.width), height: Int64(size.height))
         }
+        
+        localLayout(size: size)
+    }
+    
+    func localLayout(size: CGSize) {
+        
     }
     
     func magnify(scaleChangeAdditive: CGFloat, centerPoint: CGPoint) {

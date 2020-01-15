@@ -10,9 +10,8 @@ use crate::view::{BaseView, LoadingView};
 
 use crate::view_types::ViewTypes;
 
-use tokio::runtime::Handle;
 use tokio::stream::StreamExt;
-use tokio::sync::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use tokio::sync::{Mutex, RwLock, RwLockWriteGuard};
 
 pub struct LoadingPresenter<T>
 where

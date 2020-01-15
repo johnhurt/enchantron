@@ -27,7 +27,7 @@ class LoadingView : BaseView {
     fatalError("init(coder:) has not been implemented")
   }
   
-  override func layout(size: CGSize) {
+  override func localLayout(size: CGSize) {
     let maxHeight = size.height * LoadingView.HEIGHT_FRAC
     let maxWidth = size.width * LoadingView.MAX_WIDTH_FRAC
     

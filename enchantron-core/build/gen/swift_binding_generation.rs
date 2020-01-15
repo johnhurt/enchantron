@@ -20,23 +20,6 @@ use super::{
 
 lazy_static! {
   static ref WRAPPED_TYPES : Vec<WrappedTypeDef> = vec![
-    WrappedTypeDefBuilder::default()
-        .wrapper_name("WrappedMainMenuPresenter")
-        .wrapped_type_name("Arc<MainMenuPresenter<MainMenuView>>")
-        .wrapped_type_imports(vec![
-            "std::sync::Arc",
-            "crate::presenter::MainMenuPresenter"
-        ])
-        .build().unwrap(),
-
-    WrappedTypeDefBuilder::default()
-        .wrapper_name("WrappedGamePresenter")
-        .wrapped_type_name("Arc<GamePresenter<ViewTypes>>")
-        .wrapped_type_imports(vec![
-            "std::sync::Arc",
-            "crate::presenter::GamePresenter"
-        ])
-        .build().unwrap(),
   ];
 
   #[derive(Serialize)]
@@ -337,6 +320,16 @@ lazy_static! {
                     GenericDefBuilder::default()
                         .symbol(Some("Viewport"))
                         .bound_type("Viewport")
+                        .build().unwrap(),
+
+                    GenericDefBuilder::default()
+                        .symbol(Some("MainMenuView"))
+                        .bound_type("MainMenuView")
+                        .build().unwrap(),
+
+                    GenericDefBuilder::default()
+                        .symbol(Some("Button"))
+                        .bound_type("Button")
                         .build().unwrap()
                 ])
                 .build().unwrap()

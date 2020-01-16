@@ -1,5 +1,12 @@
 use crate::model::{Point, Rect};
 
+#[derive(Clone, Debug)]
+pub enum DragEventType {
+    Start,
+    Move,
+    End,
+}
+
 define_event_bus!(
     EventBus,
     LoadResources{},
@@ -9,15 +16,8 @@ define_event_bus!(
         pub height: i64,
     },
     ViewportChange{ pub new_viewport_rect: Rect },
-    DragStart{
-        pub global_point: Point,
-        pub local_point: Point,
-    },
-    DragMove{
-        pub global_point: Point,
-        pub local_point: Point,
-    },
-    DragEnd{
+    Drag{
+        pub state: DragEventType,
         pub global_point: Point,
         pub local_point: Point,
     },

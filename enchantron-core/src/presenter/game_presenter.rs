@@ -174,8 +174,17 @@ where
         .await;
     }
 
-    async fn on_drag_start(&self, drag_start_event: DragStart) {
-        let DragStart {
+    async fn on_drag(&self, drag_event: Drag) {
+        match drag_event.state {
+            DragEventType::Start => self.on_drag_start(drag_event).await,
+            DragEventType::Move => self.on_drag_move(drag_event).await,
+            DragEventType::End => self.on_drag_end(drag_event).await,
+        }
+    }
+
+    async fn on_drag_start(&self, drag_start_event: Drag) {
+        let Drag {
+            state: _,
             global_point: drag_point,
             local_point: _,
         } = drag_start_event;
@@ -189,8 +198,9 @@ where
         .await;
     }
 
-    async fn on_drag_move(&self, drag_move_event: DragMove) {
-        let DragMove {
+    async fn on_drag_move(&self, drag_move_event: Drag) {
+        let Drag {
+            state: _,
             global_point:
                 Point {
                     x: drag_x,
@@ -220,8 +230,8 @@ where
                     screen_coord_delta.y * scale,
                 )
             } else {
-                warn!("Invalid drag state found");
-                return;
+                error!("Invalid drag state found");
+                panic!("Invalid drag state found");
             };
 
             let new_viewport_info =
@@ -240,7 +250,7 @@ where
         .await;
     }
 
-    async fn on_drag_end(&self, _: DragEnd) {
+    async fn on_drag_end(&self, _: Drag) {
         debug!("Drag ended");
         self.with_display_state_mut(|ds| ds.drag_state = Option::None)
             .await;
@@ -293,7 +303,8 @@ where
             create_drag_handler!(
                 on_drag_start(wx, wy, lx, ly) {
                     result_drag_start.upgrade().map(|p| {
-                        p.event_bus.post(DragStart {
+                        p.event_bus.post(Drag {
+                            state: DragEventType::Start,
                             global_point: Point { x: wx, y: wy },
                             local_point: Point { x: lx, y: ly }
                         });
@@ -301,7 +312,8 @@ where
                 },
                 on_drag_move(wx, wy, lx, ly) {
                     result_drag_move.upgrade().map(|p| {
-                        p.event_bus.post(DragMove {
+                        p.event_bus.post(Drag {
+                            state: DragEventType::Move,
                             global_point: Point { x: wx, y: wy },
                             local_point: Point { x: lx, y: ly }
                         });
@@ -309,7 +321,8 @@ where
                 },
                 on_drag_end(wx, wy, lx, ly) {
                     result_drag_end.upgrade().map(|p| {
-                        p.event_bus.post(DragEnd {
+                        p.event_bus.post(Drag {
+                            state: DragEventType::End,
                             global_point: Point { x: wx, y: wy },
                             local_point: Point { x: lx, y: ly }
                         });
@@ -337,9 +350,7 @@ where
 
         handle_event!(Layout => self.on_layout);
 
-        handle_event!(DragStart => self.on_drag_start);
-        handle_event!(DragMove => self.on_drag_move);
-        handle_event!(DragEnd => self.on_drag_end);
+        handle_event!(Drag => self.on_drag);
 
         handle_event!(Magnify => self.on_magnify);
     }

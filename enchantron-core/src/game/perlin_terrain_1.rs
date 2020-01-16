@@ -148,8 +148,12 @@ fn test_proportional_difference() {
 fn test_perlin_gradient() {
     let p = PerlinTerrain1::default();
 
-    for i in 30..40 {
-        println!("{}\t{}", i, p.get(&IPoint::new(0, i)));
+    let mut prev = 0.;
+
+    for i in 0..400 {
+        let curr = p.get(&IPoint::new(1, i));
+        println!("{}\t{}", i, curr - prev);
+        prev = curr;
     }
 
     println!("blah");

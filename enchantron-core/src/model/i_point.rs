@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul, MulAssign, Sub};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
 use super::{ISize, Point};
 
@@ -64,6 +64,13 @@ impl MulAssign<i64> for IPoint {
     fn mul_assign(&mut self, rhs: i64) {
         self.x *= rhs;
         self.y *= rhs;
+    }
+}
+
+impl AddAssign<&IPoint> for IPoint {
+    fn add_assign(&mut self, rhs: &IPoint) {
+        self.x += rhs.x;
+        self.y += rhs.y;
     }
 }
 

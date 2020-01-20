@@ -3,7 +3,7 @@ use std::hash::{BuildHasher, BuildHasherDefault, Hash, Hasher};
 use crate::model::{IPoint, IRect, Point};
 
 pub struct SinglePerlinGenerator<H: Hasher + Clone + Default> {
-    scale: u8,
+    scale: u32,
     hasher: H,
     offset: IPoint,
 }
@@ -13,21 +13,21 @@ where
     H: Hasher + Clone + Default,
 {
     pub fn new(
+        scale: u32,
         offset: IPoint,
-        scale: u8,
         seed: u128,
     ) -> SinglePerlinGenerator<H> {
         SinglePerlinGenerator::inner_new(
-            offset,
             scale,
+            offset,
             seed,
             BuildHasherDefault::<H>::default(),
         )
     }
 
     fn inner_new<B>(
+        scale: u32,
         offset: IPoint,
-        scale: u8,
         seed: u128,
         hasher_builer: B,
     ) -> SinglePerlinGenerator<H>
@@ -37,7 +37,7 @@ where
         let mut hasher = hasher_builer.build_hasher();
 
         hasher.write_u128(seed);
-        hasher.write_u8(scale);
+        hasher.write_u32(scale);
 
         offset.hash(&mut hasher);
 
@@ -96,12 +96,15 @@ where
     }
 
     /// Get the perlin noise value at the given point
-    fn get(&self, point: &IPoint) -> f64 {
-        let bounding_rect = self.get_bounding_rect_at(point);
+    pub fn get(&self, point: &IPoint) -> f64 {
+        // The grid that defines the perlin points is offset, so shift the
+        // given point in the opposite direction to make computation cleaner
+        let offset_point = point - &self.offset;
+        let bounding_rect = self.get_bounding_rect_at(&offset_point);
 
         let offset = self.proportional_difference(
             &bounding_rect.top_left,
-            point,
+            &offset_point,
             &bounding_rect.size.width,
         );
 
@@ -111,7 +114,7 @@ where
                 let gradient = self.perlin_gradient(corner);
                 let delta = self.proportional_difference(
                     corner,
-                    point,
+                    &offset_point,
                     &bounding_rect.size.width,
                 );
                 gradient.dot(&delta)
@@ -130,8 +133,8 @@ mod test {
 
     fn new_generator() -> SinglePerlinGenerator<XxHash64> {
         SinglePerlinGenerator::<XxHash64>::new(
-            Default::default(),
             16,
+            Default::default(),
             Default::default(),
         )
     }

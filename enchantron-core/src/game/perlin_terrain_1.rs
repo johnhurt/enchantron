@@ -1,6 +1,8 @@
 use super::{TerrainProvider, TerrainType};
 use crate::model::{IPoint, Point};
-use crate::util::HarmonicPerlinGenerator;
+use crate::util::{
+    DefaultXxHashIPointHasher, HarmonicPerlinGenerator, RestrictedXxHasher,
+};
 
 use twox_hash::XxHash64;
 
@@ -11,7 +13,7 @@ const DEAFULT_OFFSET: IPoint = IPoint { x: 0, y: 0 };
 const DEFAULT_OFFSET_SHIFT: IPoint = IPoint { x: 6, y: 6 };
 
 pub struct PerlinTerrain1 {
-    generator: HarmonicPerlinGenerator<XxHash64>,
+    generator: HarmonicPerlinGenerator<RestrictedXxHasher>,
 }
 
 impl Default for PerlinTerrain1 {
@@ -34,10 +36,10 @@ impl PerlinTerrain1 {
         multiplier: u8,
         offset_shift: IPoint,
         count: u8,
-        seed: u128,
+        seed: u64,
     ) -> PerlinTerrain1 {
         PerlinTerrain1 {
-            generator: HarmonicPerlinGenerator::<XxHash64>::new(
+            generator: HarmonicPerlinGenerator::<RestrictedXxHasher>::new(
                 root_scale,
                 root_offset,
                 multiplier,
@@ -58,5 +60,34 @@ impl TerrainProvider for PerlinTerrain1 {
         } else {
             TerrainType::Grass
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::time::SystemTime;
+
+    #[test]
+    fn test_performance() {
+        let gen = PerlinTerrain1::default();
+
+        let rows = 1000i64;
+        let cols = 1000i64;
+
+        let row_start = rows * 3056;
+        let col_start = cols * 10573;
+
+        let now = SystemTime::now();
+
+        for row in row_start..(row_start + rows) {
+            for col in col_start..(col_start + cols) {
+                let point = IPoint::new(col, row);
+                gen.get_for(&point);
+            }
+        }
+
+        println!("{:?}", now.elapsed());
+        panic!("To get stdout");
     }
 }

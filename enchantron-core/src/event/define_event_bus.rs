@@ -87,7 +87,7 @@ macro_rules! define_event_bus {
 
                 fn new(runtime_handle: Handle) -> Inner {
                     $(
-                        let ($e, _) = broadcast_channel(128);
+                        let ($e, _) = broadcast_channel(1024);
                     )*
 
                     Inner{
@@ -163,7 +163,7 @@ macro_rules! define_event_bus {
                 )*
             }
 
-            pub trait Event: Send + Debug + Clone + 'static {
+            pub trait Event: Unpin + Send + Debug + Clone + 'static {
                 fn post(self, event_bus: &EventBus);
                 fn register(event_bus: &EventBus)
                     -> ( ListenerRegistration, MpscReceiver<Self> );

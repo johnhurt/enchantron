@@ -1,8 +1,9 @@
 use std::hash::{BuildHasher, BuildHasherDefault, Hash, Hasher};
 
+use super::IPointHasher;
 use crate::model::{IPoint, IRect, Point};
 
-pub struct SinglePerlinGenerator<H: Hasher + Clone + Default> {
+pub struct SinglePerlinGenerator<H: IPointHasher> {
     scale: u32,
     hasher: H,
     offset: IPoint,
@@ -10,50 +11,22 @@ pub struct SinglePerlinGenerator<H: Hasher + Clone + Default> {
 
 impl<H> SinglePerlinGenerator<H>
 where
-    H: Hasher + Clone + Default,
+    H: IPointHasher,
 {
     pub fn new(
         scale: u32,
         offset: IPoint,
-        seed: u128,
+        hasher: H,
     ) -> SinglePerlinGenerator<H> {
-        SinglePerlinGenerator::inner_new(
-            scale,
-            offset,
-            seed,
-            BuildHasherDefault::<H>::default(),
-        )
-    }
-
-    fn inner_new<B>(
-        scale: u32,
-        offset: IPoint,
-        seed: u128,
-        hasher_builer: B,
-    ) -> SinglePerlinGenerator<H>
-    where
-        B: BuildHasher<Hasher = H>,
-    {
-        let mut hasher = hasher_builer.build_hasher();
-
-        hasher.write_u128(seed);
-        hasher.write_u32(scale);
-
-        offset.hash(&mut hasher);
-
         SinglePerlinGenerator {
-            offset,
             scale,
             hasher,
+            offset,
         }
     }
 
     fn perlin_gradient(&self, position: &IPoint) -> Point {
-        let mut hasher = self.hasher.clone();
-
-        position.hash(&mut hasher);
-
-        let hash = hasher.finish();
+        let hash = self.hasher.hash(position);
 
         // Take the right of the hash as the dx and the left as the dy
         let gx = ((hash as i32) as f64) / std::i32::MIN as f64;
@@ -128,11 +101,11 @@ where
 
 #[cfg(test)]
 mod test {
+    use super::super::DefaultXxHashIPointHasher;
     use super::*;
-    use twox_hash::XxHash64;
 
-    fn new_generator() -> SinglePerlinGenerator<XxHash64> {
-        SinglePerlinGenerator::<XxHash64>::new(
+    fn new_generator() -> SinglePerlinGenerator<DefaultXxHashIPointHasher> {
+        SinglePerlinGenerator::<DefaultXxHashIPointHasher>::new(
             16,
             Default::default(),
             Default::default(),

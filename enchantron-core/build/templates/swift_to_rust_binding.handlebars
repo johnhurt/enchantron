@@ -3,6 +3,7 @@
 // bind to the rust library with a single method call
 
 import Foundation
+import CoreGraphics
 
 class RustBinder {
   // Bind all the swift functions into rust
@@ -103,12 +104,40 @@ private func {{name}}(ref: OpaquePointer?
 {{~/each}}
 
 
-// Stop-gap functions
+// Hidden, Stop-gap functions.  These functions are unsafe, so they shouldn't
+// be called directly. They could allow for use after free bugs because they
+// contain owned objects and mutable self references
 
-private func rustStringToString(_ rustString: RustString) -> String {
-    let length = rustString.getLength()
-    let content = rustString.getContent()
-    let data = Data(bytes: UnsafeRawPointer(content!), count: Int(length))
+// Create a string from a byte buffer. There isn't a way to create a String
+// without copying the underlying data, so this method copies the data in the
+// rust byte buffer and then the buffer is dropped like any other object
+private func byteBufferToString(_ byteBuffer: ByteBuffer) -> String {
+    let length = byteBuffer.getLength()
+    let content = byteBuffer.getContent()
+    let data = Data(
+        bytesNoCopy: UnsafeMutableRawPointer(content!),
+        count: Int(length),
+        deallocator: .custom( { (_, _) in
+            print("Dropping " + byteBuffer.description)
+        }))
 
     return String(data: data, encoding: String.Encoding.utf8)!
+}
+
+// Create a CG data provider (texture data) from a rust byte buffer without
+// copying the data. The byte buffer will be dropped after the CGDataProvider
+// is. No copying occurs in this function, but once the data has been provided,
+// the provider will be dropped since the data has to be copied to video ram in
+// order to be useful
+private func byteBufferToCGData(_ byteBuffer: ByteBuffer) -> CGDataProvider {
+    let length = byteBuffer.getLength()
+    let content = byteBuffer.getContent()!
+    let byteBufferPointer = Unmanaged.passRetained(byteBuffer).toOpaque()
+    return CGDataProvider(
+        dataInfo: byteBufferPointer,
+        data: content,
+        size: Int(length),
+        releaseData: { (pointer, _, _) in
+            byte_buffer__drop(OpaquePointer(pointer))
+        })!
 }

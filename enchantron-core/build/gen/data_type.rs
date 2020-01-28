@@ -35,6 +35,8 @@ lazy_static! {
     );
     pub static ref STRING: DataType =
         DataType::ByteBuffer(ByteBufferType::Stringy);
+    pub static ref TEXTURE_DATA: DataType =
+        DataType::ByteBuffer(ByteBufferType::TextureData);
 }
 
 #[derive(Serialize, Clone, Copy)]
@@ -54,6 +56,7 @@ pub enum DataType {
 #[derive(Serialize, Clone, Copy)]
 pub enum ByteBufferType {
     Stringy,
+    TextureData,
 }
 
 #[derive(Serialize, Builder, Default, Clone, Copy)]

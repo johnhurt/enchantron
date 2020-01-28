@@ -10,12 +10,22 @@ import Foundation
 import SpriteKit
 
 class TextureLoader {
-
-  func loadTexture(_ resourceName: String) -> Texture {
-    return Texture(resourceName: resourceName)
-  }
-
-  deinit {
-    print("Dropping Texture Loader")
-  }
+    
+    func loadTexture(_ resourceName: String) -> Texture {
+        return Texture(resourceName: resourceName)
+    }
+    
+    func loadTextureFromPngData(_ pngData: CGDataProvider) -> Texture {
+        return Texture(
+            texture: SKTexture(
+                cgImage: CGImage(
+                    pngDataProviderSource: pngData,
+                    decode: nil,
+                    shouldInterpolate: false,
+                    intent: .defaultIntent)!))
+    }
+    
+    deinit {
+        print("Dropping Texture Loader")
+    }
 }

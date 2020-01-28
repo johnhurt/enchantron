@@ -1184,7 +1184,22 @@ lazy_static! {
                 ])
                 .return_type(Some(DataType::swift_generic(Some("T"),
                     DataType::swift_struct("Texture", None))))
-                .build().unwrap()
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+            .name("load_texture_from_png_data")
+            .impl_block(Some(ImplBlockDefBuilder::default()
+                .trait_name("native::TextureLoader")
+                .build().unwrap()))
+            .arguments(vec![
+                ArgumentDefBuilder::default()
+                  .name("png_data")
+                  .data_type(TEXTURE_DATA.clone())
+                  .build().unwrap()
+            ])
+            .return_type(Some(DataType::swift_generic(Some("T"),
+                DataType::swift_struct("Texture", None))))
+            .build().unwrap()
         ])
         .build().unwrap(),
 

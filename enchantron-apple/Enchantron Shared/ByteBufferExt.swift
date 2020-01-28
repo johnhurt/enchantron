@@ -11,6 +11,6 @@ import Foundation
 extension ByteBuffer : CustomStringConvertible {
 
     public var description: String {
-        String(data: <#T##Data#>, encoding: <#T##String.Encoding#>)!
+        "Rust Byte Buffer"
     }
 }

@@ -19,3 +19,9 @@ impl ByteBuffer {
         ByteBuffer(Vec::<u8>::from(string))
     }
 }
+
+impl Drop for ByteBuffer {
+    fn drop(&mut self) {
+        debug!("Dropping Byte Buffer");
+    }
+}

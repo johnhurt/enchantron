@@ -219,7 +219,32 @@ fn render_byte_buffer_type(
             .swift_name_incoming("OpaquePointer?".to_owned())
             .swift_name_outgoing("OpaquePointer?".to_owned())
             .swift_type_coersion_prefix_incoming(
-                "rustStringToString(RustString(".to_owned(),
+                "byteBufferToString(ByteBuffer(".to_owned(),
+            )
+            .swift_type_coersion_postfix_incoming("))".to_owned())
+            .swift_type_coersion_prefix_outgoing(
+                "OpaquePointer(Unmanaged.passRetained(SwiftString(".to_owned(),
+            )
+            .swift_type_coersion_postfix_outgoing(")).toOpaque())".to_owned()),
+        ByteBufferType::TextureData => builder
+            .name("TextureData".to_owned())
+            .sanitized_name("TextureData".to_owned())
+            .rust_name_internal("ByteBuffer".to_owned())
+            .rust_name_incoming("*mut Opaque_SwiftTextureData".to_owned())
+            .rust_name_outgoing("*mut ByteBuffer".to_owned())
+            .rust_type_coersion_prefix_incoming(
+                "panic!(\"Cannot receive ".to_owned(),
+            )
+            .rust_type_coersion_postfix_incoming(" from swift\")".to_owned())
+            .rust_type_coersion_prefix_outgoing(
+                "Box::into_raw(Box::new(".to_owned(),
+            )
+            .rust_type_coersion_postfix_outgoing("))".to_owned())
+            .swift_name_internal("String".to_owned())
+            .swift_name_incoming("OpaquePointer?".to_owned())
+            .swift_name_outgoing("OpaquePointer?".to_owned())
+            .swift_type_coersion_prefix_incoming(
+                "byteBufferToCGData(ByteBuffer(".to_owned(),
             )
             .swift_type_coersion_postfix_incoming("))".to_owned())
             .swift_type_coersion_prefix_outgoing(

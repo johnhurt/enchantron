@@ -33,14 +33,15 @@ lazy_static! {
             .build()
             .unwrap()
     );
-    pub static ref STRING: DataType = DataType::Stringy;
+    pub static ref STRING: DataType =
+        DataType::ByteBuffer(ByteBufferType::Stringy);
 }
 
 #[derive(Serialize, Clone, Copy)]
 pub enum DataType {
     Nil,
     Any,
-    Stringy,
+    ByteBuffer(ByteBufferType),
     Primitive(PrimitiveDataType),
     Future(RustStructDataType),
     RustGeneric(RustGenericDataType),
@@ -48,6 +49,11 @@ pub enum DataType {
     SwiftGeneric(SwiftGenericDataType),
     SwiftStruct(SwiftStructDataType),
     SwiftGenericized(SwiftGenericizedDataType),
+}
+
+#[derive(Serialize, Clone, Copy)]
+pub enum ByteBufferType {
+    Stringy,
 }
 
 #[derive(Serialize, Builder, Default, Clone, Copy)]
@@ -110,7 +116,9 @@ impl DataType {
         match &self {
             DataType::Nil => Vec::new(),
             DataType::Any => vec!["crate::util::BoxedAny".to_owned()],
-            DataType::Stringy => vec![String::from("crate::util::RustString")],
+            DataType::ByteBuffer(_) => {
+                vec!["crate::util::ByteBuffer".to_owned()]
+            }
             DataType::Primitive(_) => Vec::new(),
             DataType::Future(output_type) => {
                 let mut result = output_type

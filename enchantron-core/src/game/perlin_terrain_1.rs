@@ -1,10 +1,6 @@
 use super::{TerrainProvider, TerrainType};
-use crate::model::{IPoint, Point};
-use crate::util::{
-    DefaultXxHashIPointHasher, HarmonicPerlinGenerator, RestrictedXxHasher,
-};
-
-use twox_hash::XxHash64;
+use crate::model::IPoint;
+use crate::util::{HarmonicPerlinGenerator, RestrictedXxHasher};
 
 const DEFAULT_OCTAVE_SCALE: u32 = 8;
 const DEFAULT_OCTAVE_COUNT: u8 = 12;
@@ -72,8 +68,8 @@ mod test {
     fn test_performance() {
         let gen = PerlinTerrain1::default();
 
-        let rows = 1000i64;
-        let cols = 1000i64;
+        let rows = 64i64;
+        let cols = 64i64;
 
         let row_start = rows * 3056;
         let col_start = cols * 10573;
@@ -88,6 +84,6 @@ mod test {
         }
 
         println!("{:?}", now.elapsed());
-        panic!("To get stdout");
+        //panic!("To get stdout");
     }
 }

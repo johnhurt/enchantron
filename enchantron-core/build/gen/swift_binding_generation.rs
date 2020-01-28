@@ -28,9 +28,9 @@ lazy_static! {
     // Low-level Types
 
     TypeDefBuilder::default()
-        .name("RustString")
+        .name("ByteBuffer")
         .rust_owned(true)
-        .rust_import(Some("crate::util::RustString"))
+        .rust_import(Some("crate::util::ByteBuffer"))
         .methods(vec![
 
             MethodDefBuilder::default()

@@ -13,7 +13,7 @@ class SwiftString {
   let length: Int64
   let data: NSData
   
-  init(_ source: String) {
+  init(_ rustData: ByteBuffer) {
     let sourceData = source.data(
       using: String.Encoding.utf8,
       allowLossyConversion: false)!

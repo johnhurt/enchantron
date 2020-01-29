@@ -92,6 +92,7 @@ impl ApplicationContext {
             .handle()
             .spawn(GamePresenter::<ViewTypes>::new(
                 view,
+                self.system_view.clone(),
                 self.event_bus.clone(),
                 self.get_runtime_resources(),
             ));

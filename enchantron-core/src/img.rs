@@ -1,5 +1,3 @@
-
-
 // Image specific module
 
 pub use png_generator::PngGenerator;

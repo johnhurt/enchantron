@@ -21,6 +21,7 @@ mod game;
 
 mod application_context;
 mod event;
+mod img;
 mod native;
 mod presenter;
 mod view;

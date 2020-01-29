@@ -9,7 +9,7 @@ use crate::view::BaseView;
 
 use crate::model::{Point, Rect, Size};
 
-use crate::native::RuntimeResources;
+use crate::native::{RuntimeResources, SystemView, TextureLoader};
 
 use crate::ui::{
     DragHandler, DragState, GameDisplayState, HandlerRegistration,
@@ -17,6 +17,8 @@ use crate::ui::{
     HasMutableScale, HasMutableVisibility, HasViewport, LayoutHandler,
     MagnifyHandler, Sprite, SpriteSource, SpriteSourceWrapper,
 };
+
+use crate::img::PngGenerator;
 
 use tokio::stream::StreamExt;
 
@@ -42,6 +44,7 @@ where
     T: ViewTypes,
 {
     view: T::GameView,
+    system_view: Arc<T::SystemView>,
     event_bus: EventBus,
     runtime_resources: Arc<RuntimeResources<T::SystemView>>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
@@ -50,6 +53,8 @@ where
     weak_self: RwLock<Option<Box<Weak<GamePresenter<T>>>>>,
 
     display_state: RwLock<Option<GameDisplayState<T>>>,
+
+
 }
 
 impl<T> GamePresenter<T>
@@ -196,6 +201,15 @@ where
                 Option::Some(DragState::new(drag_point.clone()));
         })
         .await;
+
+        let sprite = self.view.create_sprite();
+        sprite.set_visible(true);
+        sprite.set_texture(
+            &self
+                .system_view
+                .get_texture_loader()
+                .load_texture_from_png_data(PngGenerator::get_png()),
+        );
     }
 
     async fn on_drag_move(&self, drag_move_event: Drag) {
@@ -361,13 +375,15 @@ where
 
     pub async fn new(
         view: T::GameView,
+        system_view: Arc<T::SystemView>,
         event_bus: EventBus,
         runtime_resources: Arc<RuntimeResources<T::SystemView>>,
     ) -> Arc<GamePresenter<T>> {
         view.initialize_pre_bind();
 
         let raw_result = GamePresenter {
-            view: view,
+            view,
+            system_view,
             event_bus: event_bus,
             runtime_resources: runtime_resources,
             listener_registrations: Mutex::new(Vec::new()),

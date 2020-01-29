@@ -133,11 +133,15 @@ private func byteBufferToCGData(_ byteBuffer: ByteBuffer) -> CGDataProvider {
     let length = byteBuffer.getLength()
     let content = byteBuffer.getContent()!
     let byteBufferPointer = Unmanaged.passRetained(byteBuffer).toOpaque()
+
     return CGDataProvider(
         dataInfo: byteBufferPointer,
         data: content,
         size: Int(length),
-        releaseData: { (pointer, _, _) in
-            byte_buffer__drop(OpaquePointer(pointer))
+        releaseData:
+
+        { (pointer, _, _) in
+        let v =  Unmanaged<ByteBuffer>.fromOpaque(UnsafeRawPointer(pointer!)).takeRetainedValue()
+            print("Dropped")
         })!
 }

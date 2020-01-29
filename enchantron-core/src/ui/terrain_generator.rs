@@ -366,8 +366,8 @@ where
         let action = |x: usize, y: usize| {
             let (tile, terrain_point) =
                 self.get_tile_at(valid_top_left, &x, &y);
-            tile_updater(tile, &terrain_point);
             tile.set_location_point(&(&terrain_point * self.tile_size as f64));
+            tile_updater(tile, &terrain_point);
         };
 
         for y in 0..new_valid_size.height {

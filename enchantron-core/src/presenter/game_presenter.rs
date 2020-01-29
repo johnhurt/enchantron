@@ -14,9 +14,12 @@ use crate::native::{RuntimeResources, SystemView, TextureLoader};
 use crate::ui::{
     DragHandler, DragState, GameDisplayState, HandlerRegistration,
     HasDragHandlers, HasLayoutHandlers, HasMagnifyHandlers, HasMutableLocation,
-    HasMutableScale, HasMutableVisibility, HasViewport, LayoutHandler,
-    MagnifyHandler, Sprite, SpriteSource, SpriteSourceWrapper,
+    HasMutableScale, HasMutableSize, HasMutableVisibility, HasMutableZLevel,
+    HasViewport, LayoutHandler, MagnifyHandler, Sprite, SpriteSource,
+    SpriteSourceWrapper,
 };
+
+use std::ops::DerefMut;
 
 use crate::img::PngGenerator;
 
@@ -54,7 +57,7 @@ where
 
     display_state: RwLock<Option<GameDisplayState<T>>>,
 
-
+    sprites: Mutex<Option<T::Sprite>>,
 }
 
 impl<T> GamePresenter<T>
@@ -210,6 +213,13 @@ where
                 .get_texture_loader()
                 .load_texture_from_png_data(PngGenerator::get_png()),
         );
+        sprite.set_location_point(&drag_point);
+        sprite.set_size(64., 64.);
+        sprite.set_z_level(100.);
+
+        let ref mut curr_sprite = self.sprites.lock().await;
+        curr_sprite.as_ref().map(|s| s.set_visible(false));
+        curr_sprite.replace(sprite);
     }
 
     async fn on_drag_move(&self, drag_move_event: Drag) {
@@ -392,6 +402,8 @@ where
             weak_self: RwLock::new(Default::default()),
 
             display_state: RwLock::new(Default::default()),
+
+            sprites: Mutex::new(Default::default()),
         };
 
         let result: Arc<GamePresenter<T>> = Arc::new(raw_result);

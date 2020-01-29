@@ -16,13 +16,19 @@ class TextureLoader {
     }
     
     func loadTextureFromPngData(_ pngData: CGDataProvider) -> Texture {
-        return Texture(
+        let image = CGImage(
+            pngDataProviderSource: pngData,
+            decode: nil,
+            shouldInterpolate: false,
+            intent: .defaultIntent)
+        
+        let result = Texture(
             texture: SKTexture(
-                cgImage: CGImage(
-                    pngDataProviderSource: pngData,
-                    decode: nil,
-                    shouldInterpolate: false,
-                    intent: .defaultIntent)!))
+                cgImage: image!))
+        
+        print("loaded texture")
+        
+        return result
     }
     
     deinit {

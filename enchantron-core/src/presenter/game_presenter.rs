@@ -9,19 +9,14 @@ use crate::view::BaseView;
 
 use crate::model::{Point, Rect, Size};
 
-use crate::native::{RuntimeResources, SystemView, TextureLoader};
+use crate::native::RuntimeResources;
 
 use crate::ui::{
     DragHandler, DragState, GameDisplayState, HandlerRegistration,
     HasDragHandlers, HasLayoutHandlers, HasMagnifyHandlers, HasMutableLocation,
-    HasMutableScale, HasMutableSize, HasMutableVisibility, HasMutableZLevel,
-    HasViewport, LayoutHandler, MagnifyHandler, Sprite, SpriteSource,
-    SpriteSourceWrapper,
+    HasMutableScale, HasViewport, LayoutHandler, MagnifyHandler, Sprite,
+    SpriteSource, SpriteSourceWrapper,
 };
-
-use std::ops::DerefMut;
-
-use crate::img::PngGenerator;
 
 use tokio::stream::StreamExt;
 
@@ -47,7 +42,6 @@ where
     T: ViewTypes,
 {
     view: T::GameView,
-    system_view: Arc<T::SystemView>,
     event_bus: EventBus,
     runtime_resources: Arc<RuntimeResources<T::SystemView>>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
@@ -56,8 +50,6 @@ where
     weak_self: RwLock<Option<Box<Weak<GamePresenter<T>>>>>,
 
     display_state: RwLock<Option<GameDisplayState<T>>>,
-
-    sprites: Mutex<Option<T::Sprite>>,
 }
 
 impl<T> GamePresenter<T>
@@ -204,22 +196,6 @@ where
                 Option::Some(DragState::new(drag_point.clone()));
         })
         .await;
-
-        let sprite = self.view.create_sprite();
-        sprite.set_visible(true);
-        sprite.set_texture(
-            &self
-                .system_view
-                .get_texture_loader()
-                .load_texture_from_png_data(PngGenerator::get_png()),
-        );
-        sprite.set_location_point(&drag_point);
-        sprite.set_size(64., 64.);
-        sprite.set_z_level(100.);
-
-        let ref mut curr_sprite = self.sprites.lock().await;
-        curr_sprite.as_ref().map(|s| s.set_visible(false));
-        curr_sprite.replace(sprite);
     }
 
     async fn on_drag_move(&self, drag_move_event: Drag) {
@@ -385,7 +361,6 @@ where
 
     pub async fn new(
         view: T::GameView,
-        system_view: Arc<T::SystemView>,
         event_bus: EventBus,
         runtime_resources: Arc<RuntimeResources<T::SystemView>>,
     ) -> Arc<GamePresenter<T>> {
@@ -393,7 +368,6 @@ where
 
         let raw_result = GamePresenter {
             view,
-            system_view,
             event_bus: event_bus,
             runtime_resources: runtime_resources,
             listener_registrations: Mutex::new(Vec::new()),
@@ -402,8 +376,6 @@ where
             weak_self: RwLock::new(Default::default()),
 
             display_state: RwLock::new(Default::default()),
-
-            sprites: Mutex::new(Default::default()),
         };
 
         let result: Arc<GamePresenter<T>> = Arc::new(raw_result);

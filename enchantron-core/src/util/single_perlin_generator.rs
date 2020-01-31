@@ -1,6 +1,6 @@
-use std::hash::{BuildHasher, BuildHasherDefault, Hash, Hasher};
+use std::hash::{BuildHasherDefault, Hasher};
 
-use super::IPointHasher;
+use super::{IPointHasher, ValueRect};
 use crate::model::{IPoint, IRect, Point};
 
 pub struct SinglePerlinGenerator<H: IPointHasher> {
@@ -35,6 +35,20 @@ where
         Point::new(gx, gy)
     }
 
+    /// Precompute all the perlin gradients for all the node points that will
+    /// be needed to compute the tiles in the given rectangle.
+    fn get_perlin_gradients_for_rect(&self, rect: &IRect) {
+        // offset the incoming rect to make it appear like the grid is lined
+        // up with the origin. This just makes the computation easier.
+        let offset_rect = IRect {
+            top_left: &rect.top_left - &self.offset,
+            size: rect.size.clone(),
+        };
+
+        let bounding_rect =
+            self.get_bounding_rect_containing_rect(&offset_rect);
+    }
+
     /// Get the difference vector between the two given vectors (to minus from)
     /// scaled by the given unit length to produce floating point values for
     /// both x and y
@@ -56,7 +70,9 @@ where
         (1. - x) * f_at_x0 + x * f_at_x1
     }
 
-    /// Get the rectangle at the given octave containing the given point
+    /// Get the rectangle at the given octave containing the given point. This
+    /// computation assumes that the point has been shiften to make the
+    /// pernlin node grid line up with origin
     fn get_bounding_rect_at(&self, point: &IPoint) -> IRect {
         let side_size = self.scale as i64;
 
@@ -66,6 +82,22 @@ where
             side_size as usize,
             side_size as usize,
         )
+    }
+
+    /// Get the minimum bounding rectangle (where each corner is a perlin node)
+    /// that contains the given rectangle. This computation assumes that the
+    /// point has been shiften to make the pernlin node grid line up with origin
+    fn get_bounding_rect_containing_rect(&self, rect: &IRect) -> IRect {
+        let top_left_rect = self.get_bounding_rect_at(&rect.top_left);
+        let bottom_right_rect = self.get_bounding_rect_at(&rect.bottom_right());
+
+        let top_left = top_left_rect.top_left;
+        let bottom_right = bottom_right_rect.bottom_right();
+        let size = (bottom_right - &top_left)
+            .to_size()
+            .expect("Bad rect coords");
+
+        IRect { top_left, size }
     }
 
     /// Get the perlin noise value at the given point
@@ -96,6 +128,12 @@ where
         let ix0 = self.linear_interp(dg00, dg10, offset.x);
         let ix1 = self.linear_interp(dg01, dg11, offset.x);
         self.linear_interp(ix0, ix1, offset.y)
+    }
+
+    pub fn get_rect(&self, rect: &IRect) -> ValueRect<f64> {
+        let mut result = ValueRect::new(rect);
+
+        result
     }
 }
 

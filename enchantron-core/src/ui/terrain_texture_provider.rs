@@ -1,6 +1,7 @@
 use crate::game::{PerlinTerrain1, TerrainProvider, TerrainType};
-use crate::model::IPoint;
+use crate::model::{IPoint, IRect};
 use crate::native::RuntimeResources;
+use crate::util::ValueRect;
 use crate::view_types::ViewTypes;
 
 use std::sync::Arc;
@@ -32,5 +33,18 @@ where
                 self.runtime_resources.textures().overworld.dirt()
             }
         }
+    }
+
+    pub fn get_textures_in_rect(&self, rect: &IRect) -> ValueRect<&T::Texture> {
+        self.terrain_generator
+            .get_for_rect(rect)
+            .map(|terrain| match terrain {
+                TerrainType::Grass => {
+                    self.runtime_resources.textures().overworld.grass()
+                }
+                TerrainType::Dirt => {
+                    self.runtime_resources.textures().overworld.dirt()
+                }
+            })
     }
 }

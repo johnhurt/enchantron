@@ -2,6 +2,7 @@ pub use self::byte_buffer::ByteBuffer;
 pub use self::simple_slot_map::SimpleSlotMap;
 
 pub use self::boxed_any::*;
+pub use self::corner_values::CornerValues;
 pub use self::default_xxhash_ipoint_hasher::DefaultXxHashIPointHasher;
 pub use self::harmonic_perlin_generator::HarmonicPerlinGenerator;
 pub use self::has_slot_map_key_data::HasSlotMapKeyData;
@@ -18,6 +19,7 @@ mod slot_map;
 mod slot_map_key;
 
 mod boxed_any;
+mod corner_values;
 mod default_xxhash_ipoint_hasher;
 mod harmonic_perlin_generator;
 mod has_slot_map_key_data;

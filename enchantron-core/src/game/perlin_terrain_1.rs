@@ -1,6 +1,6 @@
 use super::{TerrainProvider, TerrainType};
-use crate::model::IPoint;
-use crate::util::{HarmonicPerlinGenerator, RestrictedXxHasher};
+use crate::model::{IPoint, IRect};
+use crate::util::{HarmonicPerlinGenerator, RestrictedXxHasher, ValueRect};
 
 const DEFAULT_OCTAVE_SCALE: u32 = 8;
 const DEFAULT_OCTAVE_COUNT: u8 = 12;
@@ -57,6 +57,16 @@ impl TerrainProvider for PerlinTerrain1 {
             TerrainType::Grass
         }
     }
+
+    fn get_for_rect(&self, rect: &IRect) -> ValueRect<TerrainType> {
+        self.generator.get_rect(rect).map(|v| {
+            if *v < 0. {
+                TerrainType::Dirt
+            } else {
+                TerrainType::Grass
+            }
+        })
+    }
 }
 
 #[cfg(test)]
@@ -68,22 +78,36 @@ mod test {
     fn test_performance() {
         let gen = PerlinTerrain1::default();
 
-        let rows = 64i64;
-        let cols = 64i64;
+        let rows = 1000i64;
+        let cols = 1000i64;
 
         let row_start = rows * 3056;
         let col_start = cols * 10573;
 
-        let now = SystemTime::now();
+        {
+            let rect =
+                IRect::new(col_start, row_start, cols as usize, rows as usize);
 
-        for row in row_start..(row_start + rows) {
-            for col in col_start..(col_start + cols) {
-                let point = IPoint::new(col, row);
-                gen.get_for(&point);
-            }
+            let now = SystemTime::now();
+
+            let values = gen.get_for_rect(&rect);
+
+            println!("batch {:?}", now.elapsed());
         }
 
-        println!("{:?}", now.elapsed());
-        //panic!("To get stdout");
+        {
+            let now = SystemTime::now();
+
+            for row in row_start..(row_start + rows) {
+                for col in col_start..(col_start + cols) {
+                    let point = IPoint::new(col, row);
+                    gen.get_for(&point);
+                }
+            }
+
+            println!("singles {:?}", now.elapsed());
+        }
+
+        panic!("To get stdout");
     }
 }

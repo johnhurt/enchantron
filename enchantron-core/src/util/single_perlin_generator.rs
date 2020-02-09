@@ -11,6 +11,17 @@ pub struct SinglePerlinGenerator<H: IPointHasher> {
     offset: IPoint,
 }
 
+#[derive(Clone, Default)]
+struct PerlinGradientCoefs {
+    dx_coef: f64,
+    dy_coef: f64,
+    dx_2_coef: f64,
+    dy_2_coef: f64,
+    dx_dy_coef: f64,
+    dx_2_dy_coef: f64,
+    dx_dy_2_coef: f64,
+}
+
 impl<H> SinglePerlinGenerator<H>
 where
     H: IPointHasher,
@@ -39,10 +50,10 @@ where
 
     /// Precompute all the perlin gradients for all the node points that will
     /// be needed to compute the tiles in the given rectangle.
-    fn get_perlin_gradients_for_rect(
+    fn get_perlin_gradients_ceofs_for_rect(
         &self,
         rect: &IRect,
-    ) -> ValueRect<CornerValues<Point>> {
+    ) -> ValueRect<PerlinGradientCoefs> {
         let bounding_rect = self.get_bounding_rect_containing_rect(rect);
 
         let stride = self.scale as usize;
@@ -69,10 +80,9 @@ where
             *value = self.perlin_gradient(point);
         });
 
-        // Now group the gradients by the 4 corners around the corresponding
-        // perlin node
+        // Now generate the perlin coeficients based on the computed gradients
         let mut result =
-            ValueRect::<CornerValues<Point>>::new_from_point_and_strides_with_defaults(
+            ValueRect::<PerlinGradientCoefs>::new_from_point_and_strides_with_defaults(
                 gradients.rect().top_left.clone(),
                 stride,
                 stride,
@@ -80,19 +90,25 @@ where
                 perlin_rect_count_y,
             );
 
+        let one_over_scale = 1.0 / (self.scale as f64);
+        let one_over_scale_2 = one_over_scale * one_over_scale;
+        let one_over_scale_3 = one_over_scale * one_over_scale * one_over_scale;
+
         result.get_raw_values_mut().iter_mut().enumerate().for_each(
-            |(index, gradient_corners)| {
+            |(index, coefs)| {
                 let col = index / perlin_rect_count_y;
                 let row = index % perlin_rect_count_y;
 
-                gradient_corners.top_left =
-                    gradients.get(col, row).unwrap().clone();
-                gradient_corners.top_right =
-                    gradients.get(col + 1, row).unwrap().clone();
-                gradient_corners.bottom_right =
-                    gradients.get(col + 1, row + 1).unwrap().clone();
-                gradient_corners.bottom_left =
-                    gradients.get(col, row + 1).unwrap().clone();
+                let ref g_tl = gradients.get(col, row).unwrap();
+                let ref g_tr = gradients.get(col + 1, row).unwrap();
+                let ref g_br = gradients.get(col + 1, row + 1).unwrap();
+                let ref g_bl = gradients.get(col, row + 1).unwrap();
+
+                coefs.dx_coef = &one_over_scale * (&g_tl.x + &g_tr.x);
+                coefs.dy_coef = &one_over_scale * (-&g_bl.y);
+                coefs.dx_2_coef = &one_over_scale_2 * (&g_tr.x - &g_tl.x);
+                coefs.dy_2_coef = &one_over_scale_2 * (&g_bl.y - &g_tl.y);
+                coefs.dx_dy_
             },
         );
 
@@ -237,7 +253,8 @@ where
         let mut now = SystemTime::now();
 
         let perlin_gradients =
-            self.get_perlin_gradients_for_rect(target.rect());
+            ValueRect::new_from_rect_with_defaults(target.rect().clone(), 1, 1);
+        //self.get_perlin_gradients_for_rect(target.rect());
 
         println!("time to create gradients: {:?}", now.elapsed());
 

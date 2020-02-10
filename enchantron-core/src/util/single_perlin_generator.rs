@@ -1,9 +1,7 @@
-use std::hash::{BuildHasherDefault, Hasher};
+use std::hash::Hasher;
 
-use super::{CornerValues, IPointHasher, ValueRect};
-use crate::model::{IPoint, IRect, ISize, Point, UPoint};
-
-use std::time::{Duration, SystemTime};
+use super::{IPointHasher, ValueRect};
+use crate::model::{IPoint, IRect, ISize, Point};
 
 pub struct SinglePerlinGenerator<H: IPointHasher> {
     scale: u32,
@@ -11,7 +9,7 @@ pub struct SinglePerlinGenerator<H: IPointHasher> {
     offset: IPoint,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 struct PerlinGradientCoefs {
     dx_coef: f64,
     dy_coef: f64,
@@ -104,11 +102,17 @@ where
                 let ref g_br = gradients.get(col + 1, row + 1).unwrap();
                 let ref g_bl = gradients.get(col, row + 1).unwrap();
 
-                coefs.dx_coef = &one_over_scale * (&g_tl.x + &g_tr.x);
-                coefs.dy_coef = &one_over_scale * (-&g_bl.y);
-                coefs.dx_2_coef = &one_over_scale_2 * (&g_tr.x - &g_tl.x);
-                coefs.dy_2_coef = &one_over_scale_2 * (&g_bl.y - &g_tl.y);
-                coefs.dx_dy_
+                coefs.dx_coef = one_over_scale * (g_tl.x - g_tr.x);
+                coefs.dy_coef = one_over_scale * (g_tl.y - g_bl.y);
+                coefs.dx_2_coef = one_over_scale_2 * (g_tr.x - g_tl.x);
+                coefs.dy_2_coef = one_over_scale_2 * (g_bl.y - g_tl.y);
+                coefs.dx_dy_coef = one_over_scale_2
+                    * (g_tr.x + g_tr.y + g_bl.x + g_bl.y
+                        - (g_tl.x + g_tl.y + g_br.x + g_br.y));
+                coefs.dx_2_dy_coef =
+                    &one_over_scale_3 * (g_tl.x + g_br.x - (g_tr.x + g_bl.x));
+                coefs.dx_dy_2_coef =
+                    one_over_scale_3 * (g_tl.y + g_br.y - (g_tr.y + g_bl.y));
             },
         );
 
@@ -154,10 +158,11 @@ where
     /// that contains the given rectangle.
     fn get_bounding_rect_containing_rect(&self, rect: &IRect) -> IRect {
         let top_left_rect = self.get_bounding_rect_at(&rect.top_left);
-        let bottom_right_rect = self.get_bounding_rect_at(&rect.bottom_right());
+        let bottom_right_point = rect.bottom_right_exclusive();
+        let bottom_right_rect = self.get_bounding_rect_at(&bottom_right_point);
 
         let top_left = top_left_rect.top_left;
-        let bottom_right = bottom_right_rect.bottom_right();
+        let bottom_right = bottom_right_rect.bottom_right_exclusive();
         let size = (bottom_right - &top_left)
             .to_size()
             .expect("Bad rect coords");
@@ -250,66 +255,62 @@ where
 
     /// Get a filled rectangle of perlin values
     pub fn fill_rect(&self, target: &mut ValueRect<f64>) {
-        let mut now = SystemTime::now();
+        let perlin_gradient_coefs =
+            self.get_perlin_gradients_ceofs_for_rect(target.rect());
 
-        let perlin_gradients =
-            ValueRect::new_from_rect_with_defaults(target.rect().clone(), 1, 1);
-        //self.get_perlin_gradients_for_rect(target.rect());
-
-        println!("time to create gradients: {:?}", now.elapsed());
-
-        let mut retrieval_us = 0u128;
-        let mut calculate_us = 0u128;
-        let mut other_us = 0u128;
-
-        let mut curr_perlin_rect = IRect {
-            top_left: perlin_gradients.rect().top_left.clone(),
+        let first_perlin_rect = IRect {
+            top_left: perlin_gradient_coefs.rect().top_left.clone(),
             size: ISize::new(self.scale as usize, self.scale as usize),
         };
 
-        let mut corner_values: &CornerValues<Point> =
-            perlin_gradients.get(0, 0).unwrap();
+        let mut coefs: &PerlinGradientCoefs =
+            perlin_gradient_coefs.get(0, 0).unwrap();
+
+        let top_most_y = first_perlin_rect.top_left.y;
+
+        let scale = self.scale as i64;
+        let scale_minus_one = scale - 1;
+        let mut curr_perlin_rect_top_left_x = first_perlin_rect.top_left.x;
+        let mut curr_perlin_rect_top_left_y = first_perlin_rect.top_left.y;
+        let mut max_x = &curr_perlin_rect_top_left_x + &scale_minus_one;
+        let mut max_y = &curr_perlin_rect_top_left_y + &scale_minus_one;
+        let mut idx_x = 0usize;
+        let mut idx_y = 0usize;
+        let mut dx = 0f64;
+        let mut dy = 0f64;
 
         target.for_each_mut(|point, value| {
-            if !curr_perlin_rect.contains_point(point) {
-                let mut now = SystemTime::now();
-                let diff = point - &perlin_gradients.rect().top_left;
-
-                let mut perlin_value_coord = UPoint::new(
-                    diff.x.div_euclid(self.scale as i64) as usize,
-                    diff.y.div_euclid(self.scale as i64) as usize,
-                );
-
-                curr_perlin_rect.top_left = &perlin_gradients.rect().top_left
-                    + &IPoint::new(
-                        perlin_value_coord.x as i64 * self.scale as i64,
-                        perlin_value_coord.y as i64 * self.scale as i64,
-                    );
-
-                corner_values =
-                    perlin_gradients.get_by_point(&perlin_value_coord).unwrap();
-
-                other_us += now.elapsed().unwrap().as_micros();
+            if point.x > max_x {
+                curr_perlin_rect_top_left_x += scale;
+                curr_perlin_rect_top_left_y = top_most_y;
+                idx_x += 1;
+                idx_y = 0;
+                max_x = curr_perlin_rect_top_left_x + scale_minus_one;
+                max_y = curr_perlin_rect_top_left_y + scale_minus_one;
+                coefs = perlin_gradient_coefs.get(idx_x, idx_y).unwrap();
+            } else if point.y < curr_perlin_rect_top_left_y {
+                curr_perlin_rect_top_left_y = top_most_y;
+                idx_y = 0;
+                max_y = curr_perlin_rect_top_left_y + scale_minus_one;
+                coefs = perlin_gradient_coefs.get(idx_x, idx_y).unwrap();
+            } else if point.y > max_y {
+                curr_perlin_rect_top_left_y += scale;
+                idx_y += 1;
+                max_y = curr_perlin_rect_top_left_y + scale_minus_one;
+                coefs = perlin_gradient_coefs.get(idx_x, idx_y).unwrap();
             }
 
-            now = SystemTime::now();
+            dx = (point.x - curr_perlin_rect_top_left_x) as f64;
+            dy = (point.y - curr_perlin_rect_top_left_y) as f64;
 
-            *value = self.calculate_perlin_value(
-                &corner_values.top_left,
-                &corner_values.top_right,
-                &corner_values.bottom_right,
-                &corner_values.bottom_left,
-                &curr_perlin_rect.top_left,
-                point,
-            );
-
-            calculate_us += now.elapsed().unwrap().as_micros();
+            *value = (coefs.dx_coef + dx * coefs.dx_2_coef) * dx
+                + (coefs.dy_coef + dy * coefs.dy_2_coef) * dy
+                + (coefs.dx_dy_coef
+                    + coefs.dx_2_dy_coef * dx
+                    + coefs.dx_dy_2_coef * dy)
+                    * dx
+                    * dy;
         });
-
-        println!(
-            "retrieve\t{}\ncalculate\t{}\nother\t\t{}",
-            retrieval_us, calculate_us, other_us
-        );
     }
 }
 
@@ -390,7 +391,12 @@ mod test {
             for row in 0..45usize {
                 let point =
                     IPoint::new(100i64 + col as i64, -200i64 + row as i64);
-                assert_eq!(Some(p.get(&point)), values.get(col, row).cloned());
+                let expected = Some(p.get(&point));
+                let value = values.get(col, row).cloned();
+                if expected != value {
+                    println!("{}, {}", col, row);
+                }
+                assert_eq!(expected, value);
             }
         }
     }

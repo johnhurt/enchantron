@@ -23,10 +23,27 @@ impl IRect {
         }
     }
 
-    pub fn bottom_right(&self) -> IPoint {
+    /// Get the last included point in this rect. This will be the coordinates
+    /// of the ipoint at the bottom right of the rectangle that is within the
+    /// integer size of the rect. For rectangles with zero size, the top-left
+    /// point is returned even though that isn't technically correct, but a rect
+    /// with zero size isn't technically a rect, so it's kind of on you
+    pub fn bottom_right_inclusive(&self) -> IPoint {
+        let dx = max(1, self.size.width as i64) - 1;
+        let dy = max(1, self.size.height as i64) - 1;
         IPoint {
-            x: self.top_left.x + self.size.width as i64,
-            y: self.top_left.y + self.size.height as i64,
+            x: self.top_left.x + dx,
+            y: self.top_left.y + dy,
+        }
+    }
+
+    /// Get the coordinates of the point that touches the bottom right corner
+    /// of this rect, but is not included in the rect un less the rect has
+    /// zero size
+    pub fn bottom_right_exclusive(&self) -> IPoint {
+        IPoint {
+            x: &self.top_left.x + self.size.width as i64,
+            y: &self.top_left.y + self.size.height as i64,
         }
     }
 
@@ -67,10 +84,13 @@ impl IRect {
 
     /// Return whether or not the given IPoint is within the given IRectangle
     pub fn contains_point(&self, i_point: &IPoint) -> bool {
+        let dx = max(self.size.width as i64, 1);
+        let dy = max(self.size.height as i64, 1);
+
         !(i_point.x < self.top_left.x
-            || i_point.x > self.top_left.x + self.size.width as i64
+            || i_point.x >= self.top_left.x + dx
             || i_point.y < self.top_left.y
-            || i_point.y > self.top_left.y + self.size.height as i64)
+            || i_point.y >= self.top_left.y + dy)
     }
 
     /// perform the given action on all 4 corners of this rect starting at the
@@ -105,7 +125,7 @@ impl IRect {
     /// of this rect
     pub fn contains_rect(&self, rect: &IRect) -> bool {
         self.contains_point(&rect.top_left)
-            && self.contains_point(&rect.bottom_right())
+            && self.contains_point(&rect.bottom_right_inclusive())
     }
 
     /// Get the intersection between two irects

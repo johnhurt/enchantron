@@ -78,8 +78,8 @@ mod test {
     fn test_performance() {
         let gen = PerlinTerrain1::default();
 
-        let rows = 1000i64;
-        let cols = 1000i64;
+        let rows = 128i64;
+        let cols = 128i64;
 
         let row_start = rows * 3056;
         let col_start = cols * 10573;
@@ -108,6 +108,6 @@ mod test {
             println!("singles {:?}", now.elapsed());
         }
 
-        panic!("To get stdout");
+        //panic!("To get stdout");
     }
 }

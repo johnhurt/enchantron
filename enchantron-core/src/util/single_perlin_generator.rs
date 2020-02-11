@@ -94,8 +94,8 @@ where
 
         result.get_raw_values_mut().iter_mut().enumerate().for_each(
             |(index, coefs)| {
-                let col = index / perlin_rect_count_y;
-                let row = index % perlin_rect_count_y;
+                let row = index / perlin_rect_count_x;
+                let col = index % perlin_rect_count_x;
 
                 let ref g_tl = gradients.get(col, row).unwrap();
                 let ref g_tr = gradients.get(col + 1, row).unwrap();
@@ -266,37 +266,37 @@ where
         let mut coefs: &PerlinGradientCoefs =
             perlin_gradient_coefs.get(0, 0).unwrap();
 
-        let top_most_y = first_perlin_rect.top_left.y;
+        let left_most_x = first_perlin_rect.top_left.x;
 
         let scale = self.scale as i64;
         let scale_minus_one = scale - 1;
         let mut curr_perlin_rect_top_left_x = first_perlin_rect.top_left.x;
         let mut curr_perlin_rect_top_left_y = first_perlin_rect.top_left.y;
-        let mut max_x = &curr_perlin_rect_top_left_x + &scale_minus_one;
-        let mut max_y = &curr_perlin_rect_top_left_y + &scale_minus_one;
+        let mut max_x = curr_perlin_rect_top_left_x + scale_minus_one;
+        let mut max_y = curr_perlin_rect_top_left_y + scale_minus_one;
         let mut idx_x = 0usize;
         let mut idx_y = 0usize;
         let mut dx = 0f64;
         let mut dy = 0f64;
 
         target.for_each_mut(|point, value| {
-            if point.x > max_x {
-                curr_perlin_rect_top_left_x += scale;
-                curr_perlin_rect_top_left_y = top_most_y;
-                idx_x += 1;
-                idx_y = 0;
+            if point.y > max_y {
+                curr_perlin_rect_top_left_x = left_most_x;
+                curr_perlin_rect_top_left_y += scale;
+                idx_x = 0;
+                idx_y += 1;
                 max_x = curr_perlin_rect_top_left_x + scale_minus_one;
                 max_y = curr_perlin_rect_top_left_y + scale_minus_one;
                 coefs = perlin_gradient_coefs.get(idx_x, idx_y).unwrap();
-            } else if point.y < curr_perlin_rect_top_left_y {
-                curr_perlin_rect_top_left_y = top_most_y;
-                idx_y = 0;
-                max_y = curr_perlin_rect_top_left_y + scale_minus_one;
+            } else if point.x < curr_perlin_rect_top_left_x {
+                curr_perlin_rect_top_left_x = left_most_x;
+                idx_x = 0;
+                max_x = curr_perlin_rect_top_left_x + scale_minus_one;
                 coefs = perlin_gradient_coefs.get(idx_x, idx_y).unwrap();
-            } else if point.y > max_y {
-                curr_perlin_rect_top_left_y += scale;
-                idx_y += 1;
-                max_y = curr_perlin_rect_top_left_y + scale_minus_one;
+            } else if point.x > max_x {
+                curr_perlin_rect_top_left_x += scale;
+                idx_x += 1;
+                max_x = curr_perlin_rect_top_left_x + scale_minus_one;
                 coefs = perlin_gradient_coefs.get(idx_x, idx_y).unwrap();
             }
 

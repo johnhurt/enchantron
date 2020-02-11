@@ -42,10 +42,10 @@ impl<T> ValueRect<T> {
 
         let filler_ref = &mut filler;
 
-        (0..values_width).for_each(|v_x| {
-            coord.x = &rect.top_left.x + (v_x * x_stride) as i64;
-            (0..values_height).for_each(|v_y| {
-                coord.y = &rect.top_left.y + (v_y * y_stride) as i64;
+        (0..values_height).for_each(|v_y| {
+            coord.x = &rect.top_left.y + (v_y * y_stride) as i64;
+            (0..values_width).for_each(|v_x| {
+                coord.y = &rect.top_left.x + (v_x * x_stride) as i64;
                 values.push(filler_ref(&coord))
             });
         });
@@ -86,15 +86,23 @@ impl<T> ValueRect<T> {
     }
 
     pub fn get<'a>(&'a self, value_x: usize, value_y: usize) -> Option<&'a T> {
-        self.values.get(value_x * self.values_height + value_y)
+        self.values.get(value_y * self.values_width + value_x)
     }
 
     pub fn map<V>(&self, mapper: impl Fn(&T) -> V) -> ValueRect<V> {
-        let mut values: Vec<V> =
-            Vec::with_capacity(self.values_width * self.values_height);
+        let len = self.values_width * self.values_height;
+        let mut values: Vec<V> = Vec::with_capacity(len);
 
-        for source_val in &self.values {
-            values.push(mapper(&source_val));
+        // Look, Mom. I used unsafe for the first time
+        unsafe {
+            let result_vec_prt = values.as_mut_ptr();
+
+            for source_val in &self.values {
+                result_vec_prt.write(mapper(&source_val));
+                result_vec_prt.add(1);
+            }
+
+            values.set_len(len);
         }
 
         ValueRect {
@@ -116,15 +124,15 @@ impl<T> ValueRect<T> {
     pub fn for_each_mut(&mut self, mut actor: impl FnMut(&IPoint, &mut T)) {
         let mut point = IPoint::default();
         let actor_ref = &mut actor;
-        let values_height = self.values_height;
+        let values_width = self.values_width;
         let x_stride = self.x_stride;
         let y_stride = self.y_stride;
         let top_left_x = self.rect.top_left.x;
         let top_left_y = self.rect.top_left.y;
 
         self.values.iter_mut().enumerate().for_each(|(i, v)| {
-            point.x = ((i / &values_height) * &x_stride) as i64 + &top_left_x;
-            point.y = ((i % &values_height) * &y_stride) as i64 + &top_left_y;
+            point.x = ((i % values_width) * x_stride) as i64 + top_left_x;
+            point.y = ((i / values_width) * y_stride) as i64 + top_left_y;
             actor_ref(&point, v)
         })
     }

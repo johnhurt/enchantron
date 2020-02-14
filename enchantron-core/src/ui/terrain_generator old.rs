@@ -5,7 +5,6 @@ use crate::event::{EventBus, ListenerRegistration, ViewportChange};
 use crate::game::constants;
 use crate::model::{IPoint, IRect, ISize, Point, Rect, Size, UPoint, URect};
 use crate::native::RuntimeResources;
-use crate::ui::ViewportInfo;
 use crate::view_types::ViewTypes;
 
 use super::{
@@ -18,20 +17,6 @@ use tokio::sync::{Mutex, RwLock};
 
 pub const DEFAULT_TILE_SIZE: usize = 32;
 pub const DEFAULT_MARGIN_FRACTION: f64 = 0.1;
-pub const MIN_SPRITE_WIDTH: f64 = 750. / 16.;
-
-/// Get the width of a single sprite in tiles
-fn get_sprite_length_in_tiles(
-    terrain_rect: &IRect,
-    viewport_info: &ViewportInfo,
-) -> usize {
-    let tile_width = f64::min(
-        viewport_info.screen_size.width / terrain_rect.size.width as f64,
-        viewport_info.screen_size.height / terrain_rect.size.height as f64,
-    );
-
-    f64::max(1., MIN_SPRITE_WIDTH / tile_width) as usize
-}
 
 pub struct TerrainGenerator<T>
 where
@@ -95,7 +80,7 @@ where
         event_bus.spawn(async move {
             while let Some(event) = event_stream.next().await {
                 if let Some(arc_self) = weak_self.upgrade() {
-                    arc_self.on_viewport_change(&event.new_viewport).await
+                    arc_self.on_viewport_change(&event.new_viewport_rect).await
                 } else {
                     break;
                 }
@@ -131,9 +116,7 @@ where
     /// 3. if the terrain tiles needs to be altered, increase the size of the
     ///    terrain tiles array and updates
     /// 4. ?
-    async fn on_viewport_change(&self, viewport_info: &ViewportInfo) {
-        let viewport_rect = &viewport_info.viewport_rect;
-
+    async fn on_viewport_change(&self, viewport_rect: &Rect) {
         let terrain_rect_opt = self
             .with_inner(|inner| inner.terrain_updates_required(viewport_rect))
             .await;
@@ -145,7 +128,7 @@ where
 
         let terrain_rect = terrain_rect_opt.unwrap();
 
-        let valid_tile_rect = {
+        let (valid_tile_rect, valied_terrain_rect) = {
             let min_size = &terrain_rect.size;
 
             if self
@@ -163,7 +146,7 @@ where
                 .await
             } else {
                 debug!("Size not increased");
-                let (top_left, new_valid_rect) = self
+                let (top_left, new_valid_rect, valid_terrain_rect) = self
                     .with_inner(|inner| {
                         inner.calculate_new_valid_tiles(&terrain_rect)
                     })
@@ -175,7 +158,7 @@ where
                 })
                 .await;
 
-                new_valid_rect
+                (new_valid_rect, valid_terrain_rect)
             }
         };
 
@@ -312,7 +295,7 @@ where
     fn calculate_new_valid_tiles(
         &self,
         new_terrain_rect: &IRect,
-    ) -> Option<(UPoint, URect)> {
+    ) -> Option<(UPoint, URect, IRect)> {
         self.tile_terrain_coverage
             .intersection(new_terrain_rect)
             .map(|itx_rect| {
@@ -338,7 +321,7 @@ where
 
                 debug!("valid tile area = {}", new_valid_rect.area());
 
-                (new_top_left, new_valid_rect)
+                (new_top_left, new_valid_rect, itx_rect)
             })
     }
 
@@ -427,7 +410,7 @@ where
         &mut self,
         new_terrain_rect: IRect,
         tile_source: impl Fn() -> T,
-    ) -> URect {
+    ) -> (URect, IRect) {
         let min_size = &new_terrain_rect.size;
 
         if !self.check_size_increased(min_size) {
@@ -476,13 +459,13 @@ where
             );
         }
 
-        let (new_top_left, valid_rect) = self
+        let (new_top_left, valid_rect, valid_terrain_rect) = self
             .calculate_new_valid_tiles(&new_terrain_rect)
             .unwrap_or_default();
 
         self.update_terrain_tiles_location(new_terrain_rect, new_top_left);
 
-        valid_rect
+        (valid_rect, valid_terrain_rect)
     }
 
     /// Icnrease the size of all the existing rows in the terrain to the given
@@ -793,26 +776,5 @@ mod tests {
                 .map(|t| t.location.borrow().clone()),
             Some(Point::new(-96., -96.))
         );
-    }
-
-    #[test]
-    fn test_get_tile_size() {
-        let this = default_test_terrain_generator();
-
-        let mut viewport_info = ViewportInfo::new(Size::new(750., 1334.));
-        viewport_info.viewport_rect = Rect::new(0., 0., 750., 1334.);
-
-        let mut terrain_rect =
-            this.viewport_rect_to_terrain_rect(&viewport_info.viewport_rect);
-
-        let mut len = get_sprite_length_in_tiles(&terrain_rect, &viewport_info);
-        assert_eq!(1, len);
-
-        viewport_info.viewport_rect = Rect::new(0., 0., 750. * 2., 1334. * 2.);
-        terrain_rect =
-            this.viewport_rect_to_terrain_rect(&viewport_info.viewport_rect);
-
-        len = get_sprite_length_in_tiles(&terrain_rect, &viewport_info);
-        assert_eq!(2, len);
     }
 }

@@ -1,7 +1,7 @@
 use super::Texture;
 use crate::util::ByteBuffer;
 
-pub trait TextureLoader: 'static {
+pub trait TextureLoader: Send + Sync + Unpin + 'static {
     type T: Texture;
 
     fn load_texture(&self, name: String) -> Self::T;

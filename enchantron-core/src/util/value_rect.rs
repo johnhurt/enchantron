@@ -121,6 +121,18 @@ impl<T> ValueRect<T> {
         &mut self.values
     }
 
+    pub fn for_each_value_coord(&self, mut actor: impl FnMut(&UPoint, &T)) {
+        let mut point = UPoint::default();
+        let actor_ref = &mut actor;
+        let values_width = self.values_width;
+
+        self.values.iter_mut().enumerate().for_each(|(i, v)| {
+            point.x = i % values_width;
+            point.y = i / values_width;
+            actor_ref(&point, v)
+        })
+    }
+
     pub fn for_each_mut(&mut self, mut actor: impl FnMut(&IPoint, &mut T)) {
         let mut point = IPoint::default();
         let actor_ref = &mut actor;

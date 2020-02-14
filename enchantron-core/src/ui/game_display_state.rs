@@ -2,7 +2,7 @@ use std::sync::{Arc, Weak};
 
 use crate::event::EventBus;
 use crate::model::{Point, Rect, Size};
-use crate::native::{RuntimeResources, Texture};
+use crate::native::{RuntimeResources, SystemView, Texture};
 use crate::ui::{
     DragState, SpriteSource, SpriteSourceWrapper, TerrainGenerator,
     TerrainTextureProvider, ViewportInfo,
@@ -29,6 +29,7 @@ where
         event_bus: EventBus,
         sprite_source: SpriteSourceWrapper<T>,
         runtime_resources: Arc<RuntimeResources<T::SystemView>>,
+        system_view: Arc<T::SystemView>,
     ) -> GameDisplayState<T> {
         GameDisplayState {
             sprite_source: sprite_source.clone(),
@@ -39,7 +40,10 @@ where
             terrain_generator: TerrainGenerator::new(
                 event_bus,
                 sprite_source,
-                TerrainTextureProvider::new(runtime_resources),
+                TerrainTextureProvider::new(
+                    runtime_resources,
+                    system_view.get_texture_loader(),
+                ),
             )
             .await,
 

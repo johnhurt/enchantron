@@ -1,8 +1,24 @@
+use std::ops::{Deref, DerefMut};
+
 pub struct ByteBuffer(Vec<u8>);
 
 impl ByteBuffer {
     pub fn new(real: Vec<u8>) -> ByteBuffer {
         ByteBuffer(real)
+    }
+}
+
+impl Deref for ByteBuffer {
+    type Target = Vec<u8>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for ByteBuffer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 

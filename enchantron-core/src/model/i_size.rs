@@ -38,6 +38,10 @@ impl ISize {
         }
     }
 
+    pub fn area(&self) -> usize {
+        self.height * self.width;
+    }
+
     pub fn aspect_ratio(&self) -> usize {
         self.width / self.height
     }

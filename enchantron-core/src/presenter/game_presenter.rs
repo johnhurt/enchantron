@@ -9,13 +9,13 @@ use crate::view::BaseView;
 
 use crate::model::{Point, Rect, Size};
 
-use crate::native::RuntimeResources;
+use crate::native::{RuntimeResources, SystemView};
 
 use crate::ui::{
     DragHandler, DragState, GameDisplayState, HandlerRegistration,
     HasDragHandlers, HasLayoutHandlers, HasMagnifyHandlers, HasMutableLocation,
     HasMutableScale, HasViewport, LayoutHandler, MagnifyHandler, Sprite,
-    SpriteSource, SpriteSourceWrapper,
+    SpriteSource, SpriteSourceWrapper, ViewportInfo,
 };
 
 use tokio::stream::StreamExt;
@@ -43,6 +43,7 @@ where
 {
     view: T::GameView,
     event_bus: EventBus,
+    system_view: Arc<T::SystemView>,
     runtime_resources: Arc<RuntimeResources<T::SystemView>>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
     handler_registrations: Mutex<Vec<Box<dyn HandlerRegistration>>>,
@@ -117,9 +118,9 @@ where
     }
 
     /// Fire a viewport change event to the event bus
-    fn fire_viewport_change_event(&self, viewport_rect: Rect) {
+    fn fire_viewport_change_event(&self, viewport_info: &ViewportInfo) {
         self.event_bus.post(ViewportChange {
-            new_viewport_rect: viewport_rect,
+            new_viewport: viewport_info.clone(),
         });
     }
 
@@ -131,9 +132,7 @@ where
         self.with_display_state_mut(|display_state| {
             let viewport_info = display_state.layout(new_size);
 
-            self.fire_viewport_change_event(
-                viewport_info.viewport_rect.clone(),
-            );
+            self.fire_viewport_change_event(viewport_info);
 
             self.view
                 .get_viewport()
@@ -163,9 +162,7 @@ where
                 magnify_center_screen_point,
             );
 
-            self.fire_viewport_change_event(
-                viewport_info.viewport_rect.clone(),
-            );
+            self.fire_viewport_change_event(viewport_info);
             self.view.get_viewport().set_scale_and_location_point(
                 viewport_info.viewport_scale,
                 &viewport_info.viewport_rect.top_left,
@@ -237,9 +234,7 @@ where
             let new_viewport_info =
                 display_state.move_viewport_by(position_shift);
 
-            self.fire_viewport_change_event(
-                new_viewport_info.viewport_rect.clone(),
-            );
+            self.fire_viewport_change_event(new_viewport_info);
 
             let new_position_ref = &new_viewport_info.viewport_rect.top_left;
 
@@ -272,6 +267,7 @@ where
                     })
             }),
             self.runtime_resources.clone(),
+            self.system_view.clone(),
         )
         .await;
 
@@ -363,13 +359,15 @@ where
         view: T::GameView,
         event_bus: EventBus,
         runtime_resources: Arc<RuntimeResources<T::SystemView>>,
+        system_view: Arc<T::SystemView>,
     ) -> Arc<GamePresenter<T>> {
         view.initialize_pre_bind();
 
         let raw_result = GamePresenter {
             view,
-            event_bus: event_bus,
-            runtime_resources: runtime_resources,
+            event_bus,
+            runtime_resources,
+            system_view,
             listener_registrations: Mutex::new(Vec::new()),
             handler_registrations: Mutex::new(Vec::new()),
 

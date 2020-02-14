@@ -94,6 +94,7 @@ impl ApplicationContext {
                 view,
                 self.event_bus.clone(),
                 self.get_runtime_resources(),
+                self.system_view.clone(),
             ));
     }
 }

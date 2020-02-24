@@ -1,4 +1,4 @@
-use std::ops::{Mul, MulAssign};
+use std::ops::{Div, DivAssign, Mul, MulAssign};
 
 #[derive(Default, Clone, Debug, PartialEq, Eq)]
 pub struct ISize {
@@ -23,6 +23,30 @@ impl Mul<usize> for &ISize {
     }
 }
 
+impl Div<usize> for ISize {
+    type Output = ISize;
+
+    fn div(mut self, rhs: usize) -> ISize {
+        self /= rhs;
+        self
+    }
+}
+
+impl Div<usize> for &ISize {
+    type Output = ISize;
+
+    fn div(self, rhs: usize) -> ISize {
+        self.clone() / rhs
+    }
+}
+
+impl DivAssign<usize> for ISize {
+    fn div_assign(&mut self, rhs: usize) {
+        self.width /= rhs;
+        self.height /= rhs;
+    }
+}
+
 impl MulAssign<usize> for ISize {
     fn mul_assign(&mut self, rhs: usize) {
         self.width *= rhs;
@@ -39,7 +63,7 @@ impl ISize {
     }
 
     pub fn area(&self) -> usize {
-        self.height * self.width;
+        self.height * self.width
     }
 
     pub fn aspect_ratio(&self) -> usize {

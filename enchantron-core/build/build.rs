@@ -7,21 +7,28 @@ extern crate derive_builder;
 #[macro_use]
 extern crate log;
 
-use regex::Regex;
-use serde_json::from_str;
-use simplelog::{CombinedLogger, Config, LevelFilter, TermLogger, WriteLogger};
-use std::fs::{remove_file, File, OpenOptions};
-use std::io::prelude::*;
+use simplelog::{
+    CombinedLogger, Config, LevelFilter, TermLogger, TerminalMode, WriteLogger,
+};
+use std::fs::File;
 use std::panic;
-use std::path::Path;
 
 use gen::*;
 
 mod gen;
 
+#[cfg(test)]
+fn main() {}
+
+#[cfg(not(test))]
 fn main() {
     CombinedLogger::init(vec![
-        TermLogger::new(LevelFilter::Info, Config::default()).unwrap(),
+        TermLogger::new(
+            LevelFilter::Info,
+            Config::default(),
+            TerminalMode::default(),
+        )
+        .unwrap(),
         WriteLogger::new(
             LevelFilter::Info,
             Config::default(),

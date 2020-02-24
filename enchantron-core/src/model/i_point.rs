@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub};
 
 use super::{ISize, Point};
 
@@ -64,6 +64,30 @@ impl MulAssign<i64> for IPoint {
     fn mul_assign(&mut self, rhs: i64) {
         self.x *= rhs;
         self.y *= rhs;
+    }
+}
+
+impl Div<i64> for IPoint {
+    type Output = IPoint;
+
+    fn div(mut self, rhs: i64) -> IPoint {
+        self /= rhs;
+        self
+    }
+}
+
+impl Div<i64> for &IPoint {
+    type Output = IPoint;
+
+    fn div(self, rhs: i64) -> IPoint {
+        self.clone() / rhs
+    }
+}
+
+impl DivAssign<i64> for IPoint {
+    fn div_assign(&mut self, rhs: i64) {
+        self.x /= rhs;
+        self.y /= rhs;
     }
 }
 

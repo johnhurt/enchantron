@@ -126,7 +126,7 @@ impl<T> ValueRect<T> {
         let actor_ref = &mut actor;
         let values_width = self.values_width;
 
-        self.values.iter_mut().enumerate().for_each(|(i, v)| {
+        self.values.iter().enumerate().for_each(|(i, v)| {
             point.x = i % values_width;
             point.y = i / values_width;
             actor_ref(&point, v)

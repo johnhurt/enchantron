@@ -12,7 +12,7 @@ use crate::native::RuntimeResources;
 
 use crate::presenter::{GamePresenter, LoadingPresenter, MainMenuPresenter};
 
-lazy_static! {
+lazy_static::lazy_static! {
     static ref LOGGER_RESULT: Result<(), SetLoggerError> = CombinedLogger::init(
         vec![SimpleLogger::new(LevelFilter::Debug, Config::default())]
     );

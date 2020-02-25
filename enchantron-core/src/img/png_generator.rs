@@ -10,7 +10,7 @@ impl PngGenerator {
             Encoder::new(target, size.width as u32, size.height as u32);
         encoder.set_color(ColorType::RGB);
         encoder.set_depth(BitDepth::Eight);
-        encoder.set_compression(Compression::Fast);
+        //encoder.set_compression(Compression::Fast);
 
         let mut writer = encoder.write_header().unwrap_or_else(|e| {
             error!("Failed to write png header data: {:?}", e);

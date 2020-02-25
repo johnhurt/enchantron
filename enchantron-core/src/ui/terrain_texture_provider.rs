@@ -8,6 +8,9 @@ use crate::view_types::ViewTypes;
 use std::ptr::copy_nonoverlapping;
 use std::sync::Arc;
 
+use std::fs::File;
+use std::io::prelude::*;
+
 const BROWN_BYTES: [u8; 3] = [0x65, 0x43, 0x21];
 const GREEN_BYTES: [u8; 3] = [0x90, 0x33, 0x90];
 
@@ -72,11 +75,11 @@ where
         rect: &IRect,
         texture_size: &ISize,
     ) -> ByteBuffer {
-        let x_tile_pixels = rect.size.width / texture_size.width;
-        let y_tile_pixels = rect.size.height / texture_size.height;
+        let x_tile_pixels = texture_size.width / rect.size.width;
+        let y_tile_pixels = texture_size.height / rect.size.height;
 
-        debug_assert_eq!(x_tile_pixels * texture_size.width, rect.size.width);
-        debug_assert_eq!(y_tile_pixels * texture_size.height, rect.size.height);
+        debug_assert_eq!(x_tile_pixels * rect.size.width, texture_size.width);
+        debug_assert_eq!(y_tile_pixels * rect.size.height, texture_size.height);
 
         let mut data = Vec::<u8>::with_capacity(texture_size.area() * 3);
 
@@ -106,16 +109,34 @@ where
 
         PngGenerator::get_png(data.as_slice(), texture_size, &mut result);
 
-        //self.texture_loader.load_texture_from_png_data(result)
+        // let name =
+        //     format!("/Users/kguthrie/Downloads/img.png", result.len());
+
+        // let mut pos = 0;
+        // let mut buffer = File::create(&name).expect("");
+
+        // while pos < result.len() {
+        //     let bytes_written = buffer.write(&result[pos..]).expect("");
+        //     pos += bytes_written;
+        // }
+
         result
+    }
+
+    pub fn get_texture_for_rect(
+        &self,
+        rect: &IRect,
+        texture_size: &ISize,
+    ) -> T::Texture {
+        self.texture_loader.load_texture_from_png_data(
+            self.get_texture_data_for_rect(rect, texture_size),
+        )
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::fs::File;
-    use std::io::prelude::*;
 
     #[test]
     fn test_generate_texture_data() {

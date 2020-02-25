@@ -1,6 +1,6 @@
 use crate::model::{IRect, ISize};
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Debug)]
 pub struct TerrainUpdateInfo {
     pub zoom_level: usize,
     pub sprite_length_in_tiles: usize,

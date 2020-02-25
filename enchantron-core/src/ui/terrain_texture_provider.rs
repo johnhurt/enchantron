@@ -56,14 +56,14 @@ fn get_texture_data_for_rect(
         let terrain_data = terrain_generator.get_for_rect(rect);
 
         terrain_data.for_each_value_coord(|coord, terrain| {
-            if coord.x == 0 {
-                println!("");
-            }
+            // if coord.x == 0 {
+            //     println!("");
+            // }
 
-            match terrain {
-                TerrainType::Dirt => print!("#"),
-                TerrainType::Grass => print!("O"),
-            }
+            // match terrain {
+            //     TerrainType::Dirt => print!("#"),
+            //     TerrainType::Grass => print!("O"),
+            // }
 
             let curr_ptr = data_ptr.add(
                 3 * x_tile_pixels
@@ -151,14 +151,14 @@ mod test {
             &terrain_generator,
         );
 
-        let name = format!("/Users/kguthrie/Downloads/img.png");
+        // let name = format!("/Users/kguthrie/Downloads/img.png");
 
-        let mut pos = 0;
-        let mut buffer = File::create(&name).expect("");
+        // let mut pos = 0;
+        // let mut buffer = File::create(&name).expect("");
 
-        while pos < result.len() {
-            let bytes_written = buffer.write(&result[pos..]).expect("");
-            pos += bytes_written;
-        }
+        // while pos < result.len() {
+        //     let bytes_written = buffer.write(&result[pos..]).expect("");
+        //     pos += bytes_written;
+        // }
     }
 }

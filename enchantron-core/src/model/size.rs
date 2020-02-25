@@ -1,6 +1,6 @@
 use std::ops::{Mul, MulAssign};
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, PartialEq)]
 pub struct Size {
     pub width: f64,
     pub height: f64,

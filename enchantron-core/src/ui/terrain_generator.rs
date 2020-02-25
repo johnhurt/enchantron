@@ -16,9 +16,17 @@ use super::{
 use tokio::stream::StreamExt;
 use tokio::sync::{Mutex, RwLock};
 
-const UNIT_ZOOM_LEVEL_TILE_LENGTH: usize = 16;
+const UNIT_ZOOM_LEVEL_TILE_LENGTH: usize = 8;
+const UNIT_ZOOM_LEVEL_TILE_LENGTH_F64: f64 = UNIT_ZOOM_LEVEL_TILE_LENGTH as f64;
 const UNIT_ZOOM_LEVEL_SPRITE_WIDTH_IN_TILES: usize = 16;
-const TERRAIN_SPRITE_TEXTURE_WIDTH: usize = 128;
+const TERRAIN_SPRITE_TEXTURE_WIDTH: usize =
+    UNIT_ZOOM_LEVEL_TILE_LENGTH * UNIT_ZOOM_LEVEL_SPRITE_WIDTH_IN_TILES;
+const TERRAIN_SPRITE_TEXTURE_WIDTH_F64: f64 =
+    TERRAIN_SPRITE_TEXTURE_WIDTH as f64;
+const TEXTURE_SIZE: ISize = ISize {
+    width: TERRAIN_SPRITE_TEXTURE_WIDTH,
+    height: TERRAIN_SPRITE_TEXTURE_WIDTH,
+};
 
 /// Get the fractional zoom level for the given viewport and terrain rect
 fn get_fractional_zoom_level(viewport_info: &ViewportInfo) -> f64 {
@@ -93,6 +101,7 @@ where
     sprite_terrain_coverage: IRect,
     top_left_sprite: UPoint,
     zoom_level: usize,
+    sprite_width_in_tiles: usize,
 }
 
 impl<T> TerrainGenerator<T>
@@ -194,7 +203,7 @@ where
             {
                 debug!("Size increased");
                 self.with_inner_mut(|inner| {
-                    inner.increase_size_for(&terrain_update_info, || {
+                    inner.increase_size_for(terrain_update_info, || {
                         let result = self.sprite_source.create_sprite();
                         result.set_z_level(constants::TERRAIN_Z_LEVEL);
                         result
@@ -211,8 +220,8 @@ where
                     .unwrap_or_default();
 
                 self.with_inner_mut(|inner| {
-                    inner.update_terrain_sprites_location(
-                        terrain_update_info.terrain_rect.clone(),
+                    inner.update_terrain_sprite_info(
+                        terrain_update_info,
                         top_left,
                     );
                 })
@@ -222,34 +231,29 @@ where
             }
         };
 
-        let texture_width = UNIT_ZOOM_LEVEL_TILE_LENGTH
-            * terrain_update_info.sprite_length_in_tiles;
-        let texture_size = ISize::new(
-            TERRAIN_SPRITE_TEXTURE_WIDTH,
-            TERRAIN_SPRITE_TEXTURE_WIDTH,
-        );
-
         self.with_inner(|inner| {
+            let sprite_width = inner.sprite_width_in_tiles as f64
+                * UNIT_ZOOM_LEVEL_TILE_LENGTH_F64;
+
             inner.update_terrain_sprites(valid_sprite_rect, |sprite, point| {
                 let texture_terrain_rect = IRect {
                     top_left: point.clone(),
                     size: ISize::new(
-                        terrain_update_info.sprite_length_in_tiles,
-                        terrain_update_info.sprite_length_in_tiles,
+                        inner.sprite_width_in_tiles,
+                        inner.sprite_width_in_tiles,
                     ),
                 };
 
                 info!("sprite rect: {:?}", texture_terrain_rect);
-                info!("sprite size: {:?}", texture_size);
 
                 sprite.set_texture(
                     &self.terrain_texture_provider.get_texture_for_rect(
                         &texture_terrain_rect,
-                        &texture_size,
+                        &TEXTURE_SIZE,
                     ),
                 );
 
-                sprite.set_size(texture_width as f64, texture_width as f64);
+                sprite.set_size(sprite_width, sprite_width);
             });
         })
         .await;
@@ -276,13 +280,14 @@ where
             sprite_terrain_coverage: Default::default(),
             top_left_sprite: Default::default(),
             zoom_level: Default::default(),
+            sprite_width_in_tiles: UNIT_ZOOM_LEVEL_SPRITE_WIDTH_IN_TILES,
         }
     }
 
     /// Get the terrain rect required to cover the given viewport rect based on
     /// the current size of the terrain sprites array.
     fn viewport_rect_to_terrain_rect(&self, viewport_rect: &Rect) -> IRect {
-        let tile_size_f64 = UNIT_ZOOM_LEVEL_TILE_LENGTH as f64;
+        let tile_size_f64 = UNIT_ZOOM_LEVEL_TILE_LENGTH_F64;
 
         let viewport_top_left = &viewport_rect.top_left;
         let viewport_bottom_right = viewport_top_left + &viewport_rect.size;
@@ -501,7 +506,7 @@ where
             let (sprite, terrain_point) =
                 self.get_sprite_at(valid_top_left, &x, &y);
             sprite.set_location_point(
-                &(&terrain_point * UNIT_ZOOM_LEVEL_TILE_LENGTH as f64),
+                &(&terrain_point * UNIT_ZOOM_LEVEL_TILE_LENGTH_F64),
             );
             sprite_updater(sprite, &terrain_point);
         };
@@ -534,20 +539,22 @@ where
     /// Update the information about the terrain sprites that describes which part
     /// of the terrain is being shown and where in the sprite array the top-left
     /// corner is
-    fn update_terrain_sprites_location(
+    fn update_terrain_sprite_info(
         &mut self,
-        new_terrain_rect: IRect,
+        update_info: TerrainUpdateInfo,
         top_left_sprite: UPoint,
     ) {
+        self.zoom_level = update_info.zoom_level;
+        self.sprite_width_in_tiles = update_info.sprite_length_in_tiles;
         self.top_left_sprite = top_left_sprite;
-        self.sprite_terrain_coverage = new_terrain_rect;
+        self.sprite_terrain_coverage = update_info.terrain_rect;
     }
 
     /// Increase the size of the 2d array of terrain sprites to accomodate the
     /// given size
     fn increase_size_for(
         &mut self,
-        terrain_update_info: &TerrainUpdateInfo,
+        terrain_update_info: TerrainUpdateInfo,
         sprite_source: impl Fn() -> T,
     ) -> URect {
         let ref min_sprite_array_size = terrain_update_info.sprite_array_size;
@@ -561,7 +568,6 @@ where
             };
         }
 
-        let tiles_per_sprite = terrain_update_info.sprite_length_in_tiles;
         let ref terrain_rect = terrain_update_info.terrain_rect;
 
         debug!(
@@ -578,38 +584,25 @@ where
             .checked_sub(self.terrain_sprites_size.height)
             .unwrap_or_default();
 
-        let sprite_size_f64 =
-            (UNIT_ZOOM_LEVEL_TILE_LENGTH * tiles_per_sprite) as f64;
-
-        let sprite_source_with_vis_and_size = || {
+        let sprite_source_with_vis = || {
             let result = sprite_source();
-            result.set_size(sprite_size_f64, sprite_size_f64);
             result.set_visible(true);
             result
         };
 
         if width_inc > 0 {
-            self.increase_row_width_by(
-                width_inc,
-                &sprite_source_with_vis_and_size,
-            );
+            self.increase_row_width_by(width_inc, &sprite_source_with_vis);
         }
 
         if height_inc > 0 {
-            self.increase_row_count_by(
-                height_inc,
-                &sprite_source_with_vis_and_size,
-            );
+            self.increase_row_count_by(height_inc, &sprite_source_with_vis);
         }
 
         let (new_top_left, valid_rect) = self
-            .calculate_new_valid_sprites(terrain_update_info)
+            .calculate_new_valid_sprites(&terrain_update_info)
             .unwrap_or_default();
 
-        self.update_terrain_sprites_location(
-            terrain_rect.clone(),
-            new_top_left,
-        );
+        self.update_terrain_sprite_info(terrain_update_info, new_top_left);
 
         valid_rect
     }
@@ -716,7 +709,7 @@ mod tests {
     fn test_terrain_updates_required() {
         let mut this = default_test_terrain_generator();
 
-        let tile_size_f64 = UNIT_ZOOM_LEVEL_TILE_LENGTH as f64;
+        let tile_size_f64 = UNIT_ZOOM_LEVEL_TILE_LENGTH_F64;
 
         let mut new_viewport = ViewportInfo::new(Size::new(
             2. * tile_size_f64,
@@ -777,7 +770,7 @@ mod tests {
             IRect::new(-16, -16, 32, 32)
         );
 
-        this.increase_size_for(&terrain_update_info, Default::default);
+        this.increase_size_for(terrain_update_info, Default::default);
 
         new_viewport.viewport_rect.top_left.x = -2. * tile_size_f64;
         new_viewport.viewport_rect.top_left.y = -2. * tile_size_f64;
@@ -811,7 +804,7 @@ mod tests {
 
         let mut viewport_info = default_viewport();
 
-        let sprite_size_f64 = UNIT_ZOOM_LEVEL_TILE_LENGTH as f64;
+        let sprite_size_f64 = UNIT_ZOOM_LEVEL_TILE_LENGTH_F64;
 
         viewport_info.viewport_rect.top_left.x = -2. * sprite_size_f64;
         viewport_info.viewport_rect.top_left.y = -2. * sprite_size_f64;
@@ -835,7 +828,7 @@ mod tests {
             &terrain_update_info.sprite_array_size
         ));
 
-        this.increase_size_for(&terrain_update_info, Default::default);
+        this.increase_size_for(terrain_update_info, Default::default);
 
         assert_eq!(this.sprite_terrain_coverage, IRect::new(-16, -16, 32, 32));
     }
@@ -846,7 +839,7 @@ mod tests {
 
         let mut viewport_info = default_viewport();
 
-        let sprite_size_f64 = UNIT_ZOOM_LEVEL_TILE_LENGTH as f64;
+        let sprite_size_f64 = UNIT_ZOOM_LEVEL_TILE_LENGTH_F64;
 
         viewport_info.viewport_rect.top_left.x = -2. * sprite_size_f64;
         viewport_info.viewport_rect.top_left.y = -2. * sprite_size_f64;
@@ -870,7 +863,7 @@ mod tests {
             &terrain_update_info.sprite_array_size
         ));
 
-        this.increase_size_for(&terrain_update_info, Default::default);
+        this.increase_size_for(terrain_update_info.clone(), Default::default);
 
         assert_eq!(this.sprite_terrain_coverage, IRect::new(-16, -16, 32, 32));
 
@@ -902,10 +895,7 @@ mod tests {
         assert_eq!(UPoint::new(1, 1), new_top_left);
         assert_eq!(URect::new(0, 0, 1, 1), new_valid_rect);
 
-        this.update_terrain_sprites_location(
-            IRect::new(-32, -32, 32, 32),
-            new_top_left,
-        );
+        this.update_terrain_sprite_info(terrain_update_info, new_top_left);
 
         this.update_terrain_sprites(new_valid_rect, |sprite, _| {
             sprite.updated.inc();
@@ -931,7 +921,7 @@ mod tests {
         assert_eq!(
             this.get_sprite(&UPoint::new(1, 1))
                 .map(|t| t.location.borrow().clone()),
-            Some(Point::new(-512., -512.))
+            Some(Point::new(-256., -256.))
         );
     }
 
@@ -947,5 +937,152 @@ mod tests {
 
         zoom_level = get_fractional_zoom_level(&viewport_info);
         assert_eq!(1., zoom_level);
+    }
+
+    #[test]
+    fn test_increase_size_2() {
+        let mut this = default_test_terrain_generator();
+        let mut viewport = default_viewport();
+
+        viewport.viewport_rect.size = viewport.screen_size.clone();
+
+        let update_info = this.terrain_updates_required(&viewport).unwrap();
+
+        assert_eq!(0, update_info.zoom_level);
+
+        let valid_rect =
+            this.increase_size_for(update_info.clone(), Default::default);
+
+        assert_eq!(URect::default(), valid_rect);
+
+        // this updater increments the number of times a sprite is updated
+        // & writes the terrain location to the sprite location IPoint -> Point
+        let sprite_updater = |sprite: &TestTile, ter_point: &IPoint| {
+            sprite.updated.inc();
+            let mut loc = sprite.location.borrow_mut();
+            loc.x = ter_point.x as f64;
+            loc.y = ter_point.y as f64;
+        };
+
+        this.update_terrain_sprites(valid_rect, sprite_updater);
+
+        assert_eq!(
+            UNIT_ZOOM_LEVEL_SPRITE_WIDTH_IN_TILES,
+            update_info.sprite_length_in_tiles
+        );
+
+        this.terrain_sprites
+            .iter()
+            .enumerate()
+            .for_each(|(y, row)| {
+                row.iter().enumerate().for_each(|(x, s)| {
+                    assert_eq!(1, s.updated.get());
+                    assert_eq!(
+                        Point::new(
+                            (x * update_info.sprite_length_in_tiles) as f64,
+                            (y * update_info.sprite_length_in_tiles) as f64
+                        ),
+                        *s.location.borrow()
+                    );
+                })
+            });
+
+        let unit_sprite_array_size = this.terrain_sprites_size.clone();
+        let zoom_0_terrain_rect = update_info.terrain_rect.clone();
+
+        // now increase the size of the viewport by 1.5
+
+        viewport.viewport_rect.size *= 1.5;
+
+        let update_info = this.terrain_updates_required(&viewport).unwrap();
+
+        assert_eq!(0, update_info.zoom_level);
+
+        let valid_rect =
+            this.increase_size_for(update_info.clone(), Default::default);
+
+        // The array of sprites in the generator grows and pushes the valid
+        // top_left down and to the right
+        let x_shift =
+            update_info.sprite_array_size.width - unit_sprite_array_size.width;
+        let y_shift = update_info.sprite_array_size.height
+            - unit_sprite_array_size.height;
+
+        let sprite_array_width = update_info.sprite_array_size.width;
+        let sprite_array_height = update_info.sprite_array_size.height;
+
+        let expected_valid_rect = URect {
+            top_left: UPoint::new(x_shift, y_shift),
+            size: unit_sprite_array_size,
+        };
+
+        assert_eq!(expected_valid_rect, valid_rect);
+
+        this.update_terrain_sprites(valid_rect, sprite_updater);
+
+        this.terrain_sprites
+            .iter()
+            .enumerate()
+            .for_each(|(raw_y, row)| {
+                row.iter().enumerate().for_each(|(raw_x, s)| {
+                    assert_eq!(1, s.updated.get());
+
+                    let x = (raw_x as i64 - x_shift as i64)
+                        .rem_euclid(sprite_array_width as i64)
+                        as usize;
+                    let y = (raw_y as i64 - y_shift as i64)
+                        .rem_euclid(sprite_array_height as i64)
+                        as usize;
+
+                    assert_eq!(
+                        Point::new(
+                            (x * update_info.sprite_length_in_tiles) as f64,
+                            (y * update_info.sprite_length_in_tiles) as f64
+                        ),
+                        *s.location.borrow()
+                    );
+                })
+            });
+
+        // now increase the size of the viewport again to hit a new zoom level
+
+        viewport.viewport_rect.size *= 2. / 1.5;
+
+        let update_info = this.terrain_updates_required(&viewport).unwrap();
+
+        assert_eq!(1, update_info.zoom_level);
+
+        assert_eq!(
+            &zoom_0_terrain_rect.size * 2,
+            update_info.terrain_rect.size
+        );
+
+        assert!(!this
+            .check_sprite_array_size_increased(&update_info.sprite_array_size));
+
+        assert_eq!(None, this.calculate_new_valid_sprites(&update_info));
+
+        let sprite_array_width = update_info.sprite_array_size.width;
+        let sprite_array_height = update_info.sprite_array_size.height;
+
+        this.update_terrain_sprite_info(update_info.clone(), UPoint::default());
+
+        this.update_terrain_sprites(URect::default(), sprite_updater);
+
+        this.terrain_sprites
+            .iter()
+            .enumerate()
+            .for_each(|(y, row)| {
+                row.iter().enumerate().for_each(|(x, s)| {
+                    assert_eq!(2, s.updated.get());
+                    assert_eq!(
+                        Point::new(
+                            (x * update_info.sprite_length_in_tiles) as f64,
+                            (y * update_info.sprite_length_in_tiles) as f64
+                        ),
+                        *s.location.borrow()
+                    );
+                })
+            });
     }
 }

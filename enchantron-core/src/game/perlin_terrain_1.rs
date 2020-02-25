@@ -110,4 +110,20 @@ mod test {
 
         //panic!("To get stdout");
     }
+
+    #[test]
+    fn test_repeatablity() {
+        let gen = PerlinTerrain1::default();
+        let terrain_rect = IRect::new(0, 0, 4, 4);
+
+        let run_1 = gen.get_for_rect(&terrain_rect);
+
+        for i in 0..1000 {
+            let run_n = gen.get_for_rect(&terrain_rect);
+            if !run_1.eq(&run_n) {
+                println!("Got inconsistency on run {}", i);
+            }
+            assert_eq!(run_1, run_n);
+        }
+    }
 }

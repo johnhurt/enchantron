@@ -70,3 +70,34 @@ impl<H: IPointHasher + Default> HarmonicPerlinGenerator<H> {
         result
     }
 }
+
+#[cfg(test)]
+mod test {
+
+    use super::super::RestrictedXxHasher;
+    use super::*;
+
+    #[test]
+    fn test_repeatablity() {
+        let gen = HarmonicPerlinGenerator::<RestrictedXxHasher>::new(
+            8,
+            IPoint::new(3, 2),
+            2,
+            IPoint::new(-1, 3),
+            16,
+            0,
+        );
+
+        let terrain_rect = IRect::new(0, 0, 1, 1);
+
+        let run_1 = gen.get_rect(&terrain_rect);
+
+        for i in 0..10000 {
+            let run_n = gen.get_rect(&terrain_rect).map(|a| a.clone());
+            if !run_1.eq(&run_n) {
+                println!("Got inconsistency on run {}", i);
+            }
+            assert_eq!(run_1, run_n);
+        }
+    }
+}

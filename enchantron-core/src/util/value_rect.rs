@@ -1,4 +1,5 @@
 use crate::model::{IPoint, IRect, ISize, UPoint};
+use std::cmp::{Eq, PartialEq};
 use std::ops::AddAssign;
 
 /// Representation of a set of values over rectangular region
@@ -95,14 +96,13 @@ impl<T> ValueRect<T> {
 
         // Look, Mom. I used unsafe for the first time
         unsafe {
-            let result_vec_prt = values.as_mut_ptr();
+            let mut result_vec_prt = values.as_mut_ptr();
+            values.set_len(len);
 
             for source_val in &self.values {
                 result_vec_prt.write(mapper(&source_val));
-                result_vec_prt.add(1);
+                result_vec_prt = result_vec_prt.add(1);
             }
-
-            values.set_len(len);
         }
 
         ValueRect {
@@ -194,6 +194,18 @@ where
         };
 
         ValueRect::<T>::new_from_rect_with_defaults(rect, x_stride, y_stride)
+    }
+}
+
+impl<T> PartialEq for ValueRect<T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &ValueRect<T>) -> bool {
+        self.x_stride == other.x_stride
+            && self.y_stride == other.y_stride
+            && self.rect == other.rect
+            && self.values == other.values
     }
 }
 

@@ -137,6 +137,7 @@ mod test {
     use super::*;
     use std::fs::File;
     use std::io::prelude::*;
+    use std::time::{Duration, SystemTime};
 
     #[test]
     fn test_generate_texture_data() {
@@ -145,11 +146,17 @@ mod test {
         let terrain_rect = IRect::new(0, 0, 16, 16);
         let image_size = ISize::new(128, 128);
 
+        let now = SystemTime::now();
+
         let result = get_texture_data_for_rect(
             &terrain_rect,
             &image_size,
             &terrain_generator,
         );
+
+        println!("Terrain texture generation time: {:?}", now.elapsed());
+
+        //panic!("to get stdout");
 
         // let name = format!("/Users/kguthrie/Downloads/img.png");
 

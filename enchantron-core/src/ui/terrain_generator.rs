@@ -16,9 +16,9 @@ use super::{
 use tokio::stream::StreamExt;
 use tokio::sync::{Mutex, RwLock};
 
-const UNIT_ZOOM_LEVEL_TILE_LENGTH: usize = 8;
+const UNIT_ZOOM_LEVEL_TILE_LENGTH: usize = 16;
 const UNIT_ZOOM_LEVEL_TILE_LENGTH_F64: f64 = UNIT_ZOOM_LEVEL_TILE_LENGTH as f64;
-const UNIT_ZOOM_LEVEL_SPRITE_WIDTH_IN_TILES: usize = 16;
+const UNIT_ZOOM_LEVEL_SPRITE_WIDTH_IN_TILES: usize = 8;
 const TERRAIN_SPRITE_TEXTURE_WIDTH: usize =
     UNIT_ZOOM_LEVEL_TILE_LENGTH * UNIT_ZOOM_LEVEL_SPRITE_WIDTH_IN_TILES;
 const TERRAIN_SPRITE_TEXTURE_WIDTH_F64: f64 =
@@ -124,8 +124,8 @@ where
         terrain_texture_provider: TerrainTextureProvider<T>,
     ) -> Arc<TerrainGenerator<T>> {
         let result = Arc::new(TerrainGenerator {
-            sprite_source: sprite_source,
-            terrain_texture_provider: terrain_texture_provider,
+            sprite_source,
+            terrain_texture_provider,
 
             listener_registrations: Default::default(),
 
@@ -236,6 +236,8 @@ where
                 * UNIT_ZOOM_LEVEL_TILE_LENGTH_F64;
 
             inner.update_terrain_sprites(valid_sprite_rect, |sprite, point| {
+                sprite.set_visible(false);
+
                 let texture_terrain_rect = IRect {
                     top_left: point.clone(),
                     size: ISize::new(
@@ -254,6 +256,7 @@ where
                 );
 
                 sprite.set_size(sprite_width, sprite_width);
+                sprite.set_visible(true);
             });
         })
         .await;

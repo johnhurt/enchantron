@@ -6,4 +6,5 @@ pub struct TerrainUpdateInfo {
     pub sprite_length_in_tiles: usize,
     pub terrain_rect: IRect,
     pub sprite_array_size: ISize,
+    pub zoom_level_changed: bool,
 }

@@ -239,6 +239,12 @@ where
             }
         };
 
+        sprites_to_clear.map(|sprites| {
+            sprites.iter().for_each(|sprite_row| {
+                sprite_row.iter().for_each(|s| s.set_z_level(0.0));
+            })
+        });
+
         self.with_inner(|inner| {
             let sprite_width = inner.sprite_width_in_tiles as f64
                 * UNIT_ZOOM_LEVEL_TILE_LENGTH_F64;

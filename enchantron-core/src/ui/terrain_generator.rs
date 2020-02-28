@@ -90,7 +90,7 @@ where
     sprite_source: SpriteSourceWrapper<T>,
     terrain_texture_provider: TerrainTextureProvider<T>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
-    inner: RwLock<Inner<T::Sprite>>,
+    layers: [RwLock::new(Inner::default()); 2]
 }
 
 struct Inner<S>
@@ -99,6 +99,8 @@ where
 {
     terrain_sprites_size: ISize,
     terrain_sprites: Vec<Vec<S>>,
+    background_terrain_sprites_size: ISize,
+    background_terrain_sprites: Vec<Vec<S>>,
     sprite_terrain_coverage: IRect,
     top_left_sprite: UPoint,
     zoom_level: usize,
@@ -127,10 +129,8 @@ where
         let result = Arc::new(TerrainGenerator {
             sprite_source,
             terrain_texture_provider,
-
             listener_registrations: Default::default(),
-
-            inner: RwLock::new(Inner::default()),
+            layers: Default::default()
         });
 
         let weak_self = Arc::downgrade(&result);
@@ -157,20 +157,22 @@ where
 
     /// Run the given action with a read-only reference to the inner terrain
     /// generator
-    async fn with_inner<R>(
+    async fn with_layer<R>(
         &self,
+        layer_index: usize,
         action: impl FnOnce(&Inner<T::Sprite>) -> R,
     ) -> R {
-        action(&(*self.inner.read().await))
+        action(&(*self.layers[layer_index].read().await))
     }
 
     /// Run the given action with a rw reference to the inner terrain
     /// generator
-    async fn with_inner_mut<R>(
+    async fn with_layer_mut<R>(
         &self,
+        layer_index: usize,
         action: impl FnOnce(&mut Inner<T::Sprite>) -> R,
     ) -> R {
-        action(&mut (*self.inner.write().await))
+        action(&mut (*self.layers[layer_index].write().await))
     }
 
     /// Called when the viewport changes to adjust the terrain.  This method
@@ -181,7 +183,7 @@ where
     /// 3. if the terrain sprites needs to be altered, increase the size of the
     ///    terrain sprites array and updates
     /// 4. ?
-    async fn on_viewport_change(&self, viewport_info: &ViewportInfo) {
+    async fn on_viewport_change(&self, layer: uint, viewport_info: &ViewportInfo) {
         let terrain_update_info_opt = self
             .with_inner(|inner| inner.terrain_updates_required(viewport_info))
             .await;
@@ -193,11 +195,9 @@ where
 
         let terrain_update_info = terrain_update_info_opt.unwrap();
 
-        let sprites_to_clear = if terrain_update_info.zoom_level_changed {
-            self.with_inner_mut(|inner| Some(inner.reset_sprite_array()))
+        if terrain_update_info.zoom_level_changed {
+            self.with_inner_mut(|inner| Some(inner.swap_terrains()))
                 .await
-        } else {
-            None
         };
 
         let valid_sprite_rect = {
@@ -295,6 +295,8 @@ where
             terrain_sprites: Default::default(),
             terrain_sprites_size: Default::default(),
             sprite_terrain_coverage: Default::default(),
+            background_terrain_sprites_size: Default::default(),
+            background_terrain_sprites: Default::default(),
             top_left_sprite: Default::default(),
             zoom_level: Default::default(),
             sprite_width_in_tiles: UNIT_ZOOM_LEVEL_SPRITE_WIDTH_IN_TILES,
@@ -321,10 +323,7 @@ where
 
         let size = (bottom_right - &top_left).to_size().expect("bad size");
 
-        IRect {
-            top_left: top_left,
-            size: size,
-        }
+        IRect { top_left, size }
     }
 
     /// Determine if the terrain sprites need updating, and return the new terrain
@@ -404,25 +403,6 @@ where
             sprite_array_size: min_sprite_array_size,
             zoom_level_changed,
         })
-    }
-
-    fn reset_sprite_array(&mut self) -> Vec<Vec<T>> {
-        let mut new_array = Vec::<Vec<T>>::new();
-        std::mem::swap(&mut new_array, &mut self.terrain_sprites);
-        self.terrain_sprites_size = ISize {
-            width: 0,
-            height: 0,
-        };
-        self.sprite_terrain_coverage = IRect {
-            top_left: IPoint { x: 0, y: 0 },
-            size: ISize {
-                width: 0,
-                height: 0,
-            },
-        };
-        self.top_left_sprite = UPoint { x: 0, y: 0 };
-
-        new_array
     }
 
     /// Add the two points together whithin the bounds of the sprite grid system

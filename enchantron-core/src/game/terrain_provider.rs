@@ -4,5 +4,5 @@ use crate::util::ValueRect;
 
 pub trait TerrainProvider {
     fn get_for(&self, position: &IPoint) -> TerrainType;
-    fn get_for_rect(&self, rect: &IRect) -> ValueRect<TerrainType>;
+    fn get_for_rect(&self, rect: &IRect) -> ValueRect<(f64, TerrainType)>;
 }

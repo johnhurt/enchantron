@@ -58,12 +58,12 @@ impl TerrainProvider for PerlinTerrain1 {
         }
     }
 
-    fn get_for_rect(&self, rect: &IRect) -> ValueRect<TerrainType> {
+    fn get_for_rect(&self, rect: &IRect) -> ValueRect<(f64, TerrainType)> {
         self.generator.get_rect(rect).map(|v| {
             if *v < 0. {
-                TerrainType::Dirt
+                (-*v, TerrainType::Dirt)
             } else {
-                TerrainType::Grass
+                (*v, TerrainType::Grass)
             }
         })
     }

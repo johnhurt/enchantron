@@ -145,3 +145,10 @@ private func byteBufferToCGData(_ byteBuffer: ByteBuffer) -> CGDataProvider {
             print("Dropped")
         })!
 }
+
+// Cloning in swift without actually cloning the object, just its reference-
+// counted pointer
+private func clone(_ refToClone: OpaquePointer?) -> OpaquePointer? {
+    let toClone = Unmanaged<AnyObject>.fromOpaque(UnsafeMutableRawPointer(refToClone!)).takeUnretainedValue()
+    return OpaquePointer(Unmanaged.passRetained(toClone).toOpaque())
+}

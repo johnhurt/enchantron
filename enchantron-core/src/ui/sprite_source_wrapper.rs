@@ -5,16 +5,20 @@ use crate::view_types::ViewTypes;
 
 type SpriteSourceFn<S> = dyn Fn() -> S + 'static + Send + Sync;
 
-pub struct SpriteSourceWrapper<T: ViewTypes>(Arc<SpriteSourceFn<T::Sprite>>);
+pub struct SpriteSourceWrapper<T: ViewTypes>(
+    Arc<SpriteSourceFn<T::Sprite>>,
+    Arc<SpriteSourceFn<T::SpriteGroup>>,
+);
 
 impl<T> SpriteSourceWrapper<T>
 where
     T: ViewTypes,
 {
-    pub fn new(
-        source: impl Fn() -> T::Sprite + 'static + Send + Sync,
-    ) -> SpriteSourceWrapper<T> {
-        SpriteSourceWrapper(Arc::new(source))
+    pub fn new(real_source: &impl SpriteSource) -> SpriteSourceWrapper<T> {
+        SpriteSourceWrapper(
+            Arc::new(|| real_source.create_sprite()),
+            Arc::new(|| real_source.create_group()),
+        )
     }
 }
 
@@ -24,9 +28,14 @@ where
 {
     type T = T::Texture;
     type S = T::Sprite;
+    type G = T::SpriteGroup;
 
     fn create_sprite(&self) -> T::Sprite {
         (self.0)()
+    }
+
+    fn create_group(&self) -> T::SpriteGroup {
+        (self.1)()
     }
 }
 
@@ -35,6 +44,6 @@ where
     T: ViewTypes,
 {
     fn clone(&self) -> SpriteSourceWrapper<T> {
-        SpriteSourceWrapper(self.0.clone())
+        SpriteSourceWrapper(self.0.clone(), self.1.clone())
     }
 }

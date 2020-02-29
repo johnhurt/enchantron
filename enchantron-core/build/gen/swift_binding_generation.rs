@@ -718,6 +718,51 @@ lazy_static! {
         .custom_rust_drop_code(Some("crate::ui::Sprite::remove_from_parent(self);"))
         .build().unwrap(),
 
+        TypeDefBuilder::default()
+            .name("SpriteGroup")
+            .rust_owned(false)
+            .impls(vec![
+                ImplDefBuilder::default()
+                    .trait_name("crate::ui::SpriteGroup")
+                    .trait_import(Some("crate::ui"))
+                    // .generics(vec![
+                    //   GenericDefBuilder::default()
+                    //       .symbol(Some("T"))
+                    //       .bound_type("Texture")
+                    //       .build().unwrap()
+                    // ])
+                    .build().unwrap(),
+                ImplDefBuilder::default()
+                    .trait_name("HasMutableZLevel")
+                    .trait_import(Some("crate::ui::HasMutableZLevel"))
+                    .build().unwrap()
+            ])
+            .methods(vec![
+              MethodDefBuilder::default()
+                  .name("set_z_level")
+                  .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("z_level")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap()
+                  ])
+                  .impl_block(Some(ImplBlockDefBuilder::default()
+                      .trait_name("HasMutableZLevel")
+                      .build().unwrap()))
+                  .build().unwrap(),
+            MethodDefBuilder::default()
+                .name("remove_from_parent")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("crate::ui::SpriteSource")
+                    .build().unwrap()))
+                .build().unwrap(),
+
+            ])
+            .custom_rust_drop_code(Some("crate::ui::SpriteGroup::remove_from_parent(self);"))
+            .build().unwrap(),
+
+
+
     // Views
 
     TypeDefBuilder::default()
@@ -1015,6 +1060,10 @@ lazy_static! {
                     GenericDefBuilder::default()
                         .symbol(Some("S"))
                         .bound_type("Sprite")
+                        .build().unwrap(),
+                    GenericDefBuilder::default()
+                        .symbol(Some("G"))
+                        .bound_type("SpriteGroup")
                         .build().unwrap(),
                 ])
                 .build().unwrap(),

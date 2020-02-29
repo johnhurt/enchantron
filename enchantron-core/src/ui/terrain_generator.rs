@@ -16,6 +16,8 @@ use super::{
 use tokio::stream::StreamExt;
 use tokio::sync::{Mutex, RwLock};
 
+const LAYER_COUNT: usize = 2;
+
 const UNIT_ZOOM_LEVEL_TILE_LENGTH: usize = 16;
 const UNIT_ZOOM_LEVEL_TILE_LENGTH_F64: f64 = UNIT_ZOOM_LEVEL_TILE_LENGTH as f64;
 const UNIT_ZOOM_LEVEL_SPRITE_WIDTH_IN_TILES: usize = 8;
@@ -25,7 +27,12 @@ const TEXTURE_SIZE: ISize = ISize {
     width: TERRAIN_SPRITE_TEXTURE_WIDTH,
     height: TERRAIN_SPRITE_TEXTURE_WIDTH,
 };
+
 const ZOOM_LEVEL_BIAS: f64 = 2.;
+const ZOOM_LEVEL_OVERLAP: f64 = 0.25;
+
+const BACKGROUND_Z_LEVEL: f64 = 0.5;
+const FOREGROUND_Z_LEVEL: f64 = 1.0;
 
 /// Get the fractional zoom level for the given viewport and terrain rect
 fn get_fractional_zoom_level(viewport_info: &ViewportInfo) -> f64 {
@@ -37,6 +44,49 @@ fn get_fractional_zoom_level(viewport_info: &ViewportInfo) -> f64 {
     );
 
     f64::max(1., scale * ZOOM_LEVEL_BIAS).log2()
+}
+
+/// Get the min and max fractional zoom levels allowed for the given zoom level
+fn get_min_max_zoom_level(zoom_level: usize) -> (f64, f64) {
+    (
+        zoom_level as f64 - ZOOM_LEVEL_OVERLAP,
+        zoom_level as f64 + 1. + ZOOM_LEVEL_OVERLAP,
+    )
+}
+
+/// Determine if the given layer needs to be updated.  Since each layer only
+/// handles an overlapping region around zoom levels where the mod to the layer
+/// count is the same as the layer index (see diagram below), there are some
+/// fractional zoom levels where each layer does not need to be updated.
+///
+///     Zoom level behavior for 3 levels
+///  ZL 0 -------------- 1 -------------- 2 -------------- 3 ------------- 4 ---
+///  L0 00000000000000000000 --------------------------- 333333333333333333333 -
+///  L1 -------------- 1111111111111111111111 -------------------------- 4444444
+///  L2 ------------------------------- 2222222222222222222222 -----------------
+///
+fn check_layer_needs_update(layer_index: usize, frac_zoom_level: f64) -> bool {
+    debug_assert!(
+        frac_zoom_level >= 0.,
+        "Fractional zoom level has to be non-negative"
+    );
+
+    let layer_count_f64 = LAYER_COUNT as f64;
+    let layer_index_f64 = layer_index as f64;
+
+    let mut closest_layer_below =
+        (frac_zoom_level / layer_count_f64).floor() * layer_count_f64;
+
+    if frac_zoom_level % layer_count_f64 >= layer_index_f64 {
+        closest_layer_below += layer_index_f64;
+    } else {
+        closest_layer_below += (layer_index_f64 - layer_count_f64);
+    }
+
+    let closest_layer_above = closest_layer_below + layer_count_f64 as f64;
+
+    (frac_zoom_level >= closest_layer_above - ZOOM_LEVEL_OVERLAP)
+        || (frac_zoom_level <= closest_layer_below + 1. + ZOOM_LEVEL_OVERLAP)
 }
 
 /// Get the minimum terrain sprite rect needed to cover the given terrain rect
@@ -90,17 +140,16 @@ where
     sprite_source: SpriteSourceWrapper<T>,
     terrain_texture_provider: TerrainTextureProvider<T>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
-    layers: [RwLock::new(Inner::default()); 2]
+    layers: [RwLock<Layer<T::Sprite>>; LAYER_COUNT],
 }
 
-struct Inner<S>
+struct Layer<S>
 where
     S: Sized + HasMutableSize + HasMutableLocation + HasMutableVisibility,
 {
+    layer_index: usize,
     terrain_sprites_size: ISize,
     terrain_sprites: Vec<Vec<S>>,
-    background_terrain_sprites_size: ISize,
-    background_terrain_sprites: Vec<Vec<S>>,
     sprite_terrain_coverage: IRect,
     top_left_sprite: UPoint,
     zoom_level: usize,
@@ -126,33 +175,99 @@ where
         sprite_source: SpriteSourceWrapper<T>,
         terrain_texture_provider: TerrainTextureProvider<T>,
     ) -> Arc<TerrainGenerator<T>> {
-        let result = Arc::new(TerrainGenerator {
+        let mut layers: [RwLock<Layer<T::Sprite>>; LAYER_COUNT] =
+            Default::default();
+
+        for (index, layer_lock) in layers.iter_mut().enumerate() {
+            let ref mut layer = layer_lock.write().await;
+            layer.layer_index = index;
+        }
+
+        let result = TerrainGenerator {
             sprite_source,
             terrain_texture_provider,
             listener_registrations: Default::default(),
-            layers: Default::default()
-        });
+            layers,
+        };
 
-        let weak_self = Arc::downgrade(&result);
+        let arc_result = Arc::new(result);
+
+        // Each layer listens for the viewport to change and responds in its
+        // own async task
+        for layer in 0..LAYER_COUNT {
+            let weak_self = Arc::downgrade(&arc_result);
+
+            let (listener_registration, mut event_stream) =
+                event_bus.register::<ViewportChange>();
+
+            arc_result
+                .add_listener_registration(listener_registration)
+                .await;
+
+            event_bus.spawn(async move {
+                while let Some(event) = event_stream.next().await {
+                    if let Some(arc_self) = weak_self.upgrade() {
+                        arc_self
+                            .on_viewport_change(layer, &event.new_viewport)
+                            .await
+                    } else {
+                        break;
+                    }
+                }
+            });
+        }
+
+        let weak_self = Arc::downgrade(&arc_result);
 
         let (listener_registration, mut event_stream) =
             event_bus.register::<ViewportChange>();
 
-        result
+        arc_result
             .add_listener_registration(listener_registration)
             .await;
 
+        // Handling which layer is in the foreground is handled in a separate
+        // async task
         event_bus.spawn(async move {
+            let mut current_layer: usize;
+            let mut current_zoom = 1usize;
+
             while let Some(event) = event_stream.next().await {
                 if let Some(arc_self) = weak_self.upgrade() {
-                    arc_self.on_viewport_change(&event.new_viewport).await
+                    let (min_zoom, max_zoom) =
+                        get_min_max_zoom_level(current_zoom);
+                    let frac_zoom_level =
+                        get_fractional_zoom_level(&event.new_viewport);
+
+                    if frac_zoom_level < min_zoom || frac_zoom_level > max_zoom
+                    {
+                        let mut new_zoom = frac_zoom_level.floor() as usize;
+
+                        if new_zoom == current_zoom {
+                            new_zoom += 1;
+                        }
+
+                        current_zoom = new_zoom;
+                        current_layer = current_zoom % LAYER_COUNT;
+
+                        for (index, layer) in arc_self.layers.iter().enumerate()
+                        {
+                            layer.read().await.set_z_level(
+                                if index == current_layer {
+                                    FOREGROUND_Z_LEVEL
+                                } else {
+                                    BACKGROUND_Z_LEVEL
+                                },
+                            )
+                        }
+                    }
                 } else {
                     break;
                 }
             }
         });
 
-        result
+        arc_result
     }
 
     /// Run the given action with a read-only reference to the inner terrain
@@ -160,7 +275,7 @@ where
     async fn with_layer<R>(
         &self,
         layer_index: usize,
-        action: impl FnOnce(&Inner<T::Sprite>) -> R,
+        action: impl FnOnce(&Layer<T::Sprite>) -> R,
     ) -> R {
         action(&(*self.layers[layer_index].read().await))
     }
@@ -170,7 +285,7 @@ where
     async fn with_layer_mut<R>(
         &self,
         layer_index: usize,
-        action: impl FnOnce(&mut Inner<T::Sprite>) -> R,
+        action: impl FnOnce(&mut Layer<T::Sprite>) -> R,
     ) -> R {
         action(&mut (*self.layers[layer_index].write().await))
     }
@@ -183,9 +298,15 @@ where
     /// 3. if the terrain sprites needs to be altered, increase the size of the
     ///    terrain sprites array and updates
     /// 4. ?
-    async fn on_viewport_change(&self, layer: uint, viewport_info: &ViewportInfo) {
+    async fn on_viewport_change(
+        &self,
+        layer: usize,
+        viewport_info: &ViewportInfo,
+    ) {
         let terrain_update_info_opt = self
-            .with_inner(|inner| inner.terrain_updates_required(viewport_info))
+            .with_layer(layer, |inner| {
+                inner.terrain_updates_required(layer, viewport_info)
+            })
             .await;
 
         if terrain_update_info_opt.is_none() {
@@ -195,14 +316,9 @@ where
 
         let terrain_update_info = terrain_update_info_opt.unwrap();
 
-        if terrain_update_info.zoom_level_changed {
-            self.with_inner_mut(|inner| Some(inner.swap_terrains()))
-                .await
-        };
-
         let valid_sprite_rect = {
             if self
-                .with_inner(|inner| {
+                .with_layer(layer, |inner| {
                     inner.check_sprite_array_size_increased(
                         &terrain_update_info.sprite_array_size,
                     )
@@ -210,7 +326,7 @@ where
                 .await
             {
                 debug!("Size increased");
-                self.with_inner_mut(|inner| {
+                self.with_layer_mut(layer, |inner| {
                     inner.increase_size_for(terrain_update_info, || {
                         let result = self.sprite_source.create_sprite();
                         result.set_z_level(constants::TERRAIN_Z_LEVEL);
@@ -221,13 +337,13 @@ where
             } else {
                 debug!("Size not increased");
                 let (top_left, new_valid_rect) = self
-                    .with_inner(|inner| {
+                    .with_layer(layer, |inner| {
                         inner.calculate_new_valid_sprites(&terrain_update_info)
                     })
                     .await
                     .unwrap_or_default();
 
-                self.with_inner_mut(|inner| {
+                self.with_layer_mut(layer, |inner| {
                     inner.update_terrain_sprite_info(
                         terrain_update_info,
                         top_left,
@@ -239,13 +355,7 @@ where
             }
         };
 
-        sprites_to_clear.map(|sprites| {
-            sprites.iter().for_each(|sprite_row| {
-                sprite_row.iter().for_each(|s| s.set_z_level(0.0));
-            })
-        });
-
-        self.with_inner(|inner| {
+        self.with_layer(layer, |inner| {
             let sprite_width = inner.sprite_width_in_tiles as f64
                 * UNIT_ZOOM_LEVEL_TILE_LENGTH_F64;
 
@@ -277,31 +387,33 @@ where
     }
 }
 
-impl<T> Default for Inner<T>
+impl<T> Default for Layer<T>
 where
     T: Sized + HasMutableLocation + HasMutableSize + HasMutableVisibility,
 {
-    fn default() -> Inner<T> {
-        Inner::new()
+    fn default() -> Layer<T> {
+        Layer::new()
     }
 }
 
-impl<T> Inner<T>
+impl<T> Layer<T>
 where
     T: Sized + HasMutableLocation + HasMutableSize + HasMutableVisibility,
 {
-    pub fn new() -> Inner<T> {
-        Inner {
+    pub fn new() -> Layer<T> {
+        Layer {
+            layer_index: Default::default(),
             terrain_sprites: Default::default(),
             terrain_sprites_size: Default::default(),
             sprite_terrain_coverage: Default::default(),
-            background_terrain_sprites_size: Default::default(),
-            background_terrain_sprites: Default::default(),
             top_left_sprite: Default::default(),
-            zoom_level: Default::default(),
+            zoom_level: 1,
             sprite_width_in_tiles: UNIT_ZOOM_LEVEL_SPRITE_WIDTH_IN_TILES,
         }
     }
+
+    /// Set the z level for the whole layer
+    fn set_z_level(&self, new_z_level: f64) {}
 
     /// Get the terrain rect required to cover the given viewport rect based on
     /// the current size of the terrain sprites array.
@@ -330,19 +442,30 @@ where
     /// rect, if an update is needed
     fn terrain_updates_required(
         &self,
+        layer_index: usize,
         viewport_info: &ViewportInfo,
     ) -> Option<TerrainUpdateInfo> {
         let ref viewport_rect = viewport_info.viewport_rect;
 
+        let new_fractional_zoom = get_fractional_zoom_level(viewport_info);
+
+        if !check_layer_needs_update(layer_index, new_fractional_zoom) {
+            debug!(
+                "Layer {} not updated at zoom {}",
+                layer_index, new_fractional_zoom
+            );
+            return None;
+        }
+
         let curr_zoom_level = self.zoom_level;
         let curr_zoom_level_f64 = curr_zoom_level as f64;
-        let max_fractional_zoom_level = curr_zoom_level_f64 + 0.6;
-        let min_fractional_zoom_level = curr_zoom_level_f64 - 0.6;
+        let max_fractional_zoom_level =
+            curr_zoom_level_f64 + 1. + ZOOM_LEVEL_OVERLAP;
+        let min_fractional_zoom_level =
+            curr_zoom_level_f64 - ZOOM_LEVEL_OVERLAP;
 
         let mut terrain_rect =
             self.viewport_rect_to_terrain_rect(viewport_rect);
-
-        let new_fractional_zoom = get_fractional_zoom_level(viewport_info);
 
         let new_zoom_level = if new_fractional_zoom > max_fractional_zoom_level
             || new_fractional_zoom < min_fractional_zoom_level
@@ -721,8 +844,8 @@ mod tests {
         }
     }
 
-    fn default_test_terrain_generator() -> Inner<TestTile> {
-        Inner::new()
+    fn default_test_terrain_generator() -> Layer<TestTile> {
+        Layer::new()
     }
 
     fn default_viewport() -> ViewportInfo {
@@ -735,6 +858,26 @@ mod tests {
         let result = get_min_sprite_covering(0, &terrain_rect);
 
         assert_eq!((IRect::new(0, -24, 32, 32), ISize::new(4, 4)), result);
+    }
+
+    #[test]
+    fn test_check_layer_needs_update() {
+        assert_eq!(true, check_layer_needs_update(0, 0.));
+        assert_eq!(true, check_layer_needs_update(1, 1.));
+        assert_eq!(true, check_layer_needs_update(0, 1.));
+
+        assert_eq!(true, check_layer_needs_update(0, 0.5));
+        assert_eq!(true, check_layer_needs_update(0, 1. + ZOOM_LEVEL_OVERLAP));
+        assert_eq!(true, check_layer_needs_update(0, 2.5));
+
+        assert_eq!(true, check_layer_needs_update(1, 1. - ZOOM_LEVEL_OVERLAP));
+        assert_eq!(true, check_layer_needs_update(1, 1.5));
+        assert_eq!(true, check_layer_needs_update(1, 3. - ZOOM_LEVEL_OVERLAP));
+
+        assert_eq!(false, check_layer_needs_update(1, 0.5));
+        assert_eq!(false, check_layer_needs_update(0, 1.5));
+        assert_eq!(false, check_layer_needs_update(1, 2.5));
+        assert_eq!(false, check_layer_needs_update(0, 3.5));
     }
 
     #[test]
@@ -754,7 +897,7 @@ mod tests {
         new_viewport.viewport_rect.top_left.y = -1.5 * tile_size_f64;
 
         let terrain_update_info_opt =
-            this.terrain_updates_required(&new_viewport);
+            this.terrain_updates_required(1, &new_viewport);
 
         assert!(terrain_update_info_opt.is_some());
 
@@ -772,7 +915,7 @@ mod tests {
         new_viewport.viewport_rect.size.height = 3. * tile_size_f64;
 
         let terrain_update_info_opt =
-            this.terrain_updates_required(&new_viewport);
+            this.terrain_updates_required(1, &new_viewport);
 
         assert!(terrain_update_info_opt.is_some());
 
@@ -793,7 +936,7 @@ mod tests {
         new_viewport.viewport_rect.size.height = 4. * tile_size_f64;
 
         let terrain_update_info_opt =
-            this.terrain_updates_required(&new_viewport);
+            this.terrain_updates_required(1, &new_viewport);
 
         assert!(terrain_update_info_opt.is_some());
 
@@ -809,21 +952,21 @@ mod tests {
 
         new_viewport.viewport_rect.top_left.x = -2. * tile_size_f64;
         new_viewport.viewport_rect.top_left.y = -2. * tile_size_f64;
-        new_viewport.viewport_rect.size.width = 2. * tile_size_f64;
-        new_viewport.viewport_rect.size.height = 2. * tile_size_f64;
+        new_viewport.viewport_rect.size.width = 3. * tile_size_f64;
+        new_viewport.viewport_rect.size.height = 3. * tile_size_f64;
 
         let terrain_update_info_opt =
-            this.terrain_updates_required(&new_viewport);
+            this.terrain_updates_required(1, &new_viewport);
 
         assert_eq!(terrain_update_info_opt, None);
 
         new_viewport.viewport_rect.top_left.x = 15. * tile_size_f64;
         new_viewport.viewport_rect.top_left.y = 15. * tile_size_f64;
-        new_viewport.viewport_rect.size.width = 2. * tile_size_f64;
-        new_viewport.viewport_rect.size.height = 2. * tile_size_f64;
+        new_viewport.viewport_rect.size.width = 3. * tile_size_f64;
+        new_viewport.viewport_rect.size.height = 3. * tile_size_f64;
 
         let terrain_update_info_opt =
-            this.terrain_updates_required(&new_viewport);
+            this.terrain_updates_required(1, &new_viewport);
 
         assert!(terrain_update_info_opt.is_some());
 
@@ -850,7 +993,7 @@ mod tests {
         viewport_info.viewport_rect.size.height = 4. * sprite_size_f64;
 
         let terrain_update_info_opt =
-            this.terrain_updates_required(&viewport_info);
+            this.terrain_updates_required(1, &viewport_info);
 
         assert!(terrain_update_info_opt.is_some());
 
@@ -888,7 +1031,7 @@ mod tests {
         viewport_info.viewport_rect.size.height = 4. * sprite_size_f64;
 
         let terrain_update_info_opt =
-            this.terrain_updates_required(&viewport_info);
+            this.terrain_updates_required(1, &viewport_info);
 
         assert!(terrain_update_info_opt.is_some());
 
@@ -998,7 +1141,7 @@ mod tests {
 
         viewport.viewport_rect.size = viewport.screen_size.clone();
 
-        let update_info = this.terrain_updates_required(&viewport).unwrap();
+        let update_info = this.terrain_updates_required(1, &viewport).unwrap();
 
         assert_eq!(1, update_info.zoom_level);
 
@@ -1048,7 +1191,7 @@ mod tests {
 
         viewport.viewport_rect.size *= 1.5;
 
-        let update_info = this.terrain_updates_required(&viewport).unwrap();
+        let update_info = this.terrain_updates_required(1, &viewport).unwrap();
 
         assert_eq!(1, update_info.zoom_level);
 
@@ -1102,16 +1245,11 @@ mod tests {
 
         // now increase the size of the viewport again to hit a new zoom level
 
-        viewport.viewport_rect.size *= 2. / 1.5;
+        viewport.viewport_rect.size *= 2.5 / 1.5;
 
-        let update_info = this.terrain_updates_required(&viewport).unwrap();
+        let update_info = this.terrain_updates_required(0, &viewport).unwrap();
 
         assert_eq!(2, update_info.zoom_level);
-
-        assert_eq!(
-            &zoom_0_terrain_rect.size * 2,
-            update_info.terrain_rect.size
-        );
 
         assert!(!this
             .check_sprite_array_size_increased(&update_info.sprite_array_size));

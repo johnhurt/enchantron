@@ -14,6 +14,7 @@ pub struct RenderableType {
     pub rust_owned: bool,
     pub empty_struct: bool,
     pub impls: Vec<RenderableImplBlock>,
+    pub cloneable: bool,
 }
 
 impl RenderableType {
@@ -23,6 +24,7 @@ impl RenderableType {
             .rust_owned(type_def.rust_owned)
             .empty_struct(type_def.empty_struct)
             .impls(type_def.get_renderable_functions())
+            .cloneable(type_def.cloneable)
             .build()
             .unwrap()
     }

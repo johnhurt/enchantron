@@ -5,12 +5,11 @@ use crate::event::{EventBus, ListenerRegistration, ViewportChange};
 use crate::game::constants;
 use crate::model::{IPoint, IRect, ISize, Rect, UPoint, URect};
 use crate::ui::ViewportInfo;
-use crate::view_types::ViewTypes;
+use crate::view_types::{DynSpriteSource, ViewTypes};
 
 use super::{
     HasMutableLocation, HasMutableSize, HasMutableVisibility, HasMutableZLevel,
-    Sprite, SpriteSource, SpriteSourceWrapper, TerrainTextureProvider,
-    TerrainUpdateInfo,
+    Sprite, SpriteSource, TerrainTextureProvider, TerrainUpdateInfo,
 };
 
 use tokio::stream::StreamExt;
@@ -137,7 +136,7 @@ pub struct TerrainGenerator<T>
 where
     T: ViewTypes,
 {
-    sprite_source: SpriteSourceWrapper<T>,
+    sprite_source: T::DynSpriteSource,
     terrain_texture_provider: TerrainTextureProvider<T>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
     layers: [RwLock<Layer<T::Sprite>>; LAYER_COUNT],
@@ -172,7 +171,7 @@ where
 
     pub async fn new(
         event_bus: EventBus,
-        sprite_source: SpriteSourceWrapper<T>,
+        sprite_source: T::DynSpriteSource,
         terrain_texture_provider: TerrainTextureProvider<T>,
     ) -> Arc<TerrainGenerator<T>> {
         let mut layers: [RwLock<Layer<T::Sprite>>; LAYER_COUNT] =

@@ -3,8 +3,9 @@ use std::collections::HashMap;
 use heck::SnakeCase;
 
 use super::{
-    FieldDef, ImplDef, MethodDef, RenderableArgument, RenderableDataType,
-    RenderableFunctionBuilder, RenderableImplBlock, RenderableImplBlockBuilder,
+    DataType, FieldDef, ImplDef, MethodDef, RenderableArgument,
+    RenderableDataType, RenderableFunctionBuilder, RenderableImplBlock,
+    RenderableImplBlockBuilder, SwiftStructDataType,
 };
 
 #[derive(Serialize, Builder, Clone, Default)]
@@ -102,10 +103,13 @@ impl TypeDef {
             if let Some(impl_block_def) = &method_def.impl_block {
                 result
                     .get_mut(impl_block_def.trait_name)
-                    .expect(&format!(
-                        "Trait {} is not an impl of struct {}",
-                        impl_block_def.trait_name, self.name
-                    ))
+                    .unwrap_or_else(|| {
+                        error!(
+                            "Trait {} is not an impl of struct {}",
+                            impl_block_def.trait_name, self.name
+                        );
+                        panic!();
+                    })
                     .functions
                     .push(method_func);
             } else {
@@ -132,6 +136,30 @@ impl TypeDef {
                             self.custom_rust_drop_code
                                 .map(|code| String::from(code)),
                         )
+                        .build()
+                        .unwrap()])
+                    .build()
+                    .unwrap(),
+            );
+        }
+
+        // Add a clone implementation for cloneable non-rust types
+        if self.cloneable && !self.rust_owned {
+            result.insert(
+                "Clone".to_owned(),
+                RenderableImplBlockBuilder::default()
+                    .trait_name(Some("Clone".to_owned()))
+                    .functions(vec![RenderableFunctionBuilder::default()
+                        .name(
+                            self.name.to_snake_case()
+                                + &String::from("__clone"),
+                        )
+                        .return_type(Some(RenderableDataType::from_raw(
+                            &DataType::swift_struct(self.name, None),
+                        )))
+                        .type_name(String::from(self.name))
+                        .impl_name(Some(String::from("clone")))
+                        .rust_owned(self.rust_owned)
                         .build()
                         .unwrap()])
                     .build()

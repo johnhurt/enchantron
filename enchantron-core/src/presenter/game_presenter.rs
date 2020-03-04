@@ -15,7 +15,7 @@ use crate::ui::{
     DragHandler, DragState, GameDisplayState, HandlerRegistration,
     HasDragHandlers, HasLayoutHandlers, HasMagnifyHandlers, HasMutableLocation,
     HasMutableScale, HasViewport, LayoutHandler, MagnifyHandler, Sprite,
-    SpriteSource, SpriteSourceWrapper, ViewportInfo,
+    SpriteSource, ViewportInfo,
 };
 
 use tokio::stream::StreamExt;
@@ -257,15 +257,7 @@ where
 
         let mut display_state: GameDisplayState<T> = GameDisplayState::new(
             self.event_bus.clone(),
-            SpriteSourceWrapper::new(move || {
-                sprite_source_self
-                    .upgrade()
-                    .map(|p| p.create_sprite())
-                    .unwrap_or_else(|| {
-                        error!("Failed to create sprite");
-                        panic!("Failed to create sprite");
-                    })
-            }),
+            Box::new(self.view.clone()),
             self.runtime_resources.clone(),
             self.system_view.clone(),
         )

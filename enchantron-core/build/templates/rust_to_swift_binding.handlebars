@@ -101,6 +101,7 @@ pub extern "C" fn {{name}}
 {{~/each}}
 
 {{~/if}}
+
 {{~/each}}
 
 // All the structs and impls for types not owned by rust
@@ -139,6 +140,7 @@ impl {{#if trait_name}}{{trait_name}} for {{/if}}{{../name}} {
   {{~/each}}
 }
 {{/each}}
+
 
 {{~/unless}}
 {{~/each}}
@@ -179,6 +181,18 @@ pub extern "C" fn set_{{name}}(binding_fn: extern "C" fn(_self: *mut Opaque_{{ty
 {{~/unless}}
 {{~/each}}
 {{~/each}}
+{{~/each}}
+
+// Render the Dynamic trait types
+
+{{~#each dyn_trait_types}}
+
+{{!-- pub trait Dyn{{trait_name}}Trait : {{trait_path}} {}
+
+pub struct Dyn{{trait_name}} (
+    Box<dyn {{trait_path}}>
+); --}}
+
 {{~/each}}
 
 // Additional stop-gap code

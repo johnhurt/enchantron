@@ -12,15 +12,19 @@ use itertools::Itertools;
 
 use super::data_type::*;
 use super::{
-    ArgumentDefBuilder, FieldDefBuilder, GenericDefBuilder,
-    ImplBlockDefBuilder, ImplDefBuilder, MethodDefBuilder, RenderableContext,
-    RenderableType, RenderableWrappedType, TypeDef, TypeDefBuilder,
-    WrappedTypeDef, WrappedTypeDefBuilder,
+    ArgumentDefBuilder, DynTraitDef, DynTraitDefBuilder, FieldDefBuilder,
+    GenericDefBuilder, ImplBlockDefBuilder, ImplDefBuilder, MethodDefBuilder,
+    RenderableContext, RenderableDynTraitType, RenderableType, TypeDef,
+    TypeDefBuilder,
 };
 
 lazy_static! {
-  static ref WRAPPED_TYPES : Vec<WrappedTypeDef> = vec![
-  ];
+    static ref DYN_TRAIT_TYPES : Vec<DynTraitDef> = vec![
+        DynTraitDefBuilder::default()
+            .trait_name("SpriteSource")
+            .trait_path("crate::ui::SpriteSource")
+            .build().unwrap()
+    ];
 
   #[derive(Serialize)]
   static ref TYPES : Vec<TypeDef> = vec![
@@ -285,6 +289,11 @@ lazy_static! {
                     GenericDefBuilder::default()
                         .symbol(Some("Sprite"))
                         .bound_type("Sprite")
+                        .build().unwrap(),
+
+                    GenericDefBuilder::default()
+                        .symbol(Some("SpriteGroup"))
+                        .bound_type("SpriteGroup")
                         .build().unwrap(),
 
                     GenericDefBuilder::default()
@@ -721,6 +730,7 @@ lazy_static! {
         TypeDefBuilder::default()
             .name("SpriteGroup")
             .rust_owned(false)
+            .cloneable(true)
             .impls(vec![
                 ImplDefBuilder::default()
                     .trait_name("crate::ui::SpriteGroup")
@@ -731,6 +741,24 @@ lazy_static! {
                     //       .bound_type("Texture")
                     //       .build().unwrap()
                     // ])
+                    .build().unwrap(),
+                ImplDefBuilder::default()
+                    .trait_name("crate::ui::SpriteSource")
+                    .trait_import(Some("crate::ui"))
+                    .generics(vec![
+                        GenericDefBuilder::default()
+                            .symbol(Some("T"))
+                            .bound_type("Texture")
+                            .build().unwrap(),
+                        GenericDefBuilder::default()
+                            .symbol(Some("S"))
+                            .bound_type("Sprite")
+                            .build().unwrap(),
+                        GenericDefBuilder::default()
+                            .symbol(Some("G"))
+                            .bound_type("SpriteGroup")
+                            .build().unwrap(),
+                    ])
                     .build().unwrap(),
                 ImplDefBuilder::default()
                     .trait_name("HasMutableZLevel")
@@ -753,8 +781,24 @@ lazy_static! {
             MethodDefBuilder::default()
                 .name("remove_from_parent")
                 .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("crate::ui::SpriteGroup")
+                    .build().unwrap()))
+                .build().unwrap(),
+            MethodDefBuilder::default()
+                .name("create_sprite")
+                .impl_block(Some(ImplBlockDefBuilder::default()
                     .trait_name("crate::ui::SpriteSource")
                     .build().unwrap()))
+                .return_type(Some(DataType::swift_generic(Some("S"),
+                    DataType::swift_struct("Sprite", None))))
+                .build().unwrap(),
+            MethodDefBuilder::default()
+                .name("create_group")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("crate::ui::SpriteSource")
+                    .build().unwrap()))
+                .return_type(Some(DataType::swift_generic(Some("G"),
+                    DataType::swift_struct("SpriteGroup", None))))
                 .build().unwrap(),
 
             ])
@@ -878,6 +922,7 @@ lazy_static! {
     TypeDefBuilder::default()
         .name("GameView")
         .rust_owned(false)
+        .cloneable(true)
         .impls(vec![
             ImplDefBuilder::default()
                 .trait_name("view::GameView")
@@ -893,6 +938,10 @@ lazy_static! {
                     GenericDefBuilder::default()
                         .symbol(Some("S"))
                         .bound_type("Sprite")
+                        .build().unwrap(),
+                    GenericDefBuilder::default()
+                        .symbol(Some("G"))
+                        .bound_type("SpriteGroup")
                         .build().unwrap(),
                 ])
                 .build().unwrap(),
@@ -1014,6 +1063,15 @@ lazy_static! {
                 .build().unwrap(),
 
             MethodDefBuilder::default()
+                .name("create_group")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("crate::ui::SpriteSource")
+                    .build().unwrap()))
+                .return_type(Some(DataType::swift_generic(Some("G"),
+                    DataType::swift_struct("SpriteGroup", None))))
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
                 .name("get_viewport")
                 .impl_block(Some(ImplBlockDefBuilder::default()
                     .trait_name("HasViewport")
@@ -1044,6 +1102,7 @@ lazy_static! {
     TypeDefBuilder::default()
         .name("Viewport")
         .rust_owned(false)
+        .cloneable(true)
         .impls(vec![
             ImplDefBuilder::default()
                 .trait_name("crate::ui::Viewport")
@@ -1092,6 +1151,15 @@ lazy_static! {
                 .return_type(Some(DataType::swift_generic(Some("S"),
                     DataType::swift_struct("Sprite", None))))
                 .build().unwrap(),
+
+            MethodDefBuilder::default()
+            .name("create_group")
+            .impl_block(Some(ImplBlockDefBuilder::default()
+                .trait_name("crate::ui::SpriteSource")
+                .build().unwrap()))
+            .return_type(Some(DataType::swift_generic(Some("G"),
+                DataType::swift_struct("SpriteGroup", None))))
+            .build().unwrap(),
 
           MethodDefBuilder::default()
               .name("set_scale")
@@ -1313,9 +1381,9 @@ pub fn generate() {
         .collect();
 
     info!("Generating Imports");
-    WRAPPED_TYPES
+    DYN_TRAIT_TYPES
         .iter()
-        .flat_map(|t| t.wrapped_type_imports.clone())
+        .flat_map(|t| t.imports.clone())
         .map(String::from)
         .for_each(|i| {
             rust_imports_set.insert(i);
@@ -1327,23 +1395,16 @@ pub fn generate() {
         rust_imports.push(import);
     }
 
-    info!("Building Wrapped Types");
-    let wrapped_types: Vec<RenderableWrappedType> = WRAPPED_TYPES
+    info!("Building Dynamic Trait Types");
+    let dyn_trait_types: Vec<RenderableDynTraitType> = DYN_TRAIT_TYPES
         .iter()
-        .map(RenderableWrappedType::from_def)
+        .map(RenderableDynTraitType::from_def)
         .collect();
-
-    renderable_types.append(
-        &mut wrapped_types
-            .iter()
-            .map(RenderableType::from_wrapped)
-            .collect(),
-    );
 
     let mut renderable_context = RenderableContext {
         types: renderable_types,
-        rust_imports: rust_imports,
-        wrapped_types: wrapped_types,
+        rust_imports,
+        dyn_trait_types: dyn_trait_types,
         c_header_imports: String::default(),
         c_header_body: String::default(),
     };

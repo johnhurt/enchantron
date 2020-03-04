@@ -17,11 +17,15 @@ use gen::*;
 
 mod gen;
 
-#[cfg(test)]
-fn main() {}
-
-#[cfg(not(test))]
 fn main() {
+    // let url = format!("vscode://vadimcn.vscode-lldb/launch/config?{{request:'attach',pid:{}}}", std::process::id());
+    // std::process::Command::new("code")
+    //     .arg("--open-url")
+    //     .arg(url)
+    //     .output()
+    //     .unwrap();
+    // std::thread::sleep_ms(10000);
+
     CombinedLogger::init(vec![
         TermLogger::new(
             LevelFilter::Info,

@@ -4,16 +4,17 @@ use crate::event::EventBus;
 use crate::model::{Point, Rect, Size};
 use crate::native::{RuntimeResources, SystemView, Texture};
 use crate::ui::{
-    DragState, SpriteSource, SpriteSourceWrapper, TerrainGenerator,
-    TerrainTextureProvider, ViewportInfo,
+    DragState, SpriteSource, TerrainGenerator, TerrainTextureProvider,
+    ViewportInfo,
 };
-use crate::view_types::ViewTypes;
+use crate::view::GameView;
+use crate::view_types::{DynSpriteSource, ViewTypes};
 
 pub struct GameDisplayState<T>
 where
     T: ViewTypes,
 {
-    pub sprite_source: SpriteSourceWrapper<T>,
+    pub sprite_source: T::DynSpriteSource,
     pub viewport_info: ViewportInfo,
     pub drag_state: Option<DragState>,
     pub terrain_generator: Arc<TerrainGenerator<T>>,
@@ -27,7 +28,7 @@ where
 {
     pub async fn new(
         event_bus: EventBus,
-        sprite_source: SpriteSourceWrapper<T>,
+        sprite_source: T::DynSpriteSource,
         runtime_resources: Arc<RuntimeResources<T::SystemView>>,
         system_view: Arc<T::SystemView>,
     ) -> GameDisplayState<T> {

@@ -1,10 +1,10 @@
 use super::{Sprite, SpriteGroup};
 use crate::native::Texture;
 
-pub trait SpriteSource: Send + Sync {
+pub trait SpriteSource: Send + Sync + Clone {
     type T: Texture;
     type S: Sprite<T = Self::T>;
-    type G: SpriteGroup;
+    type G: SpriteGroup<T = Self::T, S = Self::S>;
 
     fn create_sprite(&self) -> Self::S;
 

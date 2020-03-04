@@ -5,7 +5,7 @@ use crate::event::{EventBus, ListenerRegistration, ViewportChange};
 use crate::game::constants;
 use crate::model::{IPoint, IRect, ISize, Rect, UPoint, URect};
 use crate::ui::ViewportInfo;
-use crate::view_types::{DynSpriteSource, ViewTypes};
+use crate::view_types::ViewTypes;
 
 use super::{
     HasMutableLocation, HasMutableSize, HasMutableVisibility, HasMutableZLevel,
@@ -136,10 +136,10 @@ pub struct TerrainGenerator<T>
 where
     T: ViewTypes,
 {
-    sprite_source: T::DynSpriteSource,
     terrain_texture_provider: TerrainTextureProvider<T>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
     layers: [RwLock<Layer<T::Sprite>>; LAYER_COUNT],
+    layer_sprites: Vec<T::SpriteGroup>,
 }
 
 struct Layer<S>
@@ -171,7 +171,11 @@ where
 
     pub async fn new(
         event_bus: EventBus,
-        sprite_source: T::DynSpriteSource,
+        sprite_source: &impl SpriteSource<
+            T = T::Texture,
+            S = T::Sprite,
+            G = T::SpriteGroup,
+        >,
         terrain_texture_provider: TerrainTextureProvider<T>,
     ) -> Arc<TerrainGenerator<T>> {
         let mut layers: [RwLock<Layer<T::Sprite>>; LAYER_COUNT] =
@@ -182,11 +186,18 @@ where
             layer.layer_index = index;
         }
 
+        let mut layer_sprites =
+            Vec::<T::SpriteGroup>::with_capacity(LAYER_COUNT);
+
+        for _ in 0..LAYER_COUNT {
+            layer_sprites.push(sprite_source.create_group());
+        }
+
         let result = TerrainGenerator {
-            sprite_source,
             terrain_texture_provider,
             listener_registrations: Default::default(),
             layers,
+            layer_sprites,
         };
 
         let arc_result = Arc::new(result);
@@ -249,16 +260,17 @@ where
                         current_zoom = new_zoom;
                         current_layer = current_zoom % LAYER_COUNT;
 
-                        for (index, layer) in arc_self.layers.iter().enumerate()
-                        {
-                            layer.read().await.set_z_level(
-                                if index == current_layer {
-                                    FOREGROUND_Z_LEVEL
-                                } else {
-                                    BACKGROUND_Z_LEVEL
-                                },
-                            )
-                        }
+                        arc_self.layer_sprites.iter().enumerate().for_each(
+                            |(index, sprite_group)| {
+                                sprite_group.set_z_level(
+                                    if index == current_layer {
+                                        FOREGROUND_Z_LEVEL
+                                    } else {
+                                        BACKGROUND_Z_LEVEL
+                                    },
+                                );
+                            },
+                        );
                     }
                 } else {
                     break;
@@ -327,7 +339,11 @@ where
                 debug!("Size increased");
                 self.with_layer_mut(layer, |inner| {
                     inner.increase_size_for(terrain_update_info, || {
-                        let result = self.sprite_source.create_sprite();
+                        let result = self
+                            .layer_sprites
+                            .get(layer)
+                            .unwrap()
+                            .create_sprite();
                         result.set_z_level(constants::TERRAIN_Z_LEVEL);
                         result
                     })

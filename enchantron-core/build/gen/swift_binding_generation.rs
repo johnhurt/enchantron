@@ -12,19 +12,12 @@ use itertools::Itertools;
 
 use super::data_type::*;
 use super::{
-    ArgumentDefBuilder, DynTraitDef, DynTraitDefBuilder, FieldDefBuilder,
-    GenericDefBuilder, ImplBlockDefBuilder, ImplDefBuilder, MethodDefBuilder,
-    RenderableContext, RenderableDynTraitType, RenderableType, TypeDef,
-    TypeDefBuilder,
+    ArgumentDefBuilder, FieldDefBuilder, GenericDefBuilder,
+    ImplBlockDefBuilder, ImplDefBuilder, MethodDefBuilder, RenderableContext,
+    RenderableType, TypeDef, TypeDefBuilder,
 };
 
 lazy_static! {
-    static ref DYN_TRAIT_TYPES : Vec<DynTraitDef> = vec![
-        DynTraitDefBuilder::default()
-            .trait_name("SpriteSource")
-            .trait_path("crate::ui::SpriteSource")
-            .build().unwrap()
-    ];
 
   #[derive(Serialize)]
   static ref TYPES : Vec<TypeDef> = vec![
@@ -730,17 +723,10 @@ lazy_static! {
         TypeDefBuilder::default()
             .name("SpriteGroup")
             .rust_owned(false)
-            .cloneable(true)
             .impls(vec![
                 ImplDefBuilder::default()
                     .trait_name("crate::ui::SpriteGroup")
                     .trait_import(Some("crate::ui"))
-                    // .generics(vec![
-                    //   GenericDefBuilder::default()
-                    //       .symbol(Some("T"))
-                    //       .bound_type("Texture")
-                    //       .build().unwrap()
-                    // ])
                     .build().unwrap(),
                 ImplDefBuilder::default()
                     .trait_name("crate::ui::SpriteSource")
@@ -763,6 +749,10 @@ lazy_static! {
                 ImplDefBuilder::default()
                     .trait_name("HasMutableZLevel")
                     .trait_import(Some("crate::ui::HasMutableZLevel"))
+                    .build().unwrap(),
+                ImplDefBuilder::default()
+                    .trait_name("HasMutableVisibility")
+                    .trait_import(Some("crate::ui::HasMutableVisibility"))
                     .build().unwrap()
             ])
             .methods(vec![
@@ -778,6 +768,18 @@ lazy_static! {
                       .trait_name("HasMutableZLevel")
                       .build().unwrap()))
                   .build().unwrap(),
+                MethodDefBuilder::default()
+                    .name("set_visible")
+                    .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("visible")
+                        .data_type(BOOLEAN.clone())
+                        .build().unwrap()
+                    ])
+                    .impl_block(Some(ImplBlockDefBuilder::default()
+                        .trait_name("HasMutableVisibility")
+                        .build().unwrap()))
+                    .build().unwrap(),
             MethodDefBuilder::default()
                 .name("remove_from_parent")
                 .impl_block(Some(ImplBlockDefBuilder::default()
@@ -922,7 +924,6 @@ lazy_static! {
     TypeDefBuilder::default()
         .name("GameView")
         .rust_owned(false)
-        .cloneable(true)
         .impls(vec![
             ImplDefBuilder::default()
                 .trait_name("view::GameView")
@@ -1102,7 +1103,6 @@ lazy_static! {
     TypeDefBuilder::default()
         .name("Viewport")
         .rust_owned(false)
-        .cloneable(true)
         .impls(vec![
             ImplDefBuilder::default()
                 .trait_name("crate::ui::Viewport")
@@ -1381,13 +1381,6 @@ pub fn generate() {
         .collect();
 
     info!("Generating Imports");
-    DYN_TRAIT_TYPES
-        .iter()
-        .flat_map(|t| t.imports.clone())
-        .map(String::from)
-        .for_each(|i| {
-            rust_imports_set.insert(i);
-        });
 
     let mut rust_imports: Vec<String> = Vec::new();
 
@@ -1395,16 +1388,9 @@ pub fn generate() {
         rust_imports.push(import);
     }
 
-    info!("Building Dynamic Trait Types");
-    let dyn_trait_types: Vec<RenderableDynTraitType> = DYN_TRAIT_TYPES
-        .iter()
-        .map(RenderableDynTraitType::from_def)
-        .collect();
-
     let mut renderable_context = RenderableContext {
         types: renderable_types,
         rust_imports,
-        dyn_trait_types: dyn_trait_types,
         c_header_imports: String::default(),
         c_header_body: String::default(),
     };

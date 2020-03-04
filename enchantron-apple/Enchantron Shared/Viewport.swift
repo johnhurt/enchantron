@@ -114,4 +114,8 @@ extension Viewport : SpriteSource {
     func createSprite() -> Sprite {
         return createSpriteOn(parent: self.container)
     }
+    
+    func createGroup() -> SpriteGroup {
+        return createGroupOn(parent: self.container)
+    }
 }

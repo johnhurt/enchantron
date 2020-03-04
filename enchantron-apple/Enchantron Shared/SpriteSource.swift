@@ -9,7 +9,8 @@
 import SpriteKit
 
 protocol SpriteSource {
-  func createSprite() -> Sprite
+    func createSprite() -> Sprite
+    func createGroup() -> SpriteGroup
 }
 
 func createSpriteOn(parent : SKNode) -> Sprite {
@@ -28,5 +29,23 @@ func createSpriteOn(parent : SKNode) -> Sprite {
     }
     
     return sprite
+}
+
+func createGroupOn(parent: SKNode) -> SpriteGroup {
+    let group = SpriteGroup()
+    
+    let onMain : () -> () = {
+        group.zPosition = 0.0
+        parent.addChild(group)
+    }
+    
+    if Thread.isMainThread {
+        onMain()
+    }
+    else {
+        DispatchQueue.main.sync { onMain() }
+    }
+    
+    return group
 }
 

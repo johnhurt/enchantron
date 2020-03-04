@@ -8,13 +8,12 @@ use crate::ui::{
     ViewportInfo,
 };
 use crate::view::GameView;
-use crate::view_types::{DynSpriteSource, ViewTypes};
+use crate::view_types::ViewTypes;
 
 pub struct GameDisplayState<T>
 where
     T: ViewTypes,
 {
-    pub sprite_source: T::DynSpriteSource,
     pub viewport_info: ViewportInfo,
     pub drag_state: Option<DragState>,
     pub terrain_generator: Arc<TerrainGenerator<T>>,
@@ -28,13 +27,15 @@ where
 {
     pub async fn new(
         event_bus: EventBus,
-        sprite_source: T::DynSpriteSource,
+        sprite_source: &impl SpriteSource<
+            T = T::Texture,
+            S = T::Sprite,
+            G = T::SpriteGroup,
+        >,
         runtime_resources: Arc<RuntimeResources<T::SystemView>>,
         system_view: Arc<T::SystemView>,
     ) -> GameDisplayState<T> {
         GameDisplayState {
-            sprite_source: sprite_source.clone(),
-
             viewport_info: Default::default(),
 
             drag_state: Default::default(),

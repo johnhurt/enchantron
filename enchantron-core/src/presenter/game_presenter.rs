@@ -253,11 +253,9 @@ where
 
     /// Initialize the display state with the initial game state
     async fn initialize_game_state(&self) {
-        let sprite_source_self = self.weak_self().await;
-
         let mut display_state: GameDisplayState<T> = GameDisplayState::new(
             self.event_bus.clone(),
-            Box::new(self.view.clone()),
+            &self.view,
             self.runtime_resources.clone(),
             self.system_view.clone(),
         )

@@ -28,6 +28,10 @@ extension GameView : SpriteSource {
     func createSprite() -> Sprite {
         return createSpriteOn(parent: self)
     }
+    
+    func createGroup() -> SpriteGroup {
+        return createGroupOn(parent: self)
+    }
 }
 
 

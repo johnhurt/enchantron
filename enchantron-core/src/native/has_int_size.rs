@@ -1,4 +1,3 @@
-#[cfg_attr(test, automock)]
 pub trait HasIntSize {
     fn get_width(&self) -> i64;
     fn get_height(&self) -> i64;

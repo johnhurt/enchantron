@@ -3,13 +3,6 @@ extern crate log;
 #[macro_use]
 extern crate getset;
 
-cfg_if::cfg_if! {
-    if #[cfg(test)] {
-        #[macro_use]
-        extern crate mockall;
-    }
-}
-
 pub use self::lib_gen::*;
 
 mod util;

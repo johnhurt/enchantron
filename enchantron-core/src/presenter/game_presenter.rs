@@ -12,10 +12,10 @@ use crate::model::{Point, Rect, Size};
 use crate::native::{RuntimeResources, SystemView};
 
 use crate::ui::{
-    DragHandler, DragState, GameDisplayState, HandlerRegistration,
-    HasDragHandlers, HasLayoutHandlers, HasMagnifyHandlers, HasMutableLocation,
-    HasMutableScale, HasViewport, LayoutHandler, MagnifyHandler, Sprite,
-    SpriteSource, ViewportInfo,
+    DragEventType, DragState, GameDisplayState, HandlerRegistration,
+    HasLayoutHandlers, HasMagnifyHandlers, HasMultiDragHandlers,
+    HasMutableLocation, HasMutableScale, HasViewport, LayoutHandler,
+    MagnifyHandler, MultiDragHandler, Sprite, SpriteSource, ViewportInfo,
 };
 
 use tokio::stream::StreamExt;
@@ -171,7 +171,7 @@ where
         .await;
     }
 
-    async fn on_drag(&self, drag_event: Drag) {
+    async fn on_drag(&self, drag_event: DragEvent) {
         match drag_event.state {
             DragEventType::Start => self.on_drag_start(drag_event).await,
             DragEventType::Move => self.on_drag_move(drag_event).await,
@@ -281,41 +281,13 @@ where
         )))
         .await;
 
-        let result_drag_start = self.weak_self().await;
-        let result_drag_move = self.weak_self().await;
-        let result_drag_end = self.weak_self().await;
+        let drag_presenter = self.weak_self().await;
 
-        self.add_handler_registration(Box::new(self.view.add_drag_handler(
-            create_drag_handler!(
-                on_drag_start(wx, wy, lx, ly) {
-                    result_drag_start.upgrade().map(|p| {
-                        p.event_bus.post(Drag {
-                            state: DragEventType::Start,
-                            global_point: Point { x: wx, y: wy },
-                            local_point: Point { x: lx, y: ly }
-                        });
-                    });
-                },
-                on_drag_move(wx, wy, lx, ly) {
-                    result_drag_move.upgrade().map(|p| {
-                        p.event_bus.post(Drag {
-                            state: DragEventType::Move,
-                            global_point: Point { x: wx, y: wy },
-                            local_point: Point { x: lx, y: ly }
-                        });
-                    });
-                },
-                on_drag_end(wx, wy, lx, ly) {
-                    result_drag_end.upgrade().map(|p| {
-                        p.event_bus.post(Drag {
-                            state: DragEventType::End,
-                            global_point: Point { x: wx, y: wy },
-                            local_point: Point { x: lx, y: ly }
-                        });
-                    });
-                }
-            ),
-        )))
+        self.add_handler_registration(Box::new(
+            self.view.add_multi_drag_handler(MultiDragHandler::new(
+                |drag_event| copied_event_bus.post(drag_event),
+            )),
+        ))
         .await;
 
         let result_for_magnify = self.weak_self().await;
@@ -336,7 +308,7 @@ where
 
         handle_event!(Layout => self.on_layout);
 
-        handle_event!(Drag => self.on_drag);
+        handle_event!(DragEvent => self.on_drag);
 
         handle_event!(Magnify => self.on_magnify);
     }

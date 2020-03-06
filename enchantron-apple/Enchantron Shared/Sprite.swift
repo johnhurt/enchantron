@@ -59,9 +59,7 @@ class Sprite : SKSpriteNode {
             run(resize)
         }
         else {
-            DispatchQueue.main.async {
-                self.size = CGSize(width: width, height: height)
-            }
+            self.size = CGSize(width: width, height: height)
         }
         
     }
@@ -77,9 +75,7 @@ class Sprite : SKSpriteNode {
             run(move)
         }
         else {
-            DispatchQueue.main.async {
-                self.position = CGPoint(x: left, y: -top)
-            }
+            self.position = CGPoint(x: left, y: -top)
         }
     }
     

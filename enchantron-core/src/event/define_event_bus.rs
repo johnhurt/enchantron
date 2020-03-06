@@ -188,7 +188,7 @@ macro_rules! define_event_bus {
 
         $(
 
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, derive_new::new)]
         pub struct $e $body
 
         )*

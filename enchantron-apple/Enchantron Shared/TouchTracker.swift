@@ -256,7 +256,7 @@ class TouchTracker {
         self.syntheticTouch?.windowPoint.x -= deltaX
         self.syntheticTouch?.windowPoint.y -= deltaY
         
-        self.moveDrag(syntheticTouch!)
+        //self.moveDrag(syntheticTouch!)
         self.magnify(Double(scaleChange))
         
     }

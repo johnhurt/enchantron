@@ -1,12 +1,5 @@
 use crate::model::{Point, Rect};
-use crate::ui::ViewportInfo;
-
-#[derive(Clone, Debug)]
-pub enum DragEventType {
-    Start,
-    Move,
-    End,
-}
+use crate::ui::{DragEventType, DragPoint, ViewportInfo};
 
 define_event_bus!(
     EventBus,
@@ -17,10 +10,10 @@ define_event_bus!(
         pub height: i64,
     },
     ViewportChange{ pub new_viewport: ViewportInfo },
-    Drag{
+    DragEvent{
         pub state: DragEventType,
-        pub global_point: Point,
-        pub local_point: Point,
+        pub drag_point_1: DragPoint,
+        pub drag_point_2_opt: Option<DragPoint>
     },
     Magnify{
         pub scale_change_additive: f64,

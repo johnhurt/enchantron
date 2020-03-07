@@ -12,10 +12,11 @@ use crate::model::{Point, Rect, Size};
 use crate::native::{RuntimeResources, SystemView};
 
 use crate::ui::{
-    DragEventType, DragState, GameDisplayState, HandlerRegistration,
-    HasLayoutHandlers, HasMagnifyHandlers, HasMultiDragHandlers,
-    HasMutableLocation, HasMutableScale, HasViewport, LayoutHandler,
-    MagnifyHandler, MultiDragHandler, Sprite, SpriteSource, ViewportInfo,
+    DragEventType, DragState, DragTrackerEvent::*, GameDisplayState,
+    HandlerRegistration, HasLayoutHandlers, HasMagnifyHandlers,
+    HasMultiDragHandlers, HasMutableLocation, HasMutableScale, HasViewport,
+    LayoutHandler, MagnifyHandler, MultiDragHandler, Sprite, SpriteSource,
+    ViewportInfo,
 };
 
 use tokio::stream::StreamExt;
@@ -87,22 +88,24 @@ where
     ///
     /// Run an action with a read lock on the game display state
     ///
-    async fn with_display_state(
+    async fn with_display_state<R>(
         &self,
-        action: impl FnOnce(&GameDisplayState<T>),
-    ) {
+        action: impl FnOnce(&GameDisplayState<T>) -> R,
+    ) -> R {
         if let Some(display_state) = self.display_state.read().await.as_ref() {
             action(display_state)
+        } else {
+            panic!("Failed to get display state");
         }
     }
 
     ///
     /// Run an action with a write lock on the game display state
     ///
-    async fn with_display_state_mut(
+    async fn with_display_state_mut<R>(
         &self,
-        action: impl FnOnce(&mut GameDisplayState<T>),
-    ) {
+        action: impl FnOnce(&mut GameDisplayState<T>) -> R,
+    ) -> R {
         let ref mut display_state_lock = self.display_state.write().await;
 
         let display_state = display_state_lock.as_mut().unwrap_or_else(|| {
@@ -110,7 +113,7 @@ where
             panic!("No Game State created yet");
         });
 
-        action(display_state);
+        action(display_state)
     }
 
     async fn add_handler_registration(&self, hr: Box<dyn HandlerRegistration>) {
@@ -172,64 +175,26 @@ where
     }
 
     async fn on_drag(&self, drag_event: DragEvent) {
-        match drag_event.state {
-            DragEventType::Start => self.on_drag_start(drag_event).await,
-            DragEventType::Move => self.on_drag_move(drag_event).await,
-            DragEventType::End => self.on_drag_end(drag_event).await,
+        let drag_tracker_event = self
+            .with_display_state_mut(|display_state| {
+                display_state.drag_tracker.on_drag_event(drag_event)
+            })
+            .await;
+
+        match drag_tracker_event {
+            Some(Move(drag_move)) => self.on_drag_move(drag_move).await,
+            Some(MoveAndScale(drag_move, scale)) => {
+                self.on_drag_move_and_scale(drag_move, scale).await
+            }
+            _ => (),
         }
     }
 
-    async fn on_drag_start(&self, drag_start_event: Drag) {
-        let Drag {
-            state: _,
-            global_point: drag_point,
-            local_point: _,
-        } = drag_start_event;
-
-        debug!("Drag started {:?}", drag_point);
-
-        self.with_display_state_mut(|display_state| {
-            display_state.drag_state =
-                Option::Some(DragState::new(drag_point.clone()));
-        })
-        .await;
-    }
-
-    async fn on_drag_move(&self, drag_move_event: Drag) {
-        let Drag {
-            state: _,
-            global_point:
-                Point {
-                    x: drag_x,
-                    y: drag_y,
-                },
-            local_point: _,
-        } = drag_move_event;
-
-        debug!("Drag moved ({}, {})", drag_x, drag_y);
-
+    async fn on_drag_move(&self, drag_move: Point) {
         self.with_display_state_mut(|display_state| {
             let scale = display_state.get_viewport_scale();
 
-            let position_shift = if let Some(mut drag_state) =
-                display_state.drag_state.as_mut()
-            {
-                let screen_coord_delta = Point::new(
-                    drag_state.last_drag_point.x - drag_x,
-                    drag_state.last_drag_point.y - drag_y,
-                );
-
-                drag_state.last_drag_point.x = drag_x;
-                drag_state.last_drag_point.y = drag_y;
-
-                Point::new(
-                    screen_coord_delta.x * scale,
-                    screen_coord_delta.y * scale,
-                )
-            } else {
-                error!("Invalid drag state found");
-                panic!("Invalid drag state found");
-            };
+            let position_shift = drag_move * scale;
 
             let new_viewport_info =
                 display_state.move_viewport_by(position_shift);
@@ -245,10 +210,24 @@ where
         .await;
     }
 
-    async fn on_drag_end(&self, _: Drag) {
-        debug!("Drag ended");
-        self.with_display_state_mut(|ds| ds.drag_state = Option::None)
-            .await;
+    async fn on_drag_move_and_scale(&self, drag_move: Point, new_scale: f64) {
+        self.with_display_state_mut(|display_state| {
+            let scale = display_state.get_viewport_scale();
+
+            let position_shift = drag_move * scale;
+
+            let new_viewport_info =
+                display_state.move_viewport_by(position_shift);
+
+            self.fire_viewport_change_event(new_viewport_info);
+
+            let new_position_ref = &new_viewport_info.viewport_rect.top_left;
+
+            self.view
+                .get_viewport()
+                .set_location(new_position_ref.x, new_position_ref.y);
+        })
+        .await;
     }
 
     /// Initialize the display state with the initial game state
@@ -281,11 +260,11 @@ where
         )))
         .await;
 
-        let drag_presenter = self.weak_self().await;
+        let copied_event_bus = self.event_bus.clone();
 
         self.add_handler_registration(Box::new(
             self.view.add_multi_drag_handler(MultiDragHandler::new(
-                |drag_event| copied_event_bus.post(drag_event),
+                move |drag_event| copied_event_bus.post(drag_event),
             )),
         ))
         .await;

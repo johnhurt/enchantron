@@ -249,6 +249,268 @@ lazy_static! {
         ])
         .build().unwrap(),
 
+        TypeDefBuilder::default()
+        .name("MultiDragHandler")
+        .rust_import(Some("crate::ui::MultiDragHandler"))
+        .rust_owned(true)
+        .methods(vec![
+            MethodDefBuilder::default()
+                .name("on_one_drag_start")
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("drag_id")
+                        .data_type(LONG.clone())
+                        .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("global_x")
+                      .data_type(DOUBLE.clone())
+                      .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("global_y")
+                      .data_type(DOUBLE.clone())
+                      .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("local_x")
+                      .data_type(DOUBLE.clone())
+                      .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("local_y")
+                      .data_type(DOUBLE.clone())
+                      .build().unwrap(),
+                ])
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("on_one_drag_move")
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("drag_id")
+                        .data_type(LONG.clone())
+                        .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("global_x")
+                      .data_type(DOUBLE.clone())
+                      .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("global_y")
+                      .data_type(DOUBLE.clone())
+                      .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("local_x")
+                      .data_type(DOUBLE.clone())
+                      .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("local_y")
+                      .data_type(DOUBLE.clone())
+                      .build().unwrap(),
+                ])
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("on_one_drag_end")
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("drag_id")
+                        .data_type(LONG.clone())
+                        .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("global_x")
+                      .data_type(DOUBLE.clone())
+                      .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("global_y")
+                      .data_type(DOUBLE.clone())
+                      .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("local_x")
+                      .data_type(DOUBLE.clone())
+                      .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("local_y")
+                      .data_type(DOUBLE.clone())
+                      .build().unwrap(),
+                ])
+                .build().unwrap(),
+
+                MethodDefBuilder::default()
+                    .name("on_two_drags_start")
+                    .arguments(vec![
+                        ArgumentDefBuilder::default()
+                            .name("drag_id_1")
+                            .data_type(LONG.clone())
+                            .build().unwrap(),
+
+                      ArgumentDefBuilder::default()
+                          .name("global_x_1")
+                          .data_type(DOUBLE.clone())
+                          .build().unwrap(),
+
+                      ArgumentDefBuilder::default()
+                          .name("global_y_1")
+                          .data_type(DOUBLE.clone())
+                          .build().unwrap(),
+
+                      ArgumentDefBuilder::default()
+                          .name("local_x_1")
+                          .data_type(DOUBLE.clone())
+                          .build().unwrap(),
+
+                      ArgumentDefBuilder::default()
+                          .name("local_y_1")
+                          .data_type(DOUBLE.clone())
+                          .build().unwrap(),
+
+                    ArgumentDefBuilder::default()
+                        .name("drag_id_2")
+                        .data_type(LONG.clone())
+                        .build().unwrap(),
+
+                    ArgumentDefBuilder::default()
+                        .name("global_x_2")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap(),
+
+                    ArgumentDefBuilder::default()
+                        .name("global_y_2")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap(),
+
+                    ArgumentDefBuilder::default()
+                        .name("local_x_2")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap(),
+
+                    ArgumentDefBuilder::default()
+                        .name("local_y_2")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap(),
+                    ])
+                    .build().unwrap(),
+
+                MethodDefBuilder::default()
+                .name("on_two_drags_move")
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("drag_id_1")
+                        .data_type(LONG.clone())
+                        .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("global_x_1")
+                      .data_type(DOUBLE.clone())
+                      .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("global_y_1")
+                      .data_type(DOUBLE.clone())
+                      .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("local_x_1")
+                      .data_type(DOUBLE.clone())
+                      .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("local_y_1")
+                      .data_type(DOUBLE.clone())
+                      .build().unwrap(),
+
+                ArgumentDefBuilder::default()
+                    .name("drag_id_2")
+                    .data_type(LONG.clone())
+                    .build().unwrap(),
+
+                ArgumentDefBuilder::default()
+                    .name("global_x_2")
+                    .data_type(DOUBLE.clone())
+                    .build().unwrap(),
+
+                ArgumentDefBuilder::default()
+                    .name("global_y_2")
+                    .data_type(DOUBLE.clone())
+                    .build().unwrap(),
+
+                ArgumentDefBuilder::default()
+                    .name("local_x_2")
+                    .data_type(DOUBLE.clone())
+                    .build().unwrap(),
+
+                ArgumentDefBuilder::default()
+                    .name("local_y_2")
+                    .data_type(DOUBLE.clone())
+                    .build().unwrap(),
+                ])
+                .build().unwrap(),
+
+                MethodDefBuilder::default()
+                    .name("on_two_drags_end")
+                    .arguments(vec![
+                        ArgumentDefBuilder::default()
+                            .name("drag_id_1")
+                            .data_type(LONG.clone())
+                            .build().unwrap(),
+
+                      ArgumentDefBuilder::default()
+                          .name("global_x_1")
+                          .data_type(DOUBLE.clone())
+                          .build().unwrap(),
+
+                      ArgumentDefBuilder::default()
+                          .name("global_y_1")
+                          .data_type(DOUBLE.clone())
+                          .build().unwrap(),
+
+                      ArgumentDefBuilder::default()
+                          .name("local_x_1")
+                          .data_type(DOUBLE.clone())
+                          .build().unwrap(),
+
+                      ArgumentDefBuilder::default()
+                          .name("local_y_1")
+                          .data_type(DOUBLE.clone())
+                          .build().unwrap(),
+
+                    ArgumentDefBuilder::default()
+                        .name("drag_id_2")
+                        .data_type(LONG.clone())
+                        .build().unwrap(),
+
+                    ArgumentDefBuilder::default()
+                        .name("global_x_2")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap(),
+
+                    ArgumentDefBuilder::default()
+                        .name("global_y_2")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap(),
+
+                    ArgumentDefBuilder::default()
+                        .name("local_x_2")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap(),
+
+                    ArgumentDefBuilder::default()
+                        .name("local_y_2")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap(),
+                    ])
+                    .build().unwrap(),
+        ])
+        .build().unwrap(),
+
     TypeDefBuilder::default()
         .name("LayoutHandler")
         .rust_import(Some("crate::ui::LayoutHandler"))
@@ -967,8 +1229,8 @@ lazy_static! {
                 ])
                 .build().unwrap(),
             ImplDefBuilder::default()
-                .trait_name("HasDragHandlers")
-                .trait_import(Some("crate::ui::HasDragHandlers"))
+                .trait_name("HasMultiDragHandlers")
+                .trait_import(Some("crate::ui::HasMultiDragHandlers"))
                 .generics(vec![
                     GenericDefBuilder::default()
                         .symbol(Some("R"))
@@ -993,27 +1255,19 @@ lazy_static! {
 
         ])
         .fields(vec![
-            // FieldDefBuilder::default()
-            //     .name("start_new_game_button")
-            //     .getter_impl(Some(ImplBlockDefBuilder::default()
-            //         .trait_name("view::MainMenuView")
-            //         .build().unwrap()))
-            //     .data_type(DataType::swift_generic(Some("B"),
-            //         DataType::swift_struct("Button", None)))
-            //     .build().unwrap()
         ])
         .methods(vec![
             MethodDefBuilder::default()
-                .name("add_drag_handler")
+                .name("add_multi_drag_handler")
                 .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("HasDragHandlers")
+                    .trait_name("HasMultiDragHandlers")
                     .build().unwrap()))
                 .arguments(vec![
                     ArgumentDefBuilder::default()
-                        .name("drag_handler")
+                        .name("multi_drag_handler")
                         .data_type(DataType::rust_struct(
-                            "DragHandler",
-                            Some("crate::ui::DragHandler")))
+                            "MultiDragHandler",
+                            Some("crate::ui::MultiDragHandler")))
                         .build().unwrap()
                 ])
                 .return_type(Some(DataType::swift_generic(Some("R"),

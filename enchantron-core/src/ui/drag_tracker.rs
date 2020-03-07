@@ -20,15 +20,15 @@ impl DragTracker {
         drag_event: DragEvent,
     ) -> Option<DragTrackerEvent> {
         match drag_event {
-            DragPoint {
+            DragEvent {
                 state: Start,
                 drag_point_1,
-                drag_point2_opt: None,
+                drag_point_2_opt: None,
             } => self.on_one_drag_start(drag_point_1),
-            DragPoint {
+            DragEvent {
                 state: Start,
                 drag_point_1,
-                drag_point2_opt: Some(drag_point_2),
+                drag_point_2_opt: Some(drag_point_2),
             } => self.on_two_drag_start(drag_point_1, drag_point_2),
             _ => todo!(),
         }
@@ -40,8 +40,8 @@ impl DragTracker {
     ) -> Option<DragTrackerEvent> {
         match self.drag_count {
             2 => debug!("Touch {} rejected", new_drag_point.drag_id),
-            1 => self.drag_point_2 = Some(new_drag_point),
-            0 => self.drag_point_1 = Some(new_drag_point),
+            1 => self.drag_2 = Some(new_drag_point),
+            0 => self.drag_1 = Some(new_drag_point),
             _ => panic!("Inavlid drag count: {}", self.drag_count),
         }
 
@@ -60,11 +60,11 @@ impl DragTracker {
             ),
             1 => {
                 debug!("Touch {} rejected", new_drag_point_2.drag_id);
-                self.drag_point_2 = Some(new_drag_point_1);
+                self.drag_2 = Some(new_drag_point_1);
             }
             0 => {
-                self.drag_point_1 = Some(new_drag_point_1);
-                self.drag_point_2 = Some(new_drag_point_2)
+                self.drag_1 = Some(new_drag_point_1);
+                self.drag_2 = Some(new_drag_point_2)
             }
             _ => panic!("Inavlid drag count: {}", self.drag_count),
         }

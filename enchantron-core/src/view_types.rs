@@ -1,10 +1,6 @@
 use crate::native::{SystemView, Texture, TextureLoader};
-use crate::ui::{
-    Button, ProgressBar, Sprite, SpriteGroup, SpriteSource, Viewport,
-};
+use crate::ui::{Button, ProgressBar, Sprite, SpriteGroup, Viewport};
 use crate::view::{GameView, LoadingView, MainMenuView};
-
-use std::ops::Deref;
 
 pub trait ViewTypes: 'static + Send + Sync {
     type Texture: Texture;

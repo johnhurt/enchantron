@@ -1,13 +1,12 @@
-use std::sync::{Arc, Weak};
+use std::sync::Arc;
 
 use crate::event::EventBus;
 use crate::model::{Point, Rect, Size};
-use crate::native::{RuntimeResources, SystemView, Texture};
+use crate::native::{RuntimeResources, SystemView};
 use crate::ui::{
-    DragState, SpriteSource, TerrainGenerator, TerrainTextureProvider,
+    DragTracker, SpriteSource, TerrainGenerator, TerrainTextureProvider,
     ViewportInfo,
 };
-use crate::view::GameView;
 use crate::view_types::ViewTypes;
 
 pub struct GameDisplayState<T>
@@ -15,7 +14,7 @@ where
     T: ViewTypes,
 {
     pub viewport_info: ViewportInfo,
-    pub drag_state: Option<DragState>,
+    pub drag_tracker: DragTracker,
     pub terrain_generator: Arc<TerrainGenerator<T>>,
 
     pub character: Option<T::Sprite>,
@@ -38,7 +37,7 @@ where
         GameDisplayState {
             viewport_info: Default::default(),
 
-            drag_state: Default::default(),
+            drag_tracker: Default::default(),
             terrain_generator: TerrainGenerator::new(
                 event_bus,
                 sprite_source,

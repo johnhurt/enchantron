@@ -120,46 +120,15 @@ extension GameScene {
     
     
     override func mouseDown(with event: NSEvent) {
-        DispatchQueue.main.async {
-            let localPoint = event.location(in: self)
-            
-            self.currentView?.getDragHandlers().forEach { (handler) in
-                handler.onDragStart(
-                    globalX: Float64(event.locationInWindow.x),
-                    globalY: Float64((event.window?.contentView?.bounds.size.height)!
-                        - event.locationInWindow.y),
-                    localX: Float64(localPoint.x),
-                    localY: -Float64(localPoint.y))
-            }
-        }
+        self.currentView?.mouseDown(with: event)
     }
     
     override func mouseDragged(with event: NSEvent) {
-        DispatchQueue.main.async {
-            let localPoint = event.location(in: self)
-            self.currentView?.getDragHandlers().forEach { (handler) in
-                handler.onDragMove(
-                    globalX: Float64(event.locationInWindow.x),
-                    globalY: Float64((event.window?.contentView?.bounds.size.height)!
-                        - event.locationInWindow.y),
-                    localX: Float64(localPoint.x),
-                    localY: -Float64(localPoint.y))
-            }
-        }
+        self.currentView?.mouseDragged(with: event)
     }
     
     override func mouseUp(with event: NSEvent) {
-        DispatchQueue.main.async {
-            let localPoint = event.location(in: self)
-            self.currentView?.getDragHandlers().forEach { (handler) in
-                handler.onDragEnd(
-                    globalX: Float64(event.locationInWindow.x),
-                    globalY: Float64((event.window?.contentView?.bounds.size.height)!
-                        - event.locationInWindow.y),
-                    localX: Float64(localPoint.x),
-                    localY: -Float64(localPoint.y))
-            }
-        }
+        self.currentView?.mouseUp(with: event)
     }
     #endif
 }

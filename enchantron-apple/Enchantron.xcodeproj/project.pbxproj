@@ -11,6 +11,9 @@
 		6317D38923B98DCF00DD935B /* FuturesInterop.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6317D38723B98DCF00DD935B /* FuturesInterop.swift */; };
 		6317D38B23B98F4F00DD935B /* RustFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6317D38A23B98F4F00DD935B /* RustFuture.swift */; };
 		6317D38C23B98F4F00DD935B /* RustFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6317D38A23B98F4F00DD935B /* RustFuture.swift */; };
+		632D2B052411E5F3002B29D7 /* MultiDragHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632D2B042411E4ED002B29D7 /* MultiDragHandler.swift */; };
+		632D2B062411E5F4002B29D7 /* MultiDragHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632D2B042411E4ED002B29D7 /* MultiDragHandler.swift */; };
+		632D2B082411E813002B29D7 /* TouchLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632D2B072411E813002B29D7 /* TouchLookup.swift */; };
 		633D0B23240FCA2800A40E2C /* SpriteGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 633D0B22240FCA2800A40E2C /* SpriteGroup.swift */; };
 		633D0B24240FCA2800A40E2C /* SpriteGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 633D0B22240FCA2800A40E2C /* SpriteGroup.swift */; };
 		6341098A211CC7C000D40139 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63410989211CC7C000D40139 /* AppDelegate.swift */; };
@@ -89,6 +92,8 @@
 /* Begin PBXFileReference section */
 		6317D38723B98DCF00DD935B /* FuturesInterop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FuturesInterop.swift; sourceTree = "<group>"; };
 		6317D38A23B98F4F00DD935B /* RustFuture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RustFuture.swift; sourceTree = "<group>"; };
+		632D2B042411E4ED002B29D7 /* MultiDragHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiDragHandler.swift; sourceTree = "<group>"; };
+		632D2B072411E813002B29D7 /* TouchLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchLookup.swift; sourceTree = "<group>"; };
 		633D0B22240FCA2800A40E2C /* SpriteGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteGroup.swift; sourceTree = "<group>"; };
 		6341097F211CC7BE00D40139 /* Empty.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Empty.sks; sourceTree = "<group>"; };
 		63410980211CC7BE00D40139 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; wrapsLines = 0; };
@@ -186,6 +191,7 @@
 				63F97AFF211CCB0300784701 /* Button.swift */,
 				63F97AFD211CCB0300784701 /* ClickHandler.swift */,
 				6346A2642139D1E900481721 /* DragHandler.swift */,
+				632D2B042411E4ED002B29D7 /* MultiDragHandler.swift */,
 				63983248232A865800569093 /* MagnifyHandler.swift */,
 				63410980211CC7BE00D40139 /* GameScene.swift */,
 				63C34FEC212CEB0400076E55 /* GameView.swift */,
@@ -212,6 +218,7 @@
 				6317D38723B98DCF00DD935B /* FuturesInterop.swift */,
 				6317D38A23B98F4F00DD935B /* RustFuture.swift */,
 				639EBFB123DE46D200A40E2C /* ByteBufferExt.swift */,
+				632D2B072411E813002B29D7 /* TouchLookup.swift */,
 			);
 			path = "Enchantron Shared";
 			sourceTree = "<group>";
@@ -430,6 +437,7 @@
 				63C34FED212CEB0400076E55 /* GameView.swift in Sources */,
 				6364099023181E3C00B46512 /* SpriteSource.swift in Sources */,
 				633D0B23240FCA2800A40E2C /* SpriteGroup.swift in Sources */,
+				632D2B082411E813002B29D7 /* TouchLookup.swift in Sources */,
 				63F97B0C211CCB0400784701 /* HandlerRegistration.swift in Sources */,
 				6395650B2126469C006F2A71 /* Texture.swift in Sources */,
 				634589FE212645B400D81EAD /* LoadingView.swift in Sources */,
@@ -446,6 +454,7 @@
 				6395650821264645006F2A71 /* ProgressBar.swift in Sources */,
 				6317D38B23B98F4F00DD935B /* RustFuture.swift in Sources */,
 				63E98386212A00EF0056E91C /* SystemView.swift in Sources */,
+				632D2B052411E5F3002B29D7 /* MultiDragHandler.swift in Sources */,
 				63F97B10211CCB0400784701 /* SwiftString.swift in Sources */,
 				639AD25422AC8E6900A35225 /* Viewport.swift in Sources */,
 				6341098A211CC7C000D40139 /* AppDelegate.swift in Sources */,
@@ -473,6 +482,7 @@
 				63C34FF4212F5CF900076E55 /* Sprite.swift in Sources */,
 				63C34FF1212F2F4700076E55 /* LayoutHandler.swift in Sources */,
 				6317D38C23B98F4F00DD935B /* RustFuture.swift in Sources */,
+				632D2B062411E5F4002B29D7 /* MultiDragHandler.swift in Sources */,
 				6317D38923B98DCF00DD935B /* FuturesInterop.swift in Sources */,
 				63F97B05211CCB0400784701 /* ClickHandler.swift in Sources */,
 				6341099D211CC7C000D40139 /* GameViewController.swift in Sources */,

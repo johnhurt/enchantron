@@ -6,12 +6,12 @@
 //  Copyright © 2018 Rook And Pawn Industries, Inc. All rights reserved.
 //
 
-import Foundation
+
 import SpriteKit
 
 class BaseView: SKNode {
     
-    private var dragHandlers: [DragHandler] = []
+    private var dragHandlers: [MultiDragHandler] = []
     private var layoutHandlers: [LayoutHandler] = []
     private var magnifyHandlers: [MagnifyHandler] = []
     
@@ -20,9 +20,8 @@ class BaseView: SKNode {
     private var transitionService : TransitionService?
     private var viewport : Viewport?
     
-    
     #if os(iOS) || os(tvOS)
-    private var touchTracker : TouchTracker?
+    private var touchTracker = TouchLookup()
     #endif
     
     var size: CGSize?
@@ -81,7 +80,7 @@ class BaseView: SKNode {
         layout(size: size)
     }
     
-    func getDragHandlers() -> [DragHandler] {
+    func getDragHandlers() -> [MultiDragHandler] {
         return self.dragHandlers
     }
     
@@ -115,7 +114,7 @@ class BaseView: SKNode {
         }
     }
     
-    func addDragHandler(_ handler: DragHandler) -> HandlerRegistration {
+    func addMultiDragHandler(_ handler: MultiDragHandler) -> HandlerRegistration {
         DispatchQueue.main.sync {
             self.isUserInteractionEnabled = true
             self.dragHandlers.append(handler)
@@ -125,7 +124,7 @@ class BaseView: SKNode {
         })
     }
     
-    func removeHandler(_ handler: DragHandler) {
+    func removeHandler(_ handler: MultiDragHandler) {
         DispatchQueue.main.sync {
             if let index = self.dragHandlers.firstIndex(of: handler) {
                 self.dragHandlers.remove(at: index)
@@ -162,52 +161,190 @@ class BaseView: SKNode {
         }
     }
     
-    func dragStart(windowPoint: CGPoint, localPoint: CGPoint) {
-        self.dragHandlers.forEach { (handler) in
-            handler.onDragStart(
-                globalX: Float64(windowPoint.x),
-                globalY: Float64(windowPoint.y),
+    func oneDragStarted(id: Int64, globalPoint: CGPoint, localPoint: CGPoint) {
+        for dragHandler in self.dragHandlers {
+            dragHandler.onOneDragStart(
+                dragId: id,
+                globalX: Float64(globalPoint.x),
+                globalY: Float64(globalPoint.y),
                 localX: Float64(localPoint.x),
                 localY: -Float64(localPoint.y))
         }
     }
     
-    func dragMoved(windowPoint: CGPoint, localPoint: CGPoint) {
-        self.dragHandlers.forEach { (handler) in
-            handler.onDragMove(
-                globalX: Float64(windowPoint.x),
-                globalY: Float64(windowPoint.y),
+    func oneDragMoved(id: Int64, globalPoint: CGPoint, localPoint: CGPoint) {
+        for dragHandler in self.dragHandlers {
+            dragHandler.onOneDragMove(
+                dragId: id,
+                globalX: Float64(globalPoint.x),
+                globalY: Float64(globalPoint.y),
                 localX: Float64(localPoint.x),
                 localY: -Float64(localPoint.y))
         }
     }
     
-    func dragEnded(windowPoint: CGPoint, localPoint: CGPoint) {
-        self.dragHandlers.forEach { (handler) in
-            handler.onDragEnd(
-                globalX: Float64(windowPoint.x),
-                globalY: Float64(windowPoint.y),
+    func oneDragEnded(id: Int64, globalPoint: CGPoint, localPoint: CGPoint) {
+        for dragHandler in self.dragHandlers {
+            dragHandler.onOneDragEnd(
+                dragId: id,
+                globalX: Float64(globalPoint.x),
+                globalY: Float64(globalPoint.y),
                 localX: Float64(localPoint.x),
                 localY: -Float64(localPoint.y))
+        }
+    }
+    
+    func twoDragsStarted(id1: Int64, globalPoint1: CGPoint, localPoint1: CGPoint,
+                        id2: Int64, globalPoint2: CGPoint, localPoint2: CGPoint) {
+        for dragHandler in self.dragHandlers {
+            dragHandler.onTwoDragsStart(
+                dragId1: id1,
+                globalX1: Float64(globalPoint1.x),
+                globalY1: Float64(globalPoint1.y),
+                localX1: Float64(localPoint1.x),
+                localY1: -Float64(localPoint1.y),
+                dragId2: id2,
+                globalX2: Float64(globalPoint2.x),
+                globalY2: Float64(globalPoint2.y),
+                localX2: Float64(localPoint2.x),
+                localY2: -Float64(localPoint2.y))
+        }
+    }
+    
+    func twoDragsMoved(id1: Int64, globalPoint1: CGPoint, localPoint1: CGPoint,
+                      id2: Int64, globalPoint2: CGPoint, localPoint2: CGPoint) {
+        for dragHandler in self.dragHandlers {
+            dragHandler.onTwoDragsMove(
+                dragId1: id1,
+                globalX1: Float64(globalPoint1.x),
+                globalY1: Float64(globalPoint1.y),
+                localX1: Float64(localPoint1.x),
+                localY1: -Float64(localPoint1.y),
+                dragId2: id2,
+                globalX2: Float64(globalPoint2.x),
+                globalY2: Float64(globalPoint2.y),
+                localX2: Float64(localPoint2.x),
+                localY2: -Float64(localPoint2.y))
+        }
+    }
+    
+    func twoDragsEnded(id1: Int64, globalPoint1: CGPoint, localPoint1: CGPoint,
+                      id2: Int64, globalPoint2: CGPoint, localPoint2: CGPoint) {
+        for dragHandler in self.dragHandlers {
+            dragHandler.onTwoDragsEnd(
+                dragId1: id1,
+                globalX1: Float64(globalPoint1.x),
+                globalY1: Float64(globalPoint1.y),
+                localX1: Float64(localPoint1.x),
+                localY1: -Float64(localPoint1.y),
+                dragId2: id2,
+                globalX2: Float64(globalPoint2.x),
+                globalY2: Float64(globalPoint2.y),
+                localX2: Float64(localPoint2.x),
+                localY2: -Float64(localPoint2.y))
         }
     }
     
     #if os(iOS) || os(tvOS)
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.touchTracker?.touchesStarted(touches)
+        self.dragsStarted(
+            self.touchTracker.filterForNewActiveTouches(newTouches: touches))
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.touchTracker?.touchesMoved(touches)
+        self.dragsMoved(
+            self.touchTracker.filterForNewActiveTouches(newTouches: touches))
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        touchesEnded(touches, with: event)
+        self.dragsEnded(
+            self.touchTracker.filterForNewActiveTouches(newTouches: touches))
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        touchTracker?.touchesEnded(touches)
+        self.touchesCancelled(touches, with: event)
+    }
+    
+    func dragsStart(touches: [(Int64, UITouch)]) {
+        switch touches.count {
+        case 1:
+            let (id, touch) = touches[0]
+            let globalPoint = touch.location(in: nil)
+            let localPoint = touch.location(in: self)
+            oneDragStarted(id: id, globalPoint: globalPoint, localPoint: localPoint)
+        
+        case 2:
+            let (id1, touch1) = touches[0]
+            let (id2, touch2) = touches[1]
+            
+            let globalPoint1 = touch1.location(in: nil)
+            let localPoint1 = touch1.location(in: self)
+            let globalPoint2 = touch2.location(in: nil)
+            let localPoint2 = touch2.location(in: self)
+            
+            twoDragsStarted(
+                id1: id1,
+                globalPoint1: globalPoint1,
+                localPoint1: localPoint1,
+                id2: id2,
+                globalPoint2: globalPoint2,
+                localPoint2: localPoint2)
+        }
+    }
+    
+    func dragsMoved(touches: [(Int64, UITouch)]) {
+        switch touches.count {
+        case 1:
+            let (id, touch) = touches[0]
+            let globalPoint = touch.location(in: nil)
+            let localPoint = touch.location(in: self)
+            oneDragMoved(id: id, globalPoint: globalPoint, localPoint: localPoint)
+        
+        case 2:
+            let (id1, touch1) = touches[0]
+            let (id2, touch2) = touches[1]
+            
+            let globalPoint1 = touch1.location(in: nil)
+            let localPoint1 = touch1.location(in: self)
+            let globalPoint2 = touch2.location(in: nil)
+            let localPoint2 = touch2.location(in: self)
+            
+            twoDragsMoved(
+                id1: id1,
+                globalPoint1: globalPoint1,
+                localPoint1: localPoint1,
+                id2: id2,
+                globalPoint2: globalPoint2,
+                localPoint2: localPoint2)
+        }
+    }
+    
+    func dragsEnded(touches: [(Int64, UITouch)]) {
+        switch touches.count {
+        case 1:
+            let (id, touch) = touches[0]
+            let globalPoint = touch.location(in: nil)
+            let localPoint = touch.location(in: self)
+            oneDragEnded(id: id, globalPoint: globalPoint, localPoint: localPoint)
+        
+        case 2:
+            let (id1, touch1) = touches[0]
+            let (id2, touch2) = touches[1]
+            
+            let globalPoint1 = touch1.location(in: nil)
+            let localPoint1 = touch1.location(in: self)
+            let globalPoint2 = touch2.location(in: nil)
+            let localPoint2 = touch2.location(in: self)
+            
+            twoDragsEnded(
+                id1: id1,
+                globalPoint1: globalPoint1,
+                localPoint1: localPoint1,
+                id2: id2,
+                globalPoint2: globalPoint2,
+                localPoint2: localPoint2)
+        }
     }
     
     #endif
@@ -219,7 +356,8 @@ class BaseView: SKNode {
             let localPoint = event.location(in: self)
             
             self.dragHandlers.forEach { (handler) in
-                handler.onDragStart(
+                handler.onOneDragStart(
+                    dragId: 0,
                     globalX: Float64(event.locationInWindow.x),
                     globalY: Float64((event.window?.contentView?.bounds.size.height)!
                         - event.locationInWindow.y),
@@ -233,7 +371,8 @@ class BaseView: SKNode {
         DispatchQueue.main.async {
             let localPoint = event.location(in: self)
             self.dragHandlers.forEach { (handler) in
-                handler.onDragMove(
+                handler.onOneDragMove(
+                    dragId: 0,
                     globalX: Float64(event.locationInWindow.x),
                     globalY: Float64((event.window?.contentView?.bounds.size.height)!
                         - event.locationInWindow.y),
@@ -247,7 +386,8 @@ class BaseView: SKNode {
         DispatchQueue.main.async {
             let localPoint = event.location(in: self)
             self.dragHandlers.forEach { (handler) in
-                handler.onDragEnd(
+                handler.onOneDragEnd(
+                    dragId: 0,
                     globalX: Float64(event.locationInWindow.x),
                     globalY: Float64((event.window?.contentView?.bounds.size.height)!
                         - event.locationInWindow.y),

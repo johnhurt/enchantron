@@ -2,9 +2,9 @@ use crate::model::Point;
 
 #[derive(Debug, Default, PartialEq, Clone)]
 pub struct DragPoint {
-    drag_id: i64,
-    global_point: Point,
-    local_point: Point,
+    pub drag_id: i64,
+    pub global_point: Point,
+    pub local_point: Point,
 }
 
 impl DragPoint {

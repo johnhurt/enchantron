@@ -4,7 +4,7 @@ pub use self::drag_event_type::DragEventType;
 pub use self::drag_handler::DragHandler;
 pub use self::drag_point::DragPoint;
 pub use self::drag_state::DragState;
-pub use self::drag_tracker::DragTracker;
+pub use self::drag_tracker::*;
 pub use self::handler_registration::HandlerRegistration;
 pub use self::has_click_handlers::HasClickHandlers;
 pub use self::has_drag_handlers::HasDragHandlers;

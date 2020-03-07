@@ -61,7 +61,7 @@ impl MultiDragHandler {
         ));
     }
 
-    pub fn on_two_drag_start(
+    pub fn on_two_drags_start(
         &self,
         drag_id_1: i64,
         global_x_1: f64,
@@ -85,7 +85,7 @@ impl MultiDragHandler {
         ));
     }
 
-    pub fn on_two_drag_move(
+    pub fn on_two_drags_move(
         &self,
         drag_id_1: i64,
         global_x_1: f64,
@@ -109,7 +109,7 @@ impl MultiDragHandler {
         ));
     }
 
-    pub fn on_two_drag_end(
+    pub fn on_two_drags_end(
         &self,
         drag_id_1: i64,
         global_x_1: f64,

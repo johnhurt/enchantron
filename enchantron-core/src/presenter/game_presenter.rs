@@ -175,6 +175,8 @@ where
     }
 
     async fn on_drag(&self, drag_event: DragEvent) {
+        debug!("What?");
+
         let drag_tracker_event = self
             .with_display_state_mut(|display_state| {
                 display_state.drag_tracker.on_drag_event(drag_event)
@@ -186,7 +188,7 @@ where
             Some(MoveAndScale(drag_move, scale)) => {
                 self.on_drag_move_and_scale(drag_move, scale).await
             }
-            _ => (),
+            _ => debug!("NoOp"),
         }
     }
 

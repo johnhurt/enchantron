@@ -83,14 +83,29 @@ where
 
     /// change the scale of the area shown by the viewport by the given
     /// additive amount, and return the new scale. The center of the zoom
-    pub fn change_scale_additive<'a>(
+    pub fn change_scale_additive_around_centerpoint<'a>(
         &'a mut self,
         scale_change_additive: f64,
         magnify_center_screen_point: Point,
     ) -> &'a ViewportInfo {
-        self.viewport_info.change_scale_additive(
+        self.viewport_info.change_scale_additive_around_centerpoint(
             scale_change_additive,
             magnify_center_screen_point,
+        );
+
+        &self.viewport_info
+    }
+
+    /// change the scale of the area shown by the viewport by the given
+    /// additive amount, move by the given amount, and return the new scale.
+    pub fn change_scale_additive_and_move<'a>(
+        &'a mut self,
+        scale_change_additive: f64,
+        position_shift: Point,
+    ) -> &'a ViewportInfo {
+        self.viewport_info.change_scale_additive_and_move(
+            scale_change_additive,
+            position_shift,
         );
 
         &self.viewport_info

@@ -160,10 +160,11 @@ where
             let magnify_center_screen_point =
                 Point::new(zoom_center_x, zoom_center_y);
 
-            let viewport_info = display_state.change_scale_additive(
-                scale_change_additive,
-                magnify_center_screen_point,
-            );
+            let viewport_info = display_state
+                .change_scale_additive_around_centerpoint(
+                    scale_change_additive,
+                    magnify_center_screen_point,
+                );
 
             self.fire_viewport_change_event(viewport_info);
             self.view.get_viewport().set_scale_and_location_point(
@@ -175,8 +176,6 @@ where
     }
 
     async fn on_drag(&self, drag_event: DragEvent) {
-        debug!("What?");
-
         let drag_tracker_event = self
             .with_display_state_mut(|display_state| {
                 display_state.drag_tracker.on_drag_event(drag_event)
@@ -188,7 +187,7 @@ where
             Some(MoveAndScale(drag_move, scale)) => {
                 self.on_drag_move_and_scale(drag_move, scale).await
             }
-            _ => debug!("NoOp"),
+            _ => (),
         }
     }
 
@@ -214,12 +213,8 @@ where
 
     async fn on_drag_move_and_scale(&self, drag_move: Point, new_scale: f64) {
         self.with_display_state_mut(|display_state| {
-            let scale = display_state.get_viewport_scale();
-
-            let position_shift = drag_move * scale;
-
-            let new_viewport_info =
-                display_state.move_viewport_by(position_shift);
+            let new_viewport_info = display_state
+                .change_scale_additive_and_move(new_scale, drag_move);
 
             self.fire_viewport_change_event(new_viewport_info);
 
@@ -292,10 +287,6 @@ where
         handle_event!(DragEvent => self.on_drag);
 
         handle_event!(Magnify => self.on_magnify);
-    }
-
-    pub fn create_sprite(&self) -> T::Sprite {
-        self.view.create_sprite()
     }
 
     pub async fn new(

@@ -152,7 +152,29 @@ impl DragTracker {
         moved_drag_point_1: DragPoint,
         moved_drag_point_2: DragPoint,
     ) -> Option<DragTrackerEvent> {
-        todo!()
+        Some(match (&mut self.drag_1, &mut self.drag_2) {
+            (Some(drag_1), Some(drag_2)) => {
+                let (new_drag_1, new_drag_2) =
+                    if drag_1.drag_id == moved_drag_point_1.drag_id {
+                        (moved_drag_point_1, moved_drag_point_2)
+                    } else {
+                        (moved_drag_point_2, moved_drag_point_1)
+                    };
+
+                let (shift, scale) = calculate_shift_and_scale(
+                    drag_1,
+                    drag_2,
+                    &new_drag_1,
+                    &new_drag_2,
+                );
+
+                self.drag_1 = Some(new_drag_1);
+                self.drag_2 = Some(new_drag_2);
+
+                DragTrackerEvent::MoveAndScale(shift, scale)
+            }
+            _ => panic!("Invalid drag state"),
+        })
     }
 
     fn on_one_drag_end(
@@ -175,9 +197,12 @@ impl DragTracker {
 
     fn on_two_drags_end(
         &mut self,
-        ended_drag_point_1: DragPoint,
-        ended_drag_point_2: DragPoint,
+        _: DragPoint,
+        _: DragPoint,
     ) -> Option<DragTrackerEvent> {
-        todo!()
+        self.drag_1 = None;
+        self.drag_2 = None;
+
+        None
     }
 }

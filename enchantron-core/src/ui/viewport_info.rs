@@ -53,21 +53,21 @@ impl ViewportInfo {
     /// change the scale of the area shown by the viewport by the given
     /// additive amount and center the zoom on the given point in screen
     /// coordinates
-    pub fn change_scale_additive(
+    pub fn change_scale_additive_around_centerpoint(
         &mut self,
         scale_change_additive: f64,
         magnify_center_screen_point: Point,
     ) {
         let new_scale = self.viewport_scale * (1. - scale_change_additive);
 
+        self.viewport_scale = new_scale;
+
+        let new_size = &self.screen_size * new_scale;
+
         let magnify_center_fraction = Point::new(
             magnify_center_screen_point.x / self.screen_size.width,
             magnify_center_screen_point.y / self.screen_size.height,
         );
-
-        self.viewport_scale = new_scale;
-
-        let new_size = &self.screen_size * new_scale;
 
         let position_shift = {
             let size = &self.viewport_rect.size;
@@ -82,6 +82,33 @@ impl ViewportInfo {
             self.viewport_rect.top_left.x + position_shift.x,
             self.viewport_rect.top_left.y + position_shift.y,
         );
+
+        self.viewport_rect.size = new_size;
+        self.viewport_rect.top_left = new_position;
+
+        debug!("Viewport changed to {:?}", self);
+    }
+
+    /// change the scale of the area shown by the viewport by the given
+    /// additive amount and shift the position of the viewport by the given
+    /// amount
+    pub fn change_scale_additive_and_move(
+        &mut self,
+        scale_change_additive: f64,
+        position_shift: Point,
+    ) {
+        let new_scale = self.viewport_scale * (1. - scale_change_additive);
+
+        let new_position = Point::new(
+            self.viewport_rect.top_left.x + position_shift.x,
+            self.viewport_rect.top_left.y + position_shift.y,
+        );
+
+        self.viewport_scale = new_scale;
+
+        let new_size = &self.screen_size * new_scale;
+
+        let new_scale = self.viewport_scale * (1. - scale_change_additive);
 
         self.viewport_rect.size = new_size;
         self.viewport_rect.top_left = new_position;

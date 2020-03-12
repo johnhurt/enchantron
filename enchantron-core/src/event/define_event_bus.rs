@@ -22,6 +22,16 @@ macro_rules! define_event_bus {
                 Sender as BroadcastSender,
                 Receiver as BroadcastReceiver
             };
+            use tokio::sync::oneshot::{
+                channel as oneshot_channel,
+                Sender as OneshotSender,
+                Receiver as OneshotReceiver
+            };
+            use tokio::sync::oneshot::{
+                channel as watch_channel,
+                Sender as WatchSender,
+                Receiver as WatchReceiver
+            };
             use tokio::sync::mpsc::{
                 channel as mpsc_channel,
                 Receiver as MpscReceiver
@@ -35,12 +45,26 @@ macro_rules! define_event_bus {
             struct Inner {
                 runtime_handle: Handle,
                 registration_counter: ConsistentCounter,
-                senders: Senders
+                senders: Senders,
+                oneshots: Oneshots,
+                watchers: Watchers
             }
 
             struct Senders {
                 $(
                     $e : BroadcastSender<event_bus_enums::$e>,
+                )*
+            }
+
+            struct Oneshots {
+                $(
+                    $e : OneshotSender<event_bus_enums::$e>,
+                )*
+            }
+
+            struct Watchers {
+                $(
+                    $e : WatchSender<event_bus_enums::$e>,
                 )*
             }
 
@@ -86,17 +110,30 @@ macro_rules! define_event_bus {
             impl Inner {
 
                 fn new(runtime_handle: Handle) -> Inner {
-                    $(
-                        let ($e, _) = broadcast_channel(1024);
-                    )*
+                    let senders = Senders {
+                        $(
+                            $e: broadcast_channel(1024).0,
+                        )*
+                    };
+
+                    let oneshots = Oneshots {
+                        $(
+                            $e: oneshot_channel().0,
+                        )*
+                    };
+
+                    let watchers = Watchers {
+                        $(
+                            $e: watch_channel().0,
+                        )*
+                    };
 
                     Inner{
                         runtime_handle,
                         registration_counter: Default::default(),
-                        senders: Senders {$(
-                            $e,
-                        )*}
-
+                        senders,
+                        oneshots,
+                        watchers,
                     }
                 }
 

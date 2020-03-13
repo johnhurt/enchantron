@@ -206,23 +206,24 @@ where
 
             self.view
                 .get_viewport()
-                .set_location(new_position_ref.x, new_position_ref.y);
+                .set_location_point(new_position_ref);
         })
         .await;
     }
 
     async fn on_drag_move_and_scale(&self, drag_move: Point, new_scale: f64) {
         self.with_display_state_mut(|display_state| {
-            let new_viewport_info = display_state
-                .change_scale_additive_and_move(new_scale, drag_move);
+            let new_viewport_info =
+                display_state.change_scale_and_move(new_scale, drag_move);
 
             self.fire_viewport_change_event(new_viewport_info);
 
             let new_position_ref = &new_viewport_info.viewport_rect.top_left;
 
-            self.view
-                .get_viewport()
-                .set_location(new_position_ref.x, new_position_ref.y);
+            self.view.get_viewport().set_scale_and_location_point(
+                new_viewport_info.viewport_scale,
+                new_position_ref,
+            );
         })
         .await;
     }

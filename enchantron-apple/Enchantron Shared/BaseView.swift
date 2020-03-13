@@ -55,9 +55,6 @@ class BaseView: SKNode {
     }
     
     func initializePostBind(_ presenter: BoxedAny) {
-        #if os(iOS) || os(tvOS)
-        self.touchTracker = TouchTracker(self)
-        #endif
         self.presenter = presenter
         self.transitionService?.postBindTransition(self)
         
@@ -248,18 +245,18 @@ class BaseView: SKNode {
     #if os(iOS) || os(tvOS)
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.dragsStarted(
+        self.dragsStart(touches:
             self.touchTracker.filterForNewActiveTouches(newTouches: touches))
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.dragsMoved(
-            self.touchTracker.filterForNewActiveTouches(newTouches: touches))
+        self.dragsMoved(touches:
+            self.touchTracker.filterForMovedActiveTouches(movedTouches: touches))
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.dragsEnded(
-            self.touchTracker.filterForNewActiveTouches(newTouches: touches))
+        self.dragsEnded(touches:
+            self.touchTracker.filterForEndedActiveTouches(endedTouches: touches))
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -290,6 +287,7 @@ class BaseView: SKNode {
                 id2: id2,
                 globalPoint2: globalPoint2,
                 localPoint2: localPoint2)
+        default: do {}
         }
     }
     
@@ -317,6 +315,7 @@ class BaseView: SKNode {
                 id2: id2,
                 globalPoint2: globalPoint2,
                 localPoint2: localPoint2)
+        default: do {}
         }
     }
     
@@ -344,6 +343,7 @@ class BaseView: SKNode {
                 id2: id2,
                 globalPoint2: globalPoint2,
                 localPoint2: localPoint2)
+        default: do {}
         }
     }
     

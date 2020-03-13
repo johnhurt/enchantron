@@ -98,15 +98,13 @@ where
 
     /// change the scale of the area shown by the viewport by the given
     /// additive amount, move by the given amount, and return the new scale.
-    pub fn change_scale_additive_and_move<'a>(
+    pub fn change_scale_and_move<'a>(
         &'a mut self,
-        scale_change_additive: f64,
+        scale: f64,
         position_shift: Point,
     ) -> &'a ViewportInfo {
-        self.viewport_info.change_scale_additive_and_move(
-            scale_change_additive,
-            position_shift,
-        );
+        self.viewport_info
+            .change_scale_and_move(scale, position_shift);
 
         &self.viewport_info
     }

@@ -68,7 +68,6 @@
 		63E98386212A00EF0056E91C /* SystemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63E98385212A00EF0056E91C /* SystemView.swift */; };
 		63E98387212A00F00056E91C /* SystemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63E98385212A00EF0056E91C /* SystemView.swift */; };
 		63F75D85235A977500B963F7 /* Touch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F75D84235A977500B963F7 /* Touch.swift */; };
-		63F75D88235A98F400B963F7 /* TouchTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F75D87235A98F400B963F7 /* TouchTracker.swift */; };
 		63F97AFA211CC9B500784701 /* RustBinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F97AF9211CC9B500784701 /* RustBinder.swift */; };
 		63F97AFB211CC9B500784701 /* RustBinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F97AF9211CC9B500784701 /* RustBinder.swift */; };
 		63F97B04211CCB0400784701 /* ClickHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F97AFD211CCB0300784701 /* ClickHandler.swift */; };
@@ -131,7 +130,6 @@
 		63E983822129C9B90056E91C /* Indira_K.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = Indira_K.ttf; path = ../../resources/fonts/Indira_K.ttf; sourceTree = "<group>"; };
 		63E98385212A00EF0056E91C /* SystemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemView.swift; sourceTree = "<group>"; };
 		63F75D84235A977500B963F7 /* Touch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Touch.swift; sourceTree = "<group>"; };
-		63F75D87235A98F400B963F7 /* TouchTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchTracker.swift; sourceTree = "<group>"; };
 		63F97AF9211CC9B500784701 /* RustBinder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RustBinder.swift; sourceTree = "<group>"; };
 		63F97AFD211CCB0300784701 /* ClickHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClickHandler.swift; sourceTree = "<group>"; };
 		63F97AFE211CCB0300784701 /* TextArea.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextArea.swift; sourceTree = "<group>"; };
@@ -212,7 +210,6 @@
 				6364098F23181E3C00B46512 /* SpriteSource.swift */,
 				639AD25322AC8E6900A35225 /* Viewport.swift */,
 				63F75D84235A977500B963F7 /* Touch.swift */,
-				63F75D87235A98F400B963F7 /* TouchTracker.swift */,
 				63410981211CC7C000D40139 /* Assets.xcassets */,
 				634589F5212624FC00D81EAD /* Resources */,
 				6317D38723B98DCF00DD935B /* FuturesInterop.swift */,
@@ -445,7 +442,6 @@
 				6395650E212646BD006F2A71 /* TextureLoader.swift in Sources */,
 				63C34FF3212F5CF900076E55 /* Sprite.swift in Sources */,
 				63C34FF0212F2F4700076E55 /* LayoutHandler.swift in Sources */,
-				63F75D88235A98F400B963F7 /* TouchTracker.swift in Sources */,
 				63F97B04211CCB0400784701 /* ClickHandler.swift in Sources */,
 				6341098C211CC7C000D40139 /* GameViewController.swift in Sources */,
 				63983249232A865800569093 /* MagnifyHandler.swift in Sources */,

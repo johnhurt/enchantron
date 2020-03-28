@@ -92,7 +92,13 @@ impl ViewportInfo {
     /// change the scale of the area shown by the viewport by the given
     /// additive amount and shift the position of the viewport by the given
     /// amount
-    pub fn change_scale_and_move(&mut self, scale: f64, position_shift: Point) {
+    pub fn change_scale_and_move(
+        &mut self,
+        scale: f64,
+        mut position_shift: Point,
+    ) {
+        position_shift *= self.viewport_scale;
+
         let new_position = Point::new(
             self.viewport_rect.top_left.x + position_shift.x,
             self.viewport_rect.top_left.y + position_shift.y,

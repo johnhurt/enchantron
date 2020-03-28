@@ -14,9 +14,10 @@ macro_rules! define_event_bus {
 
             use futures::future::FutureExt;
 
-            use atomic_counter::{ AtomicCounter, ConsistentCounter };
-
-            use tokio::stream::StreamExt;
+            use tokio::stream::{
+                StreamExt,
+                StreamMap
+            };
             use tokio::runtime::Handle;
             use tokio::task::JoinHandle;
             use tokio::sync::broadcast::{
@@ -46,13 +47,12 @@ macro_rules! define_event_bus {
 
             pub struct Inner {
                 runtime_handle: Handle,
-                registration_counter: ConsistentCounter,
                 senders: Senders,
             }
 
             struct Senders {
                 $(
-                    $e : BroadcastSender<$e>,
+                    $e : BroadcastSender<super::$e>,
                 )*
             }
 
@@ -72,7 +72,6 @@ macro_rules! define_event_bus {
                 $(
                     fn $e(&self, event: super::$e) {
                         debug!("Posting {} event: {:?}", stringify!($e), event);
-
                         let _ = self.inner.senders.$e.send(event);
                     }
                 )*
@@ -82,14 +81,43 @@ macro_rules! define_event_bus {
                     -> (ListenerRegistration, impl StreamExt<Item = E>)
                 where E: Event
                 {
-                    E::register(self)
+                    let main_receiver = E::get_main_receiver(self);
+                    let (end_sender, end_receiver)
+                        = mpsc_channel::<Option<E>>(1);
+
+                    let inner_clone = self.inner.clone();
+
+                    let listener_registration = ListenerRegistration::new(
+                        Box::new(move || {
+                            let mut end_sender = end_sender;
+                            inner_clone.runtime_handle.spawn(async move {
+                                end_sender.send(None).await;
+                            });
+                        })
+                    );
+
+                    let result_stream = main_receiver
+                        .map(Result::ok)
+                        .merge(end_receiver)
+                        .take_while(Option::is_some)
+                        .map(Option::unwrap);
+
+                    (listener_registration, result_stream)
                 }
 
                 pub fn register_for_one<E>(&self)
                     -> impl Future<Output = Option<E>>
                 where E: Event
                 {
-                    E::register_for_one(self).map(Result::ok)
+                    let main_receiver = E::get_main_receiver(self);
+
+                    async move {
+                        main_receiver
+                            .take_while(Result::is_ok)
+                            .map(Result::unwrap)
+                            .next()
+                            .await
+                    }
                 }
 
                 /// Convienient passthrough to the tokio spawner
@@ -102,75 +130,18 @@ macro_rules! define_event_bus {
                 }
             }
 
-            mod register {
-                pub use super::*;
-
-
-                $(
-                pub fn $e(
-                    this: Arc<Inner>,
-                    mut main_receiver: BroadcastReceiver<super::super::$e>
-                )
-                    -> ( ListenerRegistration, MpscReceiver<super::super::$e> )
-                {
-                    info!("Registering a listener for {} events",
-                        stringify!($e));
-
-                    let listener_id = this.registration_counter.inc();
-
-                    let (mut end_sender, end_receiver) = oneshot_channel::<()>();
-                    let (mut )
-
-                    let _ = this.runtime_handle.spawn(async move {
-
-                        loop {
-                            futures::select! {
-                                event = main_receiver => {
-                                    let _ = sender.send(event).await
-                                },
-                                _ = end_receiver => break
-                            }
-                        }
-
-                        debug!("Receiver for {} closed", stringify!($e));
-                    });
-
-                    let deregister_inner = this.clone();
-
-
-                    let listener_registration = ListenerRegistration::new(
-                        Box::new(move || {
-                            end_sender.send(());
-                        })
-                    );
-
-                    (listener_registration, receiver)
-                }
-            )*}
-
-            mod register_for_one {
-                pub use super::*;
-                $(
-                    pub fn $e(this: Arc<Inner>,
-                        mut main_receiver: BroadcastReceiver<$e>) -> OneshotReceiver<super::super::$e>{
-                            todo!();
-                        }
-                )*
-            }
-
             impl Inner {
 
                 fn new(runtime_handle: Handle) -> Inner {
                     let senders = Senders {
                         $(
-                            $e: broadcast_channel(1024).0,
+                            $e: broadcast_channel::<super::$e>(1024).0,
                         )*
                     };
 
 
                     Inner{
                         runtime_handle,
-                        registration_counter: Default::default(),
                         senders,
                     }
                 }
@@ -181,10 +152,7 @@ macro_rules! define_event_bus {
 
             pub trait Event: Unpin + Send + Debug + Clone + 'static {
                 fn post(self, event_bus: &EventBus);
-                fn register(event_bus: &EventBus)
-                    -> ( ListenerRegistration, MpscReceiver<Self> );
-                fn register_for_one(event_bus: &EventBus)
-                    -> OneshotReceiver<Self>;
+                fn get_main_receiver(event_bus: &EventBus) -> BroadcastReceiver<Self>;
             }
 
             $(
@@ -193,20 +161,10 @@ macro_rules! define_event_bus {
                         event_bus.$e(self)
                     }
 
-                    fn register(event_bus: &EventBus)
-                        -> ( ListenerRegistration, MpscReceiver<super::$e> )
+                    fn get_main_receiver(event_bus: &EventBus)
+                        -> BroadcastReceiver<super::$e>
                     {
-                        register::$e(
-                            event_bus.inner.clone(),
-                            event_bus.inner.senders.$e.subscribe())
-                    }
-
-                    fn register_for_one(event_bus: &EventBus)
-                        -> OneshotReceiver<super::$e>
-                    {
-                        register_for_one::$e(
-                            event_bus.inner.clone(),
-                            event_bus.inner.senders.$e.subscribe())
+                        event_bus.inner.senders.$e.subscribe()
                     }
                 }
             )*

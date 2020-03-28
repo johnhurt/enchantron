@@ -1,6 +1,6 @@
-use crate::event::{EventBus, ListenerRegistration, LoadResources};
+use crate::event::{EventBus, LoadResources};
 
-use std::sync::{Arc, Weak};
+use std::sync::Arc;
 
 use crate::native::{RuntimeResources, SystemView, Textures};
 
@@ -10,9 +10,6 @@ use crate::view::{BaseView, LoadingView};
 
 use crate::view_types::ViewTypes;
 
-use tokio::stream::StreamExt;
-use tokio::sync::{Mutex, RwLock, RwLockWriteGuard};
-
 pub struct LoadingPresenter<T>
 where
     T: ViewTypes,
@@ -20,30 +17,13 @@ where
     view: T::LoadingView,
     system_view: Arc<T::SystemView>,
     resources_sink: Box<dyn Fn(RuntimeResources<T::SystemView>) + Send + Sync>,
-    weak_self: RwLock<Option<Box<Weak<LoadingPresenter<T>>>>>,
     event_bus: EventBus,
-    listener_registrations: Mutex<Vec<ListenerRegistration>>,
 }
 
 impl<T> LoadingPresenter<T>
 where
     T: ViewTypes,
 {
-    /// Get a weak arc pointer to this presenter or panic if none has been
-    /// created yet
-    async fn weak_self(&self) -> Weak<LoadingPresenter<T>> {
-        let ref weak_self_lock = self.weak_self.read().await;
-
-        weak_self_lock
-            .as_ref()
-            .map(Box::as_ref)
-            .map(Clone::clone)
-            .unwrap_or_else(|| {
-                error!("No weak self pointer created yet");
-                panic!("No weak self pointer created yet");
-            })
-    }
-
     async fn load_resources(&self) {
         let textures =
             Textures::new(&self.system_view.get_texture_loader(), &|p| {
@@ -60,28 +40,14 @@ where
     async fn bind(self) -> Arc<LoadingPresenter<T>> {
         let result = Arc::new(self);
 
-        {
-            let weak_self = Arc::downgrade(&result);
-            let mut weak_self_opt = result.weak_self.write().await;
+        let load_resources_future =
+            result.event_bus.register_for_one::<LoadResources>();
 
-            *weak_self_opt = Some(Box::new(weak_self));
-        }
-
-        let weak_self = result.weak_self().await;
-        let (listener_registration, mut load_resources_events) =
-            result.event_bus.register::<LoadResources>();
-
-        result
-            .listener_registrations
-            .lock()
-            .await
-            .push(listener_registration);
+        let this = result.clone();
 
         let _ = result.event_bus.spawn(async move {
-            while let Some(_) = load_resources_events.next().await {
-                if let Some(arc_self) = weak_self.upgrade() {
-                    arc_self.load_resources().await
-                }
+            if let Some(_) = load_resources_future.await {
+                this.load_resources().await
             }
         });
 
@@ -110,8 +76,6 @@ where
             system_view: system_view,
             event_bus: event_bus,
             resources_sink: resources_sink,
-            weak_self: RwLock::new(None),
-            listener_registrations: Default::default(),
         }
         .bind()
         .await;

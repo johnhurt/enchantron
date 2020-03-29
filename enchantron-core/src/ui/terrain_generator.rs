@@ -208,7 +208,7 @@ where
             let weak_self = Arc::downgrade(&arc_result);
 
             let (listener_registration, mut event_stream) =
-                event_bus.register::<ViewportChange>();
+                event_bus.register_to_watch::<ViewportChange>();
 
             arc_result
                 .add_listener_registration(listener_registration)
@@ -230,7 +230,7 @@ where
         let weak_self = Arc::downgrade(&arc_result);
 
         let (listener_registration, mut event_stream) =
-            event_bus.register::<ViewportChange>();
+            event_bus.register_to_watch::<ViewportChange>();
 
         arc_result
             .add_listener_registration(listener_registration)
@@ -314,6 +314,8 @@ where
         layer: usize,
         viewport_info: &ViewportInfo,
     ) {
+        info!("Starting");
+
         let terrain_update_info_opt = self
             .with_layer(layer, |inner| {
                 inner.terrain_updates_required(layer, viewport_info)
@@ -399,6 +401,8 @@ where
             });
         })
         .await;
+
+        info!("Ending");
     }
 }
 

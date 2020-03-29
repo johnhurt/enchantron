@@ -91,7 +91,7 @@ macro_rules! define_event_bus {
                         Box::new(move || {
                             let mut end_sender = end_sender;
                             inner_clone.runtime_handle.spawn(async move {
-                                end_sender.send(None).await;
+                                let _ = end_sender.send(None).await;
                             });
                         })
                     );
@@ -118,6 +118,29 @@ macro_rules! define_event_bus {
                             .next()
                             .await
                     }
+                }
+
+                pub fn register_to_watch<E>(&self)
+                    -> (ListenerRegistration, impl StreamExt<Item = E>)
+                where E: Event {
+                    let (listener_registration, mut main_stream)
+                        = self.register::<E>();
+
+                    let (watch_sender, watch_receiver)
+                        = watch_channel::<Option<E>>(None);
+
+                    self.spawn(async move {
+                        while let Some(e) = main_stream.next().await {
+                            let _ = watch_sender.broadcast(Some(e));
+                        }
+                    });
+
+                    let result_stream = watch_receiver
+                        .skip(1)
+                        .take_while(Option::is_some)
+                        .map(Option::unwrap);
+
+                    (listener_registration, result_stream)
                 }
 
                 /// Convienient passthrough to the tokio spawner
@@ -150,7 +173,7 @@ macro_rules! define_event_bus {
 
             type ListenerKey = usize;
 
-            pub trait Event: Unpin + Send + Debug + Clone + 'static {
+            pub trait Event: Unpin + Send + Sync + Debug + Clone + 'static {
                 fn post(self, event_bus: &EventBus);
                 fn get_main_receiver(event_bus: &EventBus) -> BroadcastReceiver<Self>;
             }

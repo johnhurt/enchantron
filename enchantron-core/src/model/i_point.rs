@@ -1,8 +1,8 @@
+use super::{ISize, Point};
+use rstar::Point as RTreePoint;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub};
 
-use super::{ISize, Point};
-
-#[derive(Default, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct IPoint {
     pub x: i64,
     pub y: i64,
@@ -19,11 +19,17 @@ impl IPoint {
         IPoint { x: x, y: y }
     }
 
+    /// Get the distance to the given point
     pub fn distance_to(&self, i_point: &IPoint) -> f64 {
-        let dx = (self.x - i_point.x) as f64;
-        let dy = (self.y - i_point.y) as f64;
+        (self.distance_squared(i_point) as f64).sqrt()
+    }
 
-        (dx * dx + dy * dy).sqrt()
+    /// Get the distance squared from this point to the given point
+    pub fn distance_squared(&self, i_point: &IPoint) -> i64 {
+        let dx = self.x - i_point.x;
+        let dy = self.y - i_point.y;
+
+        dx * dx + dy * dy
     }
 
     pub fn to_size(&self) -> Option<ISize> {
@@ -32,6 +38,22 @@ impl IPoint {
         } else {
             None
         }
+    }
+
+    pub fn length_2(&self) -> i64 {
+        self.x * self.x + self.y + self.y
+    }
+
+    /// Create a new point that is the component-wise maximum of this point and
+    /// the given point
+    pub fn component_max(&self, other: &IPoint) -> IPoint {
+        IPoint::new(self.x.max(other.x), self.y.max(other.y))
+    }
+
+    /// Create a new point that is the component-wise minimum of this point and
+    /// the given point
+    pub fn component_min(&self, other: &IPoint) -> IPoint {
+        IPoint::new(self.x.min(other.x), self.y.min(other.y))
     }
 }
 
@@ -127,6 +149,31 @@ impl<'b> Sub<&'b IPoint> for IPoint {
         self.x -= rhs.x;
         self.y -= rhs.y;
         self
+    }
+}
+
+impl RTreePoint for IPoint {
+    type Scalar = i64;
+    const DIMENSIONS: usize = 2;
+
+    fn generate(generator: impl Fn(usize) -> Self::Scalar) -> Self {
+        IPoint::new(generator(0), generator(1))
+    }
+
+    fn nth(&self, index: usize) -> Self::Scalar {
+        if index == 0 {
+            self.x
+        } else {
+            self.y
+        }
+    }
+
+    fn nth_mut(&mut self, index: usize) -> &mut Self::Scalar {
+        if index == 0 {
+            &mut self.x
+        } else {
+            &mut self.y
+        }
     }
 }
 

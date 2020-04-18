@@ -1,1 +1,1 @@
-pub struct Player {}
+pub async fn run_player() {}

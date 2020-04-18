@@ -1,8 +1,8 @@
 use super::{IPoint, ISize};
-
+use rstar::{Envelope, Point, PointDistance, RTreeObject};
 use std::cmp::{max, min};
 
-#[derive(Default, Debug, Clone, Eq, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
 pub struct IRect {
     pub top_left: IPoint,
     pub size: ISize,
@@ -47,11 +47,10 @@ impl IRect {
         }
     }
 
-    /// Get the minimum distance from this IRect to the given IPoint.  If the given
-    /// IPoint is within this IRectangle then 0 is returned
-    pub fn distance_to(&self, i_point: &IPoint) -> f64 {
+    /// Get the distance squared to the given point
+    pub fn distance_squared(&self, i_point: &IPoint) -> i64 {
         if self.contains_point(i_point) {
-            return 0.;
+            return 0;
         }
 
         let right = self.top_left.x + self.size.width as i64;
@@ -59,27 +58,37 @@ impl IRect {
 
         if i_point.x < self.top_left.x {
             if i_point.y < self.top_left.y {
-                i_point.distance_to(&self.top_left)
+                i_point.distance_2(&self.top_left)
             } else if i_point.y > bottom {
-                i_point.distance_to(&IPoint::new(self.top_left.x, bottom))
+                i_point.distance_2(&IPoint::new(self.top_left.x, bottom))
             } else {
-                (self.top_left.x - i_point.x) as f64
+                let x = self.top_left.x - i_point.x;
+                x * x
             }
         } else if i_point.x > right {
             if i_point.y < self.top_left.y {
-                i_point.distance_to(&IPoint::new(right, self.top_left.y))
+                i_point.distance_2(&IPoint::new(right, self.top_left.y))
             } else if i_point.y > bottom {
-                i_point.distance_to(&IPoint::new(right, bottom))
+                i_point.distance_2(&IPoint::new(right, bottom))
             } else {
-                (i_point.x - right) as f64
+                let x = i_point.x - right;
+                x * x
             }
         } else {
-            if i_point.y < self.top_left.y {
-                (self.top_left.y - i_point.y) as f64
+            let d = if i_point.y < self.top_left.y {
+                (self.top_left.y - i_point.y)
             } else {
-                (i_point.y - bottom) as f64
-            }
+                (i_point.y - bottom)
+            };
+
+            d * d
         }
+    }
+
+    /// Get the minimum distance from this IRect to the given IPoint.  If the
+    /// given IPoint is within this IRectangle then 0 is returned
+    pub fn distance_to(&self, i_point: &IPoint) -> f64 {
+        (self.distance_squared(i_point) as f64).sqrt()
     }
 
     /// Return whether or not the given IPoint is within the given IRectangle
@@ -119,6 +128,10 @@ impl IRect {
         let t4 = action(&corner);
 
         (t1, t2, t3, t4)
+    }
+
+    pub fn area(&self) -> usize {
+        self.size.area()
     }
 
     /// Returns whether or not the given rect is completely within the bounds
@@ -161,6 +174,125 @@ impl IRect {
         } else {
             None
         }
+    }
+}
+
+impl Envelope for IRect {
+    type Point = IPoint;
+
+    fn new_empty() -> Self {
+        IRect::default()
+    }
+
+    fn contains_point(&self, point: &IPoint) -> bool {
+        self.contains_point(point)
+    }
+
+    fn contains_envelope(&self, other: &IRect) -> bool {
+        self.contains_rect(other)
+    }
+
+    fn merge(&mut self, other: &Self) {
+        let bottom_right = self
+            .bottom_right_exclusive()
+            .component_max(&other.bottom_right_exclusive());
+        self.top_left = self.top_left.component_min(&other.top_left);
+        self.size = (bottom_right - &self.top_left).to_size().unwrap()
+    }
+
+    fn merged(&self, other: &Self) -> Self {
+        let mut result = self.clone();
+        result.merge(other);
+        result
+    }
+
+    fn intersects(&self, other: &Self) -> bool {
+        self.intersection(other).is_some()
+    }
+
+    fn area(&self) -> i64 {
+        self.area() as i64
+    }
+
+    fn distance_2(&self, point: &Self::Point) -> i64 {
+        self.distance_2(point)
+    }
+
+    fn min_max_dist_2(&self, point: &Self::Point) -> i64 {
+        let l_x = self.top_left.x - point.x;
+        let l_y = self.top_left.y - point.y;
+        let u_x = l_x + self.size.width as i64;
+        let u_y = l_y + self.size.height as i64;
+
+        let (min_x, max_x) = if l_x.abs() < u_x.abs() {
+            (l_x, u_x)
+        } else {
+            (u_x, l_x)
+        };
+
+        let (min_y, max_y) = if l_y.abs() < u_y.abs() {
+            (l_y, u_y)
+        } else {
+            (u_y, l_y)
+        };
+
+        let l_sq_1 = min_x * min_x + max_y * max_y;
+        let l_sq_2 = max_x * max_x + min_y * min_y;
+
+        l_sq_1.min(l_sq_2)
+    }
+
+    fn center(&self) -> Self::Point {
+        IPoint::new(
+            self.top_left.x + (self.size.width / 2) as i64,
+            self.top_left.y + (self.size.height / 2) as i64,
+        )
+    }
+
+    fn intersection_area(
+        &self,
+        other: &Self,
+    ) -> <Self::Point as Point>::Scalar {
+        self.intersection(other)
+            .map(|intersection| intersection.area())
+            .unwrap_or_default() as i64
+    }
+
+    fn perimeter_value(&self) -> <Self::Point as Point>::Scalar {
+        (self.size.width + self.size.height) as i64
+    }
+
+    fn sort_envelopes<T: RTreeObject<Envelope = Self>>(
+        axis: usize,
+        envelopes: &mut [T],
+    ) {
+        envelopes.sort_by(|l, r| {
+            let ref lp = l.envelope().top_left;
+            let ref rp = r.envelope().top_left;
+
+            if axis == 0 {
+                lp.x.cmp(&rp.x)
+            } else {
+                lp.y.cmp(&rp.y)
+            }
+        });
+    }
+
+    fn partition_envelopes<T: RTreeObject<Envelope = Self>>(
+        axis: usize,
+        envelopes: &mut [T],
+        selection_size: usize,
+    ) {
+        pdqselect::select_by(envelopes, selection_size, |l, r| {
+            let ref lp = l.envelope().top_left;
+            let ref rp = r.envelope().top_left;
+
+            if axis == 0 {
+                lp.x.cmp(&rp.x)
+            } else {
+                lp.y.cmp(&rp.y)
+            }
+        });
     }
 }
 

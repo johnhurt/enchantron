@@ -1,6 +1,4 @@
-use crate::model::IRect;
-use rstar::RTreeObject;
-
+#[derive(Debug, Hash, Clone, Copy)]
 pub enum WorldEntity {
     Player,
 }

@@ -10,16 +10,15 @@ edition = "2018"
 trace-error = "0.1.5"
 lazy_static = "1.4.0"
 log = "0.4"
-simplelog = "0.7.4"
-itertools = "0.8.2"
+simplelog = "0.7.5"
+itertools = "0.9.0"
 getset = "0.1.0"
 derive_builder = "0.9.0"
 atomic-counter = "1.0.1"
 twox-hash = "1.5.0"
-anymap = "0.12.1"
-tokio = { version = "0.2.13", features = [ "time", "sync", "rt-threaded", "rt-core", "stream" ] }
+tokio = { version = "0.2.18", features = [ "time", "sync", "rt-threaded", "rt-core", "stream" ] }
 futures = "0.3.4"
-png = "0.16.1"
+png = "0.16.2"
 rand = "0.7.3"
 derive-new = "0.5.8"
 rstar = "0.7.1"
@@ -47,3 +46,5 @@ name = "enchantron"
 path = "src/lib.rs"
 crate-type = ["staticlib"]
 
+[profile.release]
+panic = "abort"

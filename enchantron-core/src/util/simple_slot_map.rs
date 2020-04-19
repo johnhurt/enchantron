@@ -1,12 +1,19 @@
 use std::collections::VecDeque;
 use std::iter::FilterMap;
 use std::slice::Iter;
+use std::marker::PhantomData;
+use super::{SlotMapKey, SlotMapKeyData, HasSlotMapKeyData};
 
 /// Simple and naive map that keeps elements in slots that can be accessed by
 /// id and that id is guaranteed not to change over time
-pub struct SimpleSlotMap<T> {
-    storage: Vec<Option<T>>,
-    queue: VecDeque<usize>,
+pub struct SimpleSlotMap<K, T>
+    where
+        K : SlotMapKey,
+        T : Default {
+    storage: Vec<T>,
+    queue: VecDeque<SlotMapKeyData>,
+
+    phantomKey: PhantomData<K>
 }
 
 impl<T> Default for SimpleSlotMap<T> {

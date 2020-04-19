@@ -215,7 +215,7 @@ impl Envelope for IRect {
     }
 
     fn distance_2(&self, point: &Self::Point) -> i64 {
-        self.distance_2(point)
+        self.distance_squared(point)
     }
 
     fn min_max_dist_2(&self, point: &Self::Point) -> i64 {

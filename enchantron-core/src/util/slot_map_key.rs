@@ -1,3 +1,3 @@
-use super::{HasSlotMapKeyData, SlotMapKeyData};
+use super::{HasSlotMapKeyData};
 
-pub trait SlotMapKey: 'static + Clone + HasSlotMapKeyData {}
+pub trait SlotMapKey: 'static + Copy + Default + HasSlotMapKeyData {}

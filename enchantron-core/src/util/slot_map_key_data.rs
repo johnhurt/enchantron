@@ -1,1 +1,2 @@
-pub type SlotMapKeyData = u64;
+
+pub struct SlotMapKeyData = u64;

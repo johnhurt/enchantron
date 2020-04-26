@@ -1,30 +1,26 @@
-pub use self::byte_buffer::ByteBuffer;
-pub use self::simple_slot_map::SimpleSlotMap;
-
 pub use self::boxed_any::*;
+pub use self::byte_buffer::ByteBuffer;
 pub use self::corner_values::CornerValues;
 pub use self::default_xxhash_ipoint_hasher::DefaultXxHashIPointHasher;
 pub use self::harmonic_perlin_generator::HarmonicPerlinGenerator;
-pub use self::has_slot_map_key_data::HasSlotMapKeyData;
 pub use self::ipoint_hasher::IPointHasher;
 pub use self::restricted_xx_hasher::RestrictedXxHasher;
 pub use self::single_perlin_generator::SinglePerlinGenerator;
+pub use self::slot_map::SlotMap;
+pub use self::slot_map::SLOT_MAP_CHUNK_SIZE;
 pub use self::slot_map_key::SlotMapKey;
 pub use self::slot_map_key_data::SlotMapKeyData;
 pub use self::value_rect::ValueRect;
 
-mod byte_buffer;
-mod simple_slot_map;
-mod slot_map;
-mod slot_map_key;
-
 mod boxed_any;
+mod byte_buffer;
 mod corner_values;
 mod default_xxhash_ipoint_hasher;
 mod harmonic_perlin_generator;
-mod has_slot_map_key_data;
 mod ipoint_hasher;
 mod restricted_xx_hasher;
 mod single_perlin_generator;
+mod slot_map;
+mod slot_map_key;
 mod slot_map_key_data;
 mod value_rect;

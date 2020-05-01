@@ -175,6 +175,21 @@ impl IRect {
             None
         }
     }
+
+    /// Create a new rect by expanding this rect in all directions by the
+    /// given offset
+    pub fn expanded_by(&self, offset: usize) -> IRect {
+        IRect {
+            top_left: IPoint {
+                x: self.top_left.x - offset as i64,
+                y: self.top_left.y - offset as i64,
+            },
+            size: ISize {
+                width: self.size.width + 2 * offset,
+                height: self.size.height + 2 * offset,
+            },
+        }
+    }
 }
 
 impl Envelope for IRect {

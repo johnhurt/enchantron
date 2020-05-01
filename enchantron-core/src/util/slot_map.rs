@@ -233,13 +233,13 @@ where
         }
     }
     /// Remove the item at the given index and return true iff successful
-    pub fn remove(&mut self, key: &K) -> bool {
+    pub fn remove(&mut self, key: &K) -> Option<&T> {
         let key_data = key.get_slot_map_key_data();
 
         // This allows us to unwrap instead of matching and panicing
         self.validate_slot_key(key);
 
-        let (generation, _) =
+        let (generation, value) =
             if key_data.chunk_index == self.current_chunk_index {
                 self.current_chunk
                     .get_mut(key_data.index_in_chunk)
@@ -257,9 +257,9 @@ where
         if *generation == key_data.generation {
             *generation += 1;
             self.queue.push_front(*key_data);
-            true
+            Some(value)
         } else {
-            false
+            None
         }
     }
 }
@@ -308,7 +308,7 @@ mod test {
         }
 
         for k in keys.iter() {
-            assert!(map.remove(k));
+            assert_eq!(map.remove(k), Some(&format!("{}", k.0)));
             assert_eq!(map.get(k), None);
         }
 

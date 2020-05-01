@@ -1,7 +1,7 @@
 use super::GameEntity;
 use crate::util::{SlotMapKey, SlotMapKeyData};
 
-#[derive(Debug, Hash, Clone, Copy)]
+#[derive(Debug, Hash, Clone, Copy, PartialEq)]
 pub struct GameEntitySlotKey {
     entity: GameEntity,
     slot_key: SlotMapKeyData,

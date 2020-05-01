@@ -14,7 +14,7 @@ const GENERATION_SHIFT: u8 = CHUNK_INDEX_SHIFT + CHUNK_INDEX_BITS;
 const GENERATION_MASK: u64 =
     ((0x1 << (GENERATION_BITS + 1)) - 1) << GENERATION_SHIFT;
 
-#[derive(Debug, Hash, Clone, Copy, derive_new::new)]
+#[derive(Debug, Hash, Clone, Copy, derive_new::new, PartialEq)]
 pub struct SlotMapKeyData {
     pub index_in_chunk: usize,
     pub chunk_index: usize,

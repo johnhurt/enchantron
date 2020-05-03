@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 pub const SLOT_MAP_CHUNK_SIZE: usize = 256;
 
 // Require the chunk size to be a power of 2
-const_assert_eq!(SLOT_MAP_CHUNK_SIZE.count_ones(), 1u32);
+//const_assert_eq!(SLOT_MAP_CHUNK_SIZE.count_ones(), 1u32);
 
 /// Simple and naive map that keeps elements in slots that can be accessed by
 /// id and that id is guaranteed not to change over time

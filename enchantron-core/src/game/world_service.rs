@@ -159,6 +159,15 @@ impl WorldService {
             .await
     }
 
+    pub async fn move_by_key_delta(
+        &self,
+        key: &GameEntitySlotKey,
+        shift: &IPoint,
+    ) {
+        self.with_inner_mut(|inner| inner.move_by_key_delta(key, shift))
+            .await
+    }
+
     pub async fn get_entities_at(&self, point: &IPoint) -> Vec<GameEntity> {
         self.with_inner(|inner| inner.get_entities_at(point)).await
     }
@@ -211,6 +220,20 @@ impl Inner {
     fn move_by_key(&mut self, key: &GameEntitySlotKey, new_location: IPoint) {
         if let Some(mut wp) = self.slot_map.get_mut(key) {
             wp.write().location.top_left = new_location;
+            if !wp.check_window_contains_location() {
+                let mut owned_wp = self
+                    .rtree
+                    .remove(wp)
+                    .expect("Entity pointer should still be in rtree");
+                owned_wp.recenter_window();
+                self.rtree.insert(owned_wp);
+            }
+        }
+    }
+
+    fn move_by_key_delta(&mut self, key: &GameEntitySlotKey, shift: &IPoint) {
+        if let Some(mut wp) = self.slot_map.get_mut(key) {
+            wp.write().location.top_left += shift;
             if !wp.check_window_contains_location() {
                 let mut owned_wp = self
                     .rtree

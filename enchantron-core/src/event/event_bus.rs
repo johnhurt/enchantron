@@ -18,5 +18,11 @@ define_event_bus!(
     Magnify{
         pub scale_change_additive: f64,
         pub global_center: Point
+    },
+    EnteredViewport{
+
+    },
+    ExitedViewport{
+
     }
 );

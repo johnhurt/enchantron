@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 pub const SLOT_MAP_CHUNK_SIZE: usize = 256;
 
 // Require the chunk size to be a power of 2
-//const_assert_eq!(SLOT_MAP_CHUNK_SIZE.count_ones(), 1u32);
+const_assert_eq!(SLOT_MAP_CHUNK_SIZE.count_ones(), 1u32);
 
 /// Simple and naive map that keeps elements in slots that can be accessed by
 /// id and that id is guaranteed not to change over time
@@ -233,7 +233,7 @@ where
         }
     }
     /// Remove the item at the given index and return true iff successful
-    pub fn remove(&mut self, key: &K) -> Option<&T> {
+    pub fn remove(&mut self, key: &K) -> Option<&mut T> {
         let key_data = key.get_slot_map_key_data();
 
         // This allows us to unwrap instead of matching and panicing
@@ -308,7 +308,7 @@ mod test {
         }
 
         for k in keys.iter() {
-            assert_eq!(map.remove(k), Some(&format!("{}", k.0)));
+            assert_eq!(map.remove(k), Some(&mut format!("{}", k.0)));
             assert_eq!(map.get(k), None);
         }
 

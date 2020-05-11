@@ -65,6 +65,7 @@ class Sprite : SKSpriteNode {
     }
     
     func setLocationAnimated(_ left: Float64, _ top: Float64, _ durationSeconds: Float64) {
+        
         if durationSeconds > 0.0 {
             let move = SKAction.move(
                 to: CGPoint(x: CGFloat(left), y: -CGFloat(top)),

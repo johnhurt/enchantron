@@ -2,11 +2,15 @@ use super::{GameEntity, GameEntitySlotKey};
 use crate::model::{IPoint, IRect, ISize};
 use crate::util::SlotMap;
 use rstar::{PointDistance, RTree, RTreeObject};
-use std::cell::{Ref, RefCell, RefMut};
 use std::collections::HashMap;
-use std::rc::Rc;
+use std::ptr;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+
+struct WindowedPointer {
+    owner: bool,
+    p: *const WindowedPointerInner,
+}
 
 fn get_windowed_offset_for(entity: &GameEntity) -> usize {
     use GameEntity::*;
@@ -16,8 +20,60 @@ fn get_windowed_offset_for(entity: &GameEntity) -> usize {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-struct WindowedPointer(Rc<RefCell<WindowedPointerInner>>);
+impl PartialEq for WindowedPointer {
+    fn eq(&self, other: &WindowedPointer) -> bool {
+        self.read().entity == other.read().entity
+    }
+}
+
+impl RTreeObject for WindowedPointer {
+    type Envelope = IRect;
+
+    fn envelope(&self) -> Self::Envelope {
+        self.read().window
+    }
+}
+
+impl PointDistance for WindowedPointer {
+    /// Returns the squared euclidean distance of an object to a point.
+    fn distance_2(&self, point: &IPoint) -> i64 {
+        self.read().location.distance_squared(point)
+    }
+
+    /// Returns true if a point is contained within this object.
+    fn contains_point(&self, point: &IPoint) -> bool {
+        self.read().location.contains_point(point)
+    }
+
+    /// Returns the squared distance to this object or `None` if the distance
+    /// is larger than a given maximum value.
+    fn distance_2_if_less_or_equal(
+        &self,
+        point: &IPoint,
+        max_distance_2: i64,
+    ) -> Option<i64> {
+        let distance_2 = self.distance_2(point);
+
+        if distance_2 <= max_distance_2 {
+            Some(distance_2)
+        } else {
+            None
+        }
+    }
+}
+
+unsafe impl Send for WindowedPointer {}
+unsafe impl Sync for WindowedPointer {}
+
+impl Drop for WindowedPointer {
+    fn drop(&mut self) {
+        if self.owner {
+            unsafe {
+                ptr::drop_in_place(self.p as *mut WindowedPointerInner);
+            }
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 struct WindowedPointerInner {
@@ -39,24 +95,29 @@ impl WindowedPointer {
             size: ISize::new(1, 1),
         };
         let window = location.expanded_by(get_windowed_offset_for(&entity));
-        WindowedPointer(Rc::new(RefCell::new(WindowedPointerInner {
+        let inner = WindowedPointerInner {
             entity,
             location,
             window,
-        })))
+        };
+
+        WindowedPointer {
+            owner: true,
+            p: Box::into_raw(Box::new(inner)),
+        }
     }
 
-    fn read(&self) -> Ref<WindowedPointerInner> {
-        self.0.borrow()
+    pub fn read<'a>(&'a self) -> &'a WindowedPointerInner {
+        unsafe { &*self.p }
+    }
+
+    pub fn write<'a>(&'a self) -> &'a mut WindowedPointerInner {
+        unsafe { &mut *(self.p as *mut WindowedPointerInner) }
     }
 
     fn check_window_contains_location(&self) -> bool {
         let inner = self.read();
         inner.window.contains_rect(&inner.location)
-    }
-
-    fn write(&self) -> RefMut<WindowedPointerInner> {
-        self.0.borrow_mut()
     }
 
     /// Move the window for this windowed pointer to be the rectangle around the
@@ -69,42 +130,16 @@ impl WindowedPointer {
     }
 }
 
-impl PointDistance for WindowedPointer {
-    /// Returns the squared euclidean distance of an object to a point.
-    fn distance_2(&self, point: &IPoint) -> i64 {
-        self.0.borrow().location.distance_squared(point)
-    }
-
-    /// Returns true if a point is contained within this object.
-    fn contains_point(&self, point: &IPoint) -> bool {
-        self.0.borrow().location.contains_point(point)
-    }
-
-    /// Returns the squared distance to this object or `None` if the distance
-    /// is larger than a given maximum value.
-    fn distance_2_if_less_or_equal(
-        &self,
-        point: &IPoint,
-        max_distance_2: i64,
-    ) -> Option<i64> {
-        let distance_2 = self.distance_2(point);
-
-        if distance_2 <= max_distance_2 {
-            Some(distance_2)
-        } else {
-            None
+impl Clone for WindowedPointer {
+    fn clone(&self) -> WindowedPointer {
+        WindowedPointer {
+            owner: false,
+            p: self.p,
         }
     }
 }
 
-impl RTreeObject for WindowedPointer {
-    type Envelope = IRect;
-
-    fn envelope(&self) -> Self::Envelope {
-        self.read().window
-    }
-}
-
+#[derive(Clone)]
 pub struct WorldService {
     inner: Arc<RwLock<Inner>>,
 }
@@ -116,7 +151,7 @@ struct Inner {
 }
 
 impl WorldService {
-    fn new() -> WorldService {
+    pub fn new() -> WorldService {
         WorldService {
             inner: Arc::new(RwLock::new(Inner::new())),
         }
@@ -183,7 +218,7 @@ impl Inner {
     }
 
     fn insert(&mut self, e: GameEntity, location: IPoint) -> GameEntitySlotKey {
-        let wp = WindowedPointer::new(e, location);
+        let mut wp = WindowedPointer::new(e, location);
         let wp_clone = wp.clone();
 
         self.rtree.insert(wp);
@@ -248,18 +283,19 @@ impl Inner {
     fn get_entities_at(&self, point: &IPoint) -> Vec<GameEntity> {
         self.rtree
             .locate_all_at_point(point)
-            .map(|wp| wp.0.borrow().entity)
+            .map(|wp| wp.read().entity)
             .collect()
     }
 
     fn remove_by_key(&mut self, key: &GameEntitySlotKey) -> Option<IRect> {
-        if let Some(wp_ref) = self.slot_map.remove(key) {
-            let wp = self
+        if let Some(mut wp_ref) = self.slot_map.remove(key) {
+            let _ = self
                 .rtree
                 .remove(wp_ref)
                 .expect("Entity missing from rtree when present in slot map");
 
-            let _ = self.slot_keys_by_entity.remove(&wp.0.borrow().entity);
+            let _ = self.slot_keys_by_entity.remove(&wp_ref.read().entity);
+
             Some(wp_ref.read().location)
         } else {
             None

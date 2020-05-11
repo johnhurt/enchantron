@@ -12,11 +12,8 @@ macro_rules! define_event_bus {
             use std::future::Future;
             use std::fmt::Debug;
 
-            use futures::future::FutureExt;
-
             use tokio::stream::{
-                StreamExt,
-                StreamMap
+                StreamExt
             };
             use tokio::runtime::Handle;
             use tokio::task::JoinHandle;
@@ -25,19 +22,11 @@ macro_rules! define_event_bus {
                 Sender as BroadcastSender,
                 Receiver as BroadcastReceiver
             };
-            use tokio::sync::oneshot::{
-                channel as oneshot_channel,
-                Sender as OneshotSender,
-                Receiver as OneshotReceiver
-            };
             use tokio::sync::watch::{
-                channel as watch_channel,
-                Sender as WatchSender,
-                Receiver as WatchReceiver
+                channel as watch_channel
             };
             use tokio::sync::mpsc::{
-                channel as mpsc_channel,
-                Receiver as MpscReceiver
+                channel as mpsc_channel
             };
 
             #[derive(Clone)]
@@ -170,8 +159,6 @@ macro_rules! define_event_bus {
                 }
 
             }
-
-            type ListenerKey = usize;
 
             pub trait Event: Unpin + Send + Sync + Debug + Clone + 'static {
                 fn post(self, event_bus: &EventBus);

@@ -24,7 +24,7 @@ derive-new = "0.5.8"
 rstar = "0.7.1"
 pdqselect = "0.1"
 array-macro = "1.0.4"
-#static_assertions = "1.1.0"
+static_assertions = "1.1.0"
 
 [build-dependencies]
 cbindgen = "0.13.1"

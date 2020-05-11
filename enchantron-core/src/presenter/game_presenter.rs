@@ -1,16 +1,8 @@
-use std::sync::{Arc, Weak};
-use tokio::sync::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
-
-use crate::view_types::ViewTypes;
-
+use super::PlayerPresenter;
 use crate::event::*;
-
-use crate::view::BaseView;
-
+use crate::game::WorldService;
 use crate::model::{Point, Rect, Size};
-
 use crate::native::{RuntimeResources, SystemView};
-
 use crate::ui::{
     DragEventType, DragState, DragTrackerEvent::*, GameDisplayState,
     HandlerRegistration, HasLayoutHandlers, HasMagnifyHandlers,
@@ -18,6 +10,10 @@ use crate::ui::{
     LayoutHandler, MagnifyHandler, MultiDragHandler, Sprite, SpriteSource,
     ViewportInfo,
 };
+use crate::view::{BaseView, PlayerViewImpl};
+use crate::view_types::ViewTypes;
+use std::sync::{Arc, Weak};
+use tokio::sync::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use tokio::stream::StreamExt;
 
@@ -52,6 +48,8 @@ where
     weak_self: RwLock<Option<Box<Weak<GamePresenter<T>>>>>,
 
     display_state: RwLock<Option<GameDisplayState<T>>>,
+
+    player_presenter: Arc<PlayerPresenter>,
 }
 
 impl<T> GamePresenter<T>
@@ -238,8 +236,6 @@ where
         )
         .await;
 
-        display_state.set_character_sprite(self.view.create_sprite());
-
         let mut display_state_opt = self.display_state.write().await;
 
         *display_state_opt = Some(display_state);
@@ -298,9 +294,11 @@ where
     ) -> Arc<GamePresenter<T>> {
         view.initialize_pre_bind();
 
+        let world_service = WorldService::new();
+
         let raw_result = GamePresenter {
             view,
-            event_bus,
+            event_bus: event_bus.clone(),
             runtime_resources,
             system_view,
             listener_registrations: Mutex::new(Vec::new()),
@@ -309,6 +307,11 @@ where
             weak_self: RwLock::new(Default::default()),
 
             display_state: RwLock::new(Default::default()),
+
+            player_presenter: PlayerPresenter::new(
+                event_bus.clone(),
+                world_service.clone(),
+            ),
         };
 
         let result: Arc<GamePresenter<T>> = Arc::new(raw_result);
@@ -325,6 +328,12 @@ where
         GamePresenter::bind(&result).await;
 
         result.view.initialize_post_bind(Box::new(result.clone()));
+
+        let player = result.player_presenter.init().await;
+        let view = PlayerViewImpl::<T>::new(result.view.create_group());
+
+        let _ =
+            PlayerPresenter::run(result.player_presenter.clone(), player, view);
 
         result
     }

@@ -17,7 +17,7 @@ use tokio::sync::{Mutex, RwLock};
 
 const LAYER_COUNT: usize = 2;
 
-const UNIT_ZOOM_LEVEL_TILE_LENGTH: usize = 16;
+const UNIT_ZOOM_LEVEL_TILE_LENGTH: usize = constants::UNIT_TERRAIN_TILE_LENGTH;
 const UNIT_ZOOM_LEVEL_TILE_LENGTH_F64: f64 = UNIT_ZOOM_LEVEL_TILE_LENGTH as f64;
 const UNIT_ZOOM_LEVEL_SPRITE_WIDTH_IN_TILES: usize = 8;
 const TERRAIN_SPRITE_TEXTURE_WIDTH: usize =
@@ -30,8 +30,8 @@ const TEXTURE_SIZE: ISize = ISize {
 const ZOOM_LEVEL_BIAS: f64 = 2.;
 const ZOOM_LEVEL_OVERLAP: f64 = 0.25;
 
-const BACKGROUND_Z_LEVEL: f64 = 0.5;
-const FOREGROUND_Z_LEVEL: f64 = 1.0;
+const BACKGROUND_Z_LEVEL: f64 = constants::TERRAIN_Z_LEVEL - 0.5;
+const FOREGROUND_Z_LEVEL: f64 = constants::TERRAIN_Z_LEVEL;
 
 /// Get the fractional zoom level for the given viewport and terrain rect
 fn get_fractional_zoom_level(viewport_info: &ViewportInfo) -> f64 {

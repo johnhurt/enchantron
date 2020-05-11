@@ -13,6 +13,7 @@ pub trait Sprite:
     + HasMutableZLevel
     + Send
     + Sync
+    + Unpin
     + 'static
 {
     type T: Texture;

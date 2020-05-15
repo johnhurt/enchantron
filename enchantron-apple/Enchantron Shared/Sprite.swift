@@ -55,7 +55,6 @@ class Sprite : SKSpriteNode {
                 toWidth: CGFloat(width),
                 height: CGFloat(height),
                 duration: durationSeconds)
-            resize.timingMode = .easeInEaseOut
             run(resize)
         }
         else {
@@ -71,7 +70,6 @@ class Sprite : SKSpriteNode {
                 to: CGPoint(x: CGFloat(left), y: -CGFloat(top)),
                 duration: durationSeconds)
             
-            move.timingMode = .easeInEaseOut
             
             run(move)
         }

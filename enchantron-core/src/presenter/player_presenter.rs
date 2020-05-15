@@ -1,17 +1,16 @@
 use crate::event::*;
 use crate::game::{
-    Direction, GameEntity, GameEntitySlotKey, Player, WorldService,
+    Direction, GameEntity, GameEntitySlotKey, Player, Time, WorldService,
 };
 use crate::model::IPoint;
 use crate::view::PlayerView;
 use std::marker::PhantomData;
 use std::sync::Arc;
-use tokio::time::{delay_for, Duration};
 
 pub struct PlayerPresenter<V: PlayerView> {
     event_bus: EventBus,
     world_service: WorldService,
-
+    time: Time,
     phantom_view: PhantomData<V>,
 }
 
@@ -19,10 +18,12 @@ impl<V: PlayerView> PlayerPresenter<V> {
     pub fn new(
         event_bus: EventBus,
         world_service: WorldService,
+        time: Time,
     ) -> Arc<PlayerPresenter<V>> {
         Arc::new(PlayerPresenter {
             event_bus,
             world_service,
+            time,
             phantom_view: Default::default(),
         })
     }
@@ -35,20 +36,36 @@ impl<V: PlayerView> PlayerPresenter<V> {
         Player::new(location_key)
     }
 
-    pub async fn run(
+    pub fn run(
         this: Arc<PlayerPresenter<V>>,
         player: Player,
         view_provider: impl Fn() -> V + 'static + Send,
     ) {
-        this.event_bus.clone().spawn(async move {
-            let mut view: Option<V> = None;
+        info!("About to spawn player");
+
+        let _ = this.event_bus.clone().spawn(async move {
+            info!("Player presenter spawned");
+
+            let view: V = view_provider();
 
             loop {
-                tokio::select! {}
+                info!("walking");
 
-                view.start_walk(Direction::NORTH, 0.5);
+                let start_tile = &this
+                    .world_service
+                    .get_by_key(&player.location_key)
+                    .await
+                    .unwrap()
+                    .top_left;
 
-                delay_for(Duration::from_secs(1)).await;
+                view.start_walk(
+                    Direction::NORTH,
+                    &start_tile,
+                    this.time.now(),
+                    0.5,
+                );
+
+                this.time.sleep(1.0).await;
 
                 this.world_service
                     .move_by_key_delta(
@@ -57,10 +74,17 @@ impl<V: PlayerView> PlayerPresenter<V> {
                     )
                     .await;
 
-                view.finish_walk(Direction::NORTH, 0.5);
+                view.finish_walk(
+                    Direction::NORTH,
+                    &start_tile,
+                    this.time.now(),
+                    0.5,
+                );
 
-                delay_for(Duration::from_secs(1)).await;
+                this.time.sleep(1.0).await;
             }
         });
+
+        info!("Finished spawning player");
     }
 }

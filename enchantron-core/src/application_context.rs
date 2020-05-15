@@ -1,12 +1,12 @@
 use crate::event::EventBus;
+use crate::view_types::ViewTypes;
 use log::SetLoggerError;
 use simplelog::{CombinedLogger, Config, LevelFilter, SimpleLogger};
-use tokio::runtime::{Builder, Runtime};
-
 use std::ops::Deref;
 use std::sync::{Arc, RwLock};
+use tokio::runtime::{Builder, Runtime};
 
-use crate::{GameView, LoadingView, MainMenuView, SystemView, ViewTypes};
+use crate::{GameView, LoadingView, MainMenuView, SystemView};
 
 use crate::native::RuntimeResources;
 
@@ -18,16 +18,17 @@ lazy_static::lazy_static! {
     );
 }
 
-pub struct ApplicationContext(Arc<ApplicationContextInner>);
+pub struct ApplicationContext<T: ViewTypes>(Arc<ApplicationContextInner<T>>);
 
-impl ApplicationContext {
-    pub fn new(system_view: SystemView) -> ApplicationContext {
+impl<T: ViewTypes> ApplicationContext<T> {
+    pub fn new(system_view: T::SystemView) -> ApplicationContext<T> {
         if LOGGER_RESULT.is_err() {
             println!("Failed to set logger")
         }
 
         let runtime = Builder::new()
             .threaded_scheduler()
+            .enable_time()
             .build()
             .unwrap_or_else(|e| {
                 error!("Failed to create tokio runtime, {:?}", e);
@@ -45,52 +46,51 @@ impl ApplicationContext {
     }
 }
 
-impl Deref for ApplicationContext {
-    type Target = ApplicationContextInner;
+impl<T: ViewTypes> Deref for ApplicationContext<T> {
+    type Target = ApplicationContextInner<T>;
 
-    fn deref(&self) -> &ApplicationContextInner {
+    fn deref(&self) -> &ApplicationContextInner<T> {
         &self.0
     }
 }
 
-pub struct ApplicationContextInner {
+pub struct ApplicationContextInner<T: ViewTypes> {
     tokio_runtime: Runtime,
     event_bus: EventBus,
-    system_view: Arc<SystemView>,
-    runtime_resources: RwLock<Option<Arc<RuntimeResources<SystemView>>>>,
+    system_view: Arc<T::SystemView>,
+    runtime_resources: RwLock<Option<Arc<RuntimeResources<T>>>>,
 }
 
-impl ApplicationContext {
-    pub fn transition_to_loading_view(&self, view: LoadingView) {
+impl<T: ViewTypes> ApplicationContext<T> {
+    pub fn transition_to_loading_view(&self, view: T::LoadingView) {
         debug!("Transition to loading view");
 
         let self_copy = self.0.clone();
 
-        (*self).tokio_runtime.handle().spawn(
-            LoadingPresenter::<ViewTypes>::new(
-                view,
-                self.system_view.clone(),
-                self.event_bus.clone(),
-                Box::new(move |resources| {
-                    self_copy.set_runtime_resources(resources);
-                }),
-            ),
-        );
+        (*self).tokio_runtime.handle().spawn(LoadingPresenter::new(
+            view,
+            self.system_view.clone(),
+            self.event_bus.clone(),
+            Box::new(move |resources| {
+                self_copy.set_runtime_resources(resources);
+            }),
+        ));
     }
 
-    pub fn transition_to_main_menu_view(&self, view: MainMenuView) {
+    pub fn transition_to_main_menu_view(&self, view: T::MainMenuView) {
         debug!("Transition to main menu view");
 
-        (*self).tokio_runtime.handle().spawn(
-            MainMenuPresenter::<ViewTypes>::new(view, self.event_bus.clone()),
-        );
-    }
-
-    pub fn transition_to_game_view(&self, view: GameView) {
         (*self)
             .tokio_runtime
             .handle()
-            .spawn(GamePresenter::<ViewTypes>::new(
+            .spawn(MainMenuPresenter::<T>::new(view, self.event_bus.clone()));
+    }
+
+    pub fn transition_to_game_view(&self, view: T::GameView) {
+        (*self)
+            .tokio_runtime
+            .handle()
+            .spawn(GamePresenter::<T>::new(
                 view,
                 self.event_bus.clone(),
                 self.get_runtime_resources(),
@@ -99,10 +99,10 @@ impl ApplicationContext {
     }
 }
 
-impl ApplicationContextInner {
+impl<T: ViewTypes> ApplicationContextInner<T> {
     pub fn set_runtime_resources(
         &self,
-        runtime_resources: RuntimeResources<SystemView>,
+        runtime_resources: RuntimeResources<T>,
     ) {
         if let Ok(mut runtime_resources_guard) = self.runtime_resources.write()
         {
@@ -112,7 +112,7 @@ impl ApplicationContextInner {
         }
     }
 
-    pub fn get_runtime_resources(&self) -> Arc<RuntimeResources<SystemView>> {
+    pub fn get_runtime_resources(&self) -> Arc<RuntimeResources<T>> {
         if let Ok(runtime_resources_guard) = self.runtime_resources.read() {
             if let Some(runtime_resources) = runtime_resources_guard.as_ref() {
                 runtime_resources.clone()

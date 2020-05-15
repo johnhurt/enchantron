@@ -29,7 +29,7 @@ where
             S = T::Sprite,
             G = T::SpriteGroup,
         >,
-        runtime_resources: Arc<RuntimeResources<T::SystemView>>,
+        runtime_resources: Arc<RuntimeResources<T>>,
         system_view: Arc<T::SystemView>,
     ) -> GameDisplayState<T> {
         GameDisplayState {

@@ -1,7 +1,9 @@
 
-use crate::application_context::ApplicationContext;
+
 use std::sync::RwLock;
 use lazy_static::lazy_static;
+
+type ApplicationContext = crate::application_context::ApplicationContext<ViewTypes>;
 
 {{#each rust_imports}}
 use {{this}};
@@ -11,7 +13,7 @@ lazy_static! {
   static ref BINDINGS : RwLock<Bindings> = RwLock::new(Bindings::default());
 }
 
-fn with_mutable_bindings(to_call: Box<Fn(&mut Bindings)>) {
+fn with_mutable_bindings(to_call: impl Fn(&mut Bindings)) {
   if let Ok(mut bindings) = BINDINGS.write() {
     to_call(&mut *bindings)
   }
@@ -170,12 +172,12 @@ lazy_static!{
 pub extern "C" fn set_{{name}}(binding_fn: extern "C" fn(_self: *mut Opaque_{{type_name}}
     {{#each arguments}}, {{snake_case name}}: {{data_type.rust_name_outgoing}}{{/each}})
         {{#if return_type}}-> {{return_type.rust_name_incoming}}{{/if}}) {
-  with_mutable_bindings(Box::new(move |bindings| {
+  with_mutable_bindings(move |bindings| {
     if let Some(_) = bindings.{{name}} {
       panic!("{{name}} is already bound")
     }
     bindings.{{name}} = Some(binding_fn);
-  }));
+  });
 }
 
 {{~/unless}}

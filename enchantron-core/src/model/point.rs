@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul, MulAssign, Sub};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
 use super::Size;
 
@@ -69,6 +69,22 @@ impl Add<Point> for &Point {
 
     fn add(self, rhs: Point) -> Point {
         Point::new(self.x + rhs.x, self.y + rhs.y)
+    }
+}
+
+impl<'a> AddAssign<&'a Point> for Point {
+    fn add_assign(&mut self, rhs: &'a Point) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+    }
+}
+
+impl Add<Point> for Point {
+    type Output = Point;
+
+    fn add(mut self, rhs: Point) -> Point {
+        self += &rhs;
+        self
     }
 }
 

@@ -6,6 +6,7 @@ pub use self::perlin_terrain_1::PerlinTerrain1;
 pub use self::player::Player;
 pub use self::terrain_provider::TerrainProvider;
 pub use self::terrain_type::TerrainType;
+pub use self::time::Time;
 pub use self::world_service::WorldService;
 
 pub mod constants;
@@ -18,4 +19,5 @@ mod perlin_terrain_1;
 mod player;
 mod terrain_provider;
 mod terrain_type;
+mod time;
 mod world_service;

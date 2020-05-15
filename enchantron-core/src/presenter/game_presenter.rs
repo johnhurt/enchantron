@@ -1,6 +1,6 @@
 use super::PlayerPresenter;
 use crate::event::*;
-use crate::game::WorldService;
+use crate::game::{Time, WorldService};
 use crate::model::{Point, Rect, Size};
 use crate::native::{RuntimeResources, SystemView};
 use crate::ui::{
@@ -41,7 +41,7 @@ where
     view: T::GameView,
     event_bus: EventBus,
     system_view: Arc<T::SystemView>,
-    runtime_resources: Arc<RuntimeResources<T::SystemView>>,
+    runtime_resources: Arc<RuntimeResources<T>>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
     handler_registrations: Mutex<Vec<Box<dyn HandlerRegistration>>>,
 
@@ -49,7 +49,7 @@ where
 
     display_state: RwLock<Option<GameDisplayState<T>>>,
 
-    player_presenter: Arc<PlayerPresenter>,
+    player_presenter: Arc<PlayerPresenter<PlayerViewImpl<T>>>,
 }
 
 impl<T> GamePresenter<T>
@@ -289,12 +289,14 @@ where
     pub async fn new(
         view: T::GameView,
         event_bus: EventBus,
-        runtime_resources: Arc<RuntimeResources<T::SystemView>>,
+        runtime_resources: Arc<RuntimeResources<T>>,
         system_view: Arc<T::SystemView>,
     ) -> Arc<GamePresenter<T>> {
         view.initialize_pre_bind();
 
         let world_service = WorldService::new();
+
+        let time = Time::new();
 
         let raw_result = GamePresenter {
             view,
@@ -311,6 +313,7 @@ where
             player_presenter: PlayerPresenter::new(
                 event_bus.clone(),
                 world_service.clone(),
+                time.clone(),
             ),
         };
 
@@ -329,11 +332,28 @@ where
 
         result.view.initialize_post_bind(Box::new(result.clone()));
 
-        let player = result.player_presenter.init().await;
-        let view = PlayerViewImpl::<T>::new(result.view.create_group());
+        let entity_sprite_group = result.view.create_group();
+        let runtime_resources = result.runtime_resources.clone();
 
-        let _ =
-            PlayerPresenter::run(result.player_presenter.clone(), player, view);
+        let view_provider = move || {
+            info!("Providing new player sprite");
+
+            PlayerViewImpl::<T>::new(
+                entity_sprite_group.create_sprite(),
+                runtime_resources.clone(),
+                time.clone(),
+            )
+        };
+
+        let player = result.player_presenter.init().await;
+
+        info!("Starting player presenter");
+
+        PlayerPresenter::run(
+            result.player_presenter.clone(),
+            player,
+            view_provider,
+        );
 
         result
     }

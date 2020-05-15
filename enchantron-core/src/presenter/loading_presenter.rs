@@ -16,7 +16,7 @@ where
 {
     view: T::LoadingView,
     system_view: Arc<T::SystemView>,
-    resources_sink: Box<dyn Fn(RuntimeResources<T::SystemView>) + Send + Sync>,
+    resources_sink: Box<dyn Fn(RuntimeResources<T>) + Send + Sync>,
     event_bus: EventBus,
 }
 
@@ -65,9 +65,7 @@ where
         view: T::LoadingView,
         system_view: Arc<T::SystemView>,
         event_bus: EventBus,
-        resources_sink: Box<
-            dyn Fn(RuntimeResources<T::SystemView>) + Send + Sync,
-        >,
+        resources_sink: Box<dyn Fn(RuntimeResources<T>) + Send + Sync>,
     ) {
         view.initialize_pre_bind();
 

@@ -1,15 +1,16 @@
-use super::{SystemView, Textures};
+use super::Textures;
+use crate::view_types::ViewTypes;
 
-pub struct RuntimeResources<S: SystemView> {
-    textures: Textures<S::T>,
+pub struct RuntimeResources<T: ViewTypes> {
+    textures: Textures<T::Texture>,
 }
 
-impl<S: SystemView> RuntimeResources<S> {
-    pub fn new(textures: Textures<S::T>) -> RuntimeResources<S> {
+impl<T: ViewTypes> RuntimeResources<T> {
+    pub fn new(textures: Textures<T::Texture>) -> RuntimeResources<T> {
         RuntimeResources { textures: textures }
     }
 
-    pub fn textures(&self) -> &Textures<S::T> {
+    pub fn textures(&self) -> &Textures<T::Texture> {
         &self.textures
     }
 }

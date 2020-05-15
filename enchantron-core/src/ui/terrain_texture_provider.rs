@@ -78,7 +78,7 @@ fn get_texture_data_for_rect(
 }
 pub struct TerrainTextureProvider<T: ViewTypes> {
     terrain_generator: Arc<PerlinTerrain1>,
-    runtime_resources: Arc<RuntimeResources<T::SystemView>>,
+    runtime_resources: Arc<RuntimeResources<T>>,
     texture_loader: T::TextureLoader,
 }
 
@@ -87,7 +87,7 @@ where
     T: ViewTypes,
 {
     pub fn new(
-        runtime_resources: Arc<RuntimeResources<T::SystemView>>,
+        runtime_resources: Arc<RuntimeResources<T>>,
         texture_loader: T::TextureLoader,
     ) -> TerrainTextureProvider<T> {
         TerrainTextureProvider {

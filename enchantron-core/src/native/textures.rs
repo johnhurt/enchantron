@@ -73,7 +73,7 @@ define_texture_atlas!(Overworld(x_tile_count: 40, y_tile_count: 36) {
 });
 
 define_texture_atlas!(Character(x_tile_count: 16, y_tile_count: 17) {
-    forward_rest(left: 0, top: 0, width: 1, height: 1)
+    forward_rest(left: 0, top: 0, width: 1, height: 2)
 });
 
 pub struct Textures<T: Texture> {

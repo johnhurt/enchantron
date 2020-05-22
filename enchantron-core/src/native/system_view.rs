@@ -1,8 +1,8 @@
-use super::{Texture, TextureLoader};
+use super::{ResourceLoader, Texture};
 
 pub trait SystemView: 'static + Sync + Send {
     type T: Texture;
-    type TL: TextureLoader<T = Self::T>;
+    type TL: ResourceLoader<T = Self::T>;
 
-    fn get_texture_loader(&self) -> Self::TL;
+    fn get_resource_loader(&self) -> Self::TL;
 }

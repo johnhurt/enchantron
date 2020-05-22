@@ -9,7 +9,7 @@
 import Foundation
 import SpriteKit
 
-class TextureLoader {
+class ResourceLoader {
     
     func loadTexture(_ resourceName: String) -> Texture {
         return Texture(resourceName: resourceName)
@@ -29,6 +29,14 @@ class TextureLoader {
         print("loaded texture")
         
         return result
+    }
+    
+    func loadShader(_ shaderName: String) -> Shader {
+        return Shader(shaderName)
+    }
+    
+    func createAnimation() -> Animation {
+        return Animation()
     }
     
     deinit {

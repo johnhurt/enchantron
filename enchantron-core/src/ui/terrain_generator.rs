@@ -30,8 +30,8 @@ const TEXTURE_SIZE: ISize = ISize {
 const ZOOM_LEVEL_BIAS: f64 = 2.;
 const ZOOM_LEVEL_OVERLAP: f64 = 0.25;
 
-const BACKGROUND_Z_LEVEL: f64 = constants::TERRAIN_Z_LEVEL - 0.5;
-const FOREGROUND_Z_LEVEL: f64 = constants::TERRAIN_Z_LEVEL;
+const BACKGROUND_Z_LEVEL: f64 = constants::TERRAIN_Z_LEVEL;
+const FOREGROUND_Z_LEVEL: f64 = constants::TERRAIN_Z_LEVEL + 2.;
 
 /// Get the fractional zoom level for the given viewport and terrain rect
 fn get_fractional_zoom_level(viewport_info: &ViewportInfo) -> f64 {
@@ -346,7 +346,9 @@ where
                             .get(layer)
                             .unwrap()
                             .create_sprite();
-                        result.set_z_level(constants::TERRAIN_Z_LEVEL);
+                        result.set_shader(
+                            self.terrain_texture_provider.get_terrain_shader(),
+                        );
                         result
                     })
                 })

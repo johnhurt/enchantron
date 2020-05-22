@@ -41,6 +41,7 @@ fn get_animation_duration(
 }
 
 pub trait PlayerView: 'static + Send + Sync + Unpin {
+    fn rest(&self);
     fn start_walk(
         &self,
         direction: Direction,
@@ -70,7 +71,7 @@ impl<T: ViewTypes> PlayerViewImpl<T> {
         time: Time,
     ) -> PlayerViewImpl<T> {
         bound_sprite
-            .set_texture(runtime_resources.textures().character.forward_rest());
+            .set_texture(runtime_resources.textures().character.south_rest());
         bound_sprite.set_visible(true);
         bound_sprite.set_z_level(constants::ENTITY_Z_LEVEL);
         bound_sprite.set_size(16., 32.);
@@ -96,8 +97,12 @@ impl<T: ViewTypes> PlayerView for PlayerViewImpl<T> {
 
         let duration = get_animation_duration(start_time, speed, &self.time);
 
-        let animation_duration = self
-            .bound_sprite
+        self.bound_sprite.animate(
+            &self.runtime_resources.animations().player_walk_south,
+            1. / 8.,
+        );
+
+        self.bound_sprite
             .set_location_point_animated(&midpoint, duration);
     }
 
@@ -113,8 +118,13 @@ impl<T: ViewTypes> PlayerView for PlayerViewImpl<T> {
 
         let duration = get_animation_duration(start_time, speed, &self.time);
 
-        let animation_duration = self
-            .bound_sprite
+        self.bound_sprite
             .set_location_point_animated(&destination, duration);
+    }
+
+    fn rest(&self) {
+        self.bound_sprite.set_texture(
+            self.runtime_resources.textures().character.south_rest(),
+        );
     }
 }

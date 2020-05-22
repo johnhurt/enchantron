@@ -28,7 +28,7 @@ class GameScene: SKScene {
     private var viewport : Viewport?
     
     func setUpScene() {
-        let systemView = SystemView(textureLoader: TextureLoader())
+        let systemView = SystemView(resourceLoader: ResourceLoader())
         self.viewport = Viewport()
         self.camera = self.viewport
         

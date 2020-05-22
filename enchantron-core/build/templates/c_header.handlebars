@@ -6,9 +6,8 @@ typedef struct UnboxedAny UnboxedAny;
 {{c_header_imports}}
 
 {{~#each types}}
-{{~#if rust_owned}}typedef struct {{name}} {{name}};
-
-{{/if}}
+{{~#if rust_owned}}{{~#unless exclude_from_header}}typedef struct {{name}} {{name}};
+{{/unless}}{{/if}}
 {{~/each}}
 
 {{c_header_body}}

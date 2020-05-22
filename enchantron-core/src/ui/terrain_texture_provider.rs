@@ -1,7 +1,7 @@
 use crate::game::{PerlinTerrain1, TerrainProvider, TerrainType};
 use crate::img::PngGenerator;
 use crate::model::{IPoint, IRect, ISize};
-use crate::native::{RuntimeResources, Texture, TextureLoader};
+use crate::native::{ResourceLoader, RuntimeResources, Texture};
 use crate::util::{ByteBuffer, ValueRect};
 use crate::view_types::ViewTypes;
 
@@ -79,7 +79,7 @@ fn get_texture_data_for_rect(
 pub struct TerrainTextureProvider<T: ViewTypes> {
     terrain_generator: Arc<PerlinTerrain1>,
     runtime_resources: Arc<RuntimeResources<T>>,
-    texture_loader: T::TextureLoader,
+    texture_loader: T::ResourceLoader,
 }
 
 impl<T> TerrainTextureProvider<T>
@@ -88,7 +88,7 @@ where
 {
     pub fn new(
         runtime_resources: Arc<RuntimeResources<T>>,
-        texture_loader: T::TextureLoader,
+        texture_loader: T::ResourceLoader,
     ) -> TerrainTextureProvider<T> {
         TerrainTextureProvider {
             runtime_resources: runtime_resources,
@@ -120,6 +120,11 @@ where
                 &*self.terrain_generator,
             ),
         )
+    }
+
+    /// Get a reference to the terrain shader
+    pub fn get_terrain_shader(&self) -> &T::Shader {
+        &self.runtime_resources.shaders().terrain_shader
     }
 }
 

@@ -9,9 +9,9 @@
 import Foundation
 
 class SystemView {
-  let textureLoader : TextureLoader
+  let resourceLoader : ResourceLoader
   
-  init(textureLoader : TextureLoader) {
-    self.textureLoader = textureLoader
+  init(resourceLoader : ResourceLoader) {
+    self.resourceLoader = resourceLoader
   }
 }

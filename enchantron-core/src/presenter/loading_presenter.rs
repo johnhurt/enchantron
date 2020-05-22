@@ -2,7 +2,9 @@ use crate::event::{EventBus, LoadResources};
 
 use std::sync::Arc;
 
-use crate::native::{RuntimeResources, SystemView, Textures};
+use crate::native::{
+    Animations, RuntimeResources, Shaders, SystemView, Textures,
+};
 
 use crate::ui::{HasIntValue, HasText};
 
@@ -25,14 +27,22 @@ where
     T: ViewTypes,
 {
     async fn load_resources(&self) {
-        let textures =
-            Textures::new(&self.system_view.get_texture_loader(), &|p| {
-                self.view
-                    .get_progress_indicator()
-                    .set_int_value((p * 100.) as i64);
-            });
+        let resource_loader: &T::ResourceLoader =
+            &self.system_view.get_resource_loader();
 
-        (self.resources_sink)(RuntimeResources::new(textures));
+        let textures = Textures::<T>::new(resource_loader, &|p| {
+            self.view
+                .get_progress_indicator()
+                .set_int_value((p * 100.) as i64);
+        });
+
+        let animations = Animations::<T>::new(resource_loader, &textures);
+
+        let shaders = Shaders::<T>::new(resource_loader);
+
+        (self.resources_sink)(RuntimeResources::new(
+            textures, animations, shaders,
+        ));
 
         self.view.transition_to_main_menu_view();
     }

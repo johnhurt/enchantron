@@ -1,4 +1,5 @@
-use super::{Texture, TextureLoader};
+use super::{HasIntSize, ResourceLoader, Texture};
+use crate::view_types::ViewTypes;
 
 macro_rules! count {
     ($h:expr) => (1);
@@ -19,14 +20,14 @@ macro_rules! define_texture_atlas {
   ) => {
 
     #[allow(dead_code)]
-    pub struct $texture_type<T: Texture> {
+    pub struct $texture_type<T: ViewTypes> {
       $(
-        $name: T,
+        $name: T::Texture,
       )*
     }
 
-    impl <T: Texture> $texture_type<T> {
-      pub fn new<F>(texture_atlas: T, progress_callback: F)
+    impl <T: ViewTypes> $texture_type<T> {
+      pub fn new<F>(texture_atlas: T::Texture, progress_callback: F)
           -> $texture_type<T>
           where F : Fn(f64) {
         let tex_width = texture_atlas.get_width();
@@ -60,7 +61,7 @@ macro_rules! define_texture_atlas {
 
       $(
         #[allow(dead_code)]
-        pub fn $name(&self) -> &T { &self.$name }
+        pub fn $name(&self) -> &T::Texture { &self.$name }
       )*
     }
 
@@ -72,18 +73,21 @@ define_texture_atlas!(Overworld(x_tile_count: 40, y_tile_count: 36) {
   dirt(left: 2, top: 32, width: 1, height: 1)
 });
 
-define_texture_atlas!(Character(x_tile_count: 16, y_tile_count: 17) {
-    forward_rest(left: 0, top: 0, width: 1, height: 2)
+define_texture_atlas!(Character(x_tile_count: 17, y_tile_count: 16) {
+    south_rest(left: 0, top: 0, width: 1, height: 2),
+    south_step_left(left: 1, top: 0, width: 1, height: 2),
+    south_step_mid(left: 2, top: 0, width: 1, height: 2),
+    south_step_right(left: 3, top: 0, width: 1, height: 2)
 });
 
-pub struct Textures<T: Texture> {
+pub struct Textures<T: ViewTypes> {
     pub overworld: Overworld<T>,
     pub character: Character<T>,
 }
 
-impl<T: Texture> Textures<T> {
+impl<T: ViewTypes> Textures<T> {
     pub fn new(
-        texture_loader: &impl TextureLoader<T = T>,
+        texture_loader: &T::ResourceLoader,
         progress_callback: &impl Fn(f64),
     ) -> Textures<T> {
         let overworld = Overworld::new(

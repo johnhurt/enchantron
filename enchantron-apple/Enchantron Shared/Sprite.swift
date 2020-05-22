@@ -29,6 +29,33 @@ class Sprite : SKSpriteNode {
         fatalError("init(coder:) has not been implemented")
     }
     
+    func animate(_ animation: Animation, _ secsPerFrame: Float64) {
+        
+        var a = SKAction.animate(with: animation.frames, timePerFrame: secsPerFrame)
+        
+        if animation.isLoop {
+            a = SKAction.repeatForever(a)
+        }
+        
+        self.run(a, withKey: animation.name)
+    }
+    
+    func clearAnimations() {
+        self.removeAllActions()
+    }
+    
+    func setShader(_ shader: Shader) {
+        self.shader = shader.inner
+    }
+    
+    func setShaderVariableF64(_ name: String, _ value: Float64) {
+        self.setValue(SKAttributeValue(float: Float(value)), forAttribute: name)
+    }
+    
+    func clearShader() {
+        self.shader = nil
+    }
+    
     func setVisible(_ visible: Bool) {
         DispatchQueue.main.async {
             self.isHidden = !visible
@@ -37,6 +64,7 @@ class Sprite : SKSpriteNode {
     
     func setTexture(_ texture: Texture) {
         DispatchQueue.main.async {
+            self.removeAllActions();
             self.currentTexture = texture
             self.texture = texture.texture
         }
@@ -66,6 +94,7 @@ class Sprite : SKSpriteNode {
     func setLocationAnimated(_ left: Float64, _ top: Float64, _ durationSeconds: Float64) {
         
         if durationSeconds > 0.0 {
+            
             let move = SKAction.move(
                 to: CGPoint(x: CGFloat(left), y: -CGFloat(top)),
                 duration: durationSeconds)

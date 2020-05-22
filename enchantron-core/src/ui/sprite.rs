@@ -1,4 +1,4 @@
-use crate::native::Texture;
+use crate::native::{Animation, Shader, Texture};
 
 use super::{
     HasDragHandlers, HasMutableLocation, HasMutableSize, HasMutableVisibility,
@@ -17,10 +17,22 @@ pub trait Sprite:
     + 'static
 {
     type T: Texture;
+    type A: Animation;
+    type S: Shader;
 
     fn set_texture(&self, texture: &Self::T);
 
     fn propagate_events_to(&self, event_target: &Self);
 
     fn remove_from_parent(&self);
+
+    fn animate(&self, animation: &Self::A, frame_duration_sec: f64);
+
+    fn clear_animations(&self);
+
+    fn set_shader(&self, shader: &Self::S);
+
+    fn clear_shader(&self);
+
+    fn set_shader_variable_f64(&self, variable_name: String, value: f64);
 }

@@ -70,6 +70,7 @@ lazy_static! {
     TypeDefBuilder::default()
         .name("ApplicationContext")
         .rust_owned(true)
+        .exclude_from_header(true)
         .methods(vec![
           MethodDefBuilder::default()
               .name("transition_to_loading_view")
@@ -567,8 +568,18 @@ lazy_static! {
                         .build().unwrap(),
 
                     GenericDefBuilder::default()
-                        .symbol(Some("TextureLoader"))
-                        .bound_type("TextureLoader")
+                        .symbol(Some("Animation"))
+                        .bound_type("Animation")
+                        .build().unwrap(),
+
+                    GenericDefBuilder::default()
+                        .symbol(Some("Shader"))
+                        .bound_type("Shader")
+                        .build().unwrap(),
+
+                    GenericDefBuilder::default()
+                        .symbol(Some("ResourceLoader"))
+                        .bound_type("ResourceLoader")
                         .build().unwrap(),
 
                     GenericDefBuilder::default()
@@ -747,6 +758,64 @@ lazy_static! {
         .build().unwrap(),
 
     TypeDefBuilder::default()
+        .name("Animation")
+        .rust_owned(false)
+        .impls(vec![
+            ImplDefBuilder::default()
+                .trait_name("native::Animation")
+                .trait_import(Some("crate::native"))
+                .generics(vec![
+                    GenericDefBuilder::default()
+                        .symbol(Some("Texture"))
+                        .bound_type("Texture")
+                        .build().unwrap()
+                ])
+                .build().unwrap()
+        ])
+        .methods(vec![
+            MethodDefBuilder::default()
+                .name("add_texture")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("native::Animation")
+                    .build().unwrap()))
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("texture")
+                        .data_type(DataType::swift_generic(Some("Texture"),
+                            DataType::swift_struct("Texture", None)))
+                        .build().unwrap()
+                ])
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("set_is_loop")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("native::Animation")
+                    .build().unwrap()))
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("is_loop")
+                        .data_type(BOOLEAN.clone())
+                        .build().unwrap()
+                ])
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("set_name")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("native::Animation")
+                    .build().unwrap()))
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("name")
+                        .data_type(STRING.clone())
+                        .build().unwrap()
+                ])
+                .build().unwrap()
+        ])
+        .build().unwrap(),
+
+    TypeDefBuilder::default()
         .name("Texture")
         .rust_owned(false)
         .impls(vec![
@@ -806,6 +875,17 @@ lazy_static! {
         .build().unwrap(),
 
     TypeDefBuilder::default()
+         .name("Shader")
+         .rust_owned(false)
+         .impls(vec![
+             ImplDefBuilder::default()
+                .trait_name("crate::native::Shader")
+                .trait_import(Some("crate::native"))
+                .build().unwrap()
+          ])
+         .build().unwrap(),
+
+    TypeDefBuilder::default()
         .name("Sprite")
         .rust_owned(false)
         .impls(vec![
@@ -813,10 +893,18 @@ lazy_static! {
                 .trait_name("crate::ui::Sprite")
                 .trait_import(Some("crate::ui"))
                 .generics(vec![
-                  GenericDefBuilder::default()
-                      .symbol(Some("T"))
-                      .bound_type("Texture")
-                      .build().unwrap()
+                    GenericDefBuilder::default()
+                        .symbol(Some("T"))
+                        .bound_type("Texture")
+                        .build().unwrap(),
+                    GenericDefBuilder::default()
+                        .symbol(Some("A"))
+                        .bound_type("Animation")
+                        .build().unwrap(),
+                    GenericDefBuilder::default()
+                        .symbol(Some("S"))
+                        .bound_type("Shader")
+                        .build().unwrap()
                 ])
                 .build().unwrap(),
 
@@ -897,6 +985,70 @@ lazy_static! {
                   .trait_name("crate::ui::Sprite")
                   .build().unwrap()))
               .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("animate")
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("animation")
+                        .data_type(DataType::swift_generic(Some("A"),
+                            DataType::swift_struct("Animation", None)))
+                        .build().unwrap(),
+
+                    ArgumentDefBuilder::default()
+                        .name("frame_duration_sec")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap()
+                ])
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("crate::ui::Sprite")
+                    .build().unwrap()))
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("clear_animations")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("crate::ui::Sprite")
+                    .build().unwrap()))
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("set_shader")
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("shader")
+                        .data_type(DataType::swift_generic(Some("S"),
+                            DataType::swift_struct("Shader", None)))
+                        .build().unwrap()
+                ])
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("crate::ui::Sprite")
+                    .build().unwrap()))
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("set_shader_variable_f64")
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("variable_name")
+                        .data_type(STRING.clone())
+                        .build().unwrap(),
+                    ArgumentDefBuilder::default()
+                        .name("value")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap()
+                ])
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("crate::ui::Sprite")
+                    .build().unwrap()))
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("clear_shader")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("crate::ui::Sprite")
+                    .build().unwrap()))
+                .build().unwrap(),
 
           MethodDefBuilder::default()
               .name("remove_from_parent")
@@ -1509,34 +1661,44 @@ lazy_static! {
 
                     GenericDefBuilder::default()
                         .symbol(Some("TL"))
-                        .bound_type("TextureLoader")
+                        .bound_type("ResourceLoader")
                         .build().unwrap()
                 ])
                 .build().unwrap()
         ])
         .fields(vec![
             FieldDefBuilder::default()
-                .name("texture_loader")
+                .name("resource_loader")
                 .getter_impl(Some(ImplBlockDefBuilder::default()
                     .trait_name("native::SystemView")
                     .build().unwrap()))
                 .data_type(DataType::swift_generic(Some("TL"),
-                    DataType::swift_struct("TextureLoader", None)))
+                    DataType::swift_struct("ResourceLoader", None)))
                 .build().unwrap()
         ])
         .build().unwrap(),
 
     TypeDefBuilder::default()
-        .name("TextureLoader")
+        .name("ResourceLoader")
         .rust_owned(false)
         .impls(vec![
             ImplDefBuilder::default()
-                .trait_name("native::TextureLoader")
+                .trait_name("native::ResourceLoader")
                 .trait_import(Some("crate::native"))
                 .generics(vec![
                     GenericDefBuilder::default()
                         .symbol(Some("T"))
                         .bound_type("Texture")
+                        .build().unwrap(),
+
+                    GenericDefBuilder::default()
+                        .symbol(Some("A"))
+                        .bound_type("Animation")
+                        .build().unwrap(),
+
+                    GenericDefBuilder::default()
+                        .symbol(Some("S"))
+                        .bound_type("Shader")
                         .build().unwrap()
                 ])
                 .build().unwrap()
@@ -1545,7 +1707,7 @@ lazy_static! {
             MethodDefBuilder::default()
                 .name("load_texture")
                 .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("native::TextureLoader")
+                    .trait_name("native::ResourceLoader")
                     .build().unwrap()))
                 .arguments(vec![
                     ArgumentDefBuilder::default()
@@ -1558,19 +1720,43 @@ lazy_static! {
                 .build().unwrap(),
 
             MethodDefBuilder::default()
-            .name("load_texture_from_png_data")
-            .impl_block(Some(ImplBlockDefBuilder::default()
-                .trait_name("native::TextureLoader")
-                .build().unwrap()))
-            .arguments(vec![
-                ArgumentDefBuilder::default()
-                  .name("png_data")
-                  .data_type(TEXTURE_DATA.clone())
-                  .build().unwrap()
-            ])
-            .return_type(Some(DataType::swift_generic(Some("T"),
-                DataType::swift_struct("Texture", None))))
-            .build().unwrap()
+                .name("load_texture_from_png_data")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("native::ResourceLoader")
+                    .build().unwrap()))
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                    .name("png_data")
+                    .data_type(TEXTURE_DATA.clone())
+                    .build().unwrap()
+                ])
+                .return_type(Some(DataType::swift_generic(Some("T"),
+                    DataType::swift_struct("Texture", None))))
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("create_animation")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("native::ResourceLoader")
+                    .build().unwrap()))
+                .return_type(Some(DataType::swift_generic(Some("A"),
+                    DataType::swift_struct("Animation", None))))
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("load_shader")
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("native::ResourceLoader")
+                    .build().unwrap()))
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("name")
+                        .data_type(STRING.clone())
+                        .build().unwrap()
+                ])
+                .return_type(Some(DataType::swift_generic(Some("S"),
+                    DataType::swift_struct("Shader", None))))
+                .build().unwrap(),
         ])
         .build().unwrap(),
 

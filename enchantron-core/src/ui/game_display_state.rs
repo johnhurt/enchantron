@@ -41,7 +41,7 @@ where
                 sprite_source,
                 TerrainTextureProvider::new(
                     runtime_resources,
-                    system_view.get_texture_loader(),
+                    system_view.get_resource_loader(),
                 ),
             )
             .await,

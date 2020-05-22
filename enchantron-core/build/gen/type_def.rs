@@ -22,6 +22,7 @@ pub struct TypeDef {
     pub rust_import: Option<&'static str>,
     pub custom_rust_drop_code: Option<&'static str>,
     pub cloneable: bool,
+    pub exclude_from_header: bool,
 }
 
 impl TypeDef {

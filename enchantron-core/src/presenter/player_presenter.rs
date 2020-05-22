@@ -49,6 +49,12 @@ impl<V: PlayerView> PlayerPresenter<V> {
             let view: V = view_provider();
 
             loop {
+                info!("resing");
+
+                view.rest();
+
+                this.time.sleep(0.5).await;
+
                 info!("walking");
 
                 let start_tile = &this
@@ -59,7 +65,7 @@ impl<V: PlayerView> PlayerPresenter<V> {
                     .top_left;
 
                 view.start_walk(
-                    Direction::NORTH,
+                    Direction::SOUTH,
                     &start_tile,
                     this.time.now(),
                     0.5,
@@ -70,18 +76,18 @@ impl<V: PlayerView> PlayerPresenter<V> {
                 this.world_service
                     .move_by_key_delta(
                         &player.location_key,
-                        &IPoint::new(0, -1),
+                        Direction::SOUTH.get_point(),
                     )
                     .await;
 
                 view.finish_walk(
-                    Direction::NORTH,
+                    Direction::SOUTH,
                     &start_tile,
                     this.time.now(),
                     0.5,
                 );
 
-                this.time.sleep(1.0).await;
+                this.time.sleep(1.).await;
             }
         });
 

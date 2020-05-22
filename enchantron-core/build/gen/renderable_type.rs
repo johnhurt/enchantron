@@ -15,6 +15,7 @@ pub struct RenderableType {
     pub empty_struct: bool,
     pub impls: Vec<RenderableImplBlock>,
     pub cloneable: bool,
+    pub exclude_from_header: bool,
 }
 
 impl RenderableType {
@@ -22,6 +23,7 @@ impl RenderableType {
         RenderableTypeBuilder::default()
             .name(String::from(type_def.name))
             .rust_owned(type_def.rust_owned)
+            .exclude_from_header(type_def.exclude_from_header)
             .empty_struct(type_def.empty_struct)
             .impls(type_def.get_renderable_functions())
             .cloneable(type_def.cloneable)

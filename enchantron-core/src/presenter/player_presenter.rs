@@ -1,6 +1,7 @@
 use crate::event::*;
 use crate::game::{
-    Direction, GameEntity, GameEntitySlotKey, Player, Time, WorldService,
+    Direction, GameEntity, GameEntitySlotKey, PerlinTerrain1, Player,
+    TerrainProvider, Time, WorldService,
 };
 use crate::model::IPoint;
 use crate::view::PlayerView;
@@ -46,16 +47,12 @@ impl<V: PlayerView> PlayerPresenter<V> {
         let _ = this.event_bus.clone().spawn(async move {
             info!("Player presenter spawned");
 
+            let terrain_generator = PerlinTerrain1::default();
+
             let view: V = view_provider();
 
             loop {
-                info!("resing");
-
                 view.rest();
-
-                this.time.sleep(0.5).await;
-
-                info!("walking");
 
                 let start_tile = &this
                     .world_service
@@ -63,6 +60,12 @@ impl<V: PlayerView> PlayerPresenter<V> {
                     .await
                     .unwrap()
                     .top_left;
+
+                info!("resing in {:?}", terrain_generator.get_for(start_tile));
+
+                this.time.sleep(0.5).await;
+
+                info!("walking");
 
                 view.start_walk(
                     Direction::SOUTH,

@@ -11,6 +11,8 @@ use std::sync::Arc;
 const UNIT_TERRAIN_TILE_LENGTH_F64: f64 =
     constants::UNIT_TERRAIN_TILE_LENGTH as f64;
 
+const PLAYER_FOOT_DOWN_FROM_CENTER: f64 = 8.;
+
 /// Get the point that's halfway from the given starting point in the given
 /// direction
 fn get_halfway_point_in_texture_coordinates(

@@ -397,7 +397,10 @@ where
                         &TEXTURE_SIZE,
                     ),
                 );
-
+                sprite.set_shader_variable_f64(
+                    "square_texture_height".to_owned(),
+                    texture_terrain_rect.size.height as f64,
+                );
                 sprite.set_size(sprite_width, sprite_width);
                 sprite.set_visible(true);
             });

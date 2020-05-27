@@ -1,15 +1,15 @@
+use crate::game::constants;
 use crate::game::{PerlinTerrain1, TerrainProvider, TerrainType};
 use crate::img::PngGenerator;
 use crate::model::{IPoint, IRect, ISize};
 use crate::native::{ResourceLoader, RuntimeResources, Texture};
 use crate::util::{ByteBuffer, ValueRect};
 use crate::view_types::ViewTypes;
-
 use std::ptr::copy_nonoverlapping;
 use std::sync::Arc;
 
-const BROWN_BYTES: [u8; 3] = [0x65, 0x43, 0x21];
-const GREEN_BYTES: [u8; 3] = [0x90, 0xEE, 0x90];
+const BROWN_BYTES: [u8; 3] = constants::DIRT_BROWN_RGB;
+const GREEN_BYTES: [u8; 3] = constants::GRASS_GREEN_RGB;
 
 /// Write to the given image-data slice in the locations corresponsing to
 /// the
@@ -41,6 +41,8 @@ fn get_texture_data_for_rect(
     texture_size: &ISize,
     terrain_generator: &impl TerrainProvider,
 ) -> ByteBuffer {
+    let ref texture_size = rect.size;
+
     let x_tile_pixels = texture_size.width / rect.size.width;
     let y_tile_pixels = texture_size.height / rect.size.height;
 

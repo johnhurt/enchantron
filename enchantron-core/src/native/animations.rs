@@ -23,6 +23,7 @@ macro_rules! create_animations {
                     let $name = resource_loader.create_animation();
 
                     $($name.set_is_loop($looped);)?
+                    $name.set_name(stringify!($name).to_owned());
 
                     $(
                         $name.add_texture(textures.$atlas.$texture());

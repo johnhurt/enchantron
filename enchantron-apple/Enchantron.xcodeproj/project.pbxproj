@@ -218,6 +218,8 @@
 				63F97B00211CCB0400784701 /* TransitionService.swift */,
 				6364098F23181E3C00B46512 /* SpriteSource.swift */,
 				639AD25322AC8E6900A35225 /* Viewport.swift */,
+				639CC0D9247098A700A40E2C /* Animation.swift */,
+				639CC0DC2476F94C00A40E2C /* Shader.swift */,
 				63F75D84235A977500B963F7 /* Touch.swift */,
 				63410981211CC7C000D40139 /* Assets.xcassets */,
 				634589F5212624FC00D81EAD /* Resources */,
@@ -225,8 +227,6 @@
 				6317D38A23B98F4F00DD935B /* RustFuture.swift */,
 				639EBFB123DE46D200A40E2C /* ByteBufferExt.swift */,
 				632D2B072411E813002B29D7 /* TouchLookup.swift */,
-				639CC0D9247098A700A40E2C /* Animation.swift */,
-				639CC0DC2476F94C00A40E2C /* Shader.swift */,
 			);
 			path = "Enchantron Shared";
 			sourceTree = "<group>";

@@ -45,11 +45,16 @@ class Sprite : SKSpriteNode {
     }
     
     func setShader(_ shader: Shader) {
-        self.shader = shader.inner
+        DispatchQueue.main.async {
+            self.shader = shader.inner
+        }
+        
     }
     
     func setShaderVariableF64(_ name: String, _ value: Float64) {
-        self.setValue(SKAttributeValue(float: Float(value)), forAttribute: name)
+        DispatchQueue.main.async {
+            self.setValue(SKAttributeValue(float: Float(value)), forAttribute: name)
+        }
     }
     
     func clearShader() {

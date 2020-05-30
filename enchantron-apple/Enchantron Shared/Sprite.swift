@@ -57,6 +57,27 @@ class Sprite : SKSpriteNode {
         }
     }
     
+    
+    func setShaderVariableVec2F64(_ name: String, _ v0: Float64, _ v1: Float64) {
+        DispatchQueue.main.async {
+            self.setValue(SKAttributeValue(vectorFloat2: simd_float2(Float(v0), Float(v1))), forAttribute: name)
+        }
+    }
+    
+    
+    func setShaderVariableVec3F64(_ name: String, _ v0: Float64, _ v1: Float64, _ v2: Float64) {
+        DispatchQueue.main.async {
+            self.setValue(SKAttributeValue(vectorFloat3: simd_float3(Float(v0), Float(v1), Float(v2))), forAttribute: name)
+        }
+    }
+    
+    
+    func setShaderVariableVec4F64(_ name: String, _ v0: Float64, _ v1: Float64, _ v2: Float64, _ v3: Float64) {
+        DispatchQueue.main.async {
+            self.setValue(SKAttributeValue(vectorFloat4: simd_float4(Float(v0), Float(v1), Float(v2), Float(v3))), forAttribute: name)
+        }
+    }
+    
     func clearShader() {
         self.shader = nil
     }

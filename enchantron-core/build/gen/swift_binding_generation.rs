@@ -918,34 +918,80 @@ lazy_static! {
                     .build().unwrap()))
                 .build().unwrap(),
 
-              MethodDefBuilder::default()
-                  .name("add_shader_constant_vec4_f64")
-                  .arguments(vec![
-                      ArgumentDefBuilder::default()
-                          .name("name")
-                          .data_type(STRING.clone())
-                          .build().unwrap(),
-                      ArgumentDefBuilder::default()
-                          .name("v0")
-                          .data_type(DOUBLE.clone())
-                          .build().unwrap(),
-                        ArgumentDefBuilder::default()
-                            .name("v1")
-                            .data_type(DOUBLE.clone())
-                            .build().unwrap(),
-                        ArgumentDefBuilder::default()
-                            .name("v2")
-                            .data_type(DOUBLE.clone())
-                            .build().unwrap(),
-                        ArgumentDefBuilder::default()
-                            .name("v3")
-                            .data_type(DOUBLE.clone())
-                            .build().unwrap()
-                  ])
-                  .impl_block(Some(ImplBlockDefBuilder::default()
-                      .trait_name("native::Shader")
-                      .build().unwrap()))
-                  .build().unwrap()
+                  MethodDefBuilder::default()
+                      .name("add_shader_constant_vec2_f64")
+                      .arguments(vec![
+                          ArgumentDefBuilder::default()
+                              .name("name")
+                              .data_type(STRING.clone())
+                              .build().unwrap(),
+                          ArgumentDefBuilder::default()
+                              .name("v0")
+                              .data_type(DOUBLE.clone())
+                              .build().unwrap(),
+                            ArgumentDefBuilder::default()
+                                .name("v1")
+                                .data_type(DOUBLE.clone())
+                                .build().unwrap()
+                      ])
+                      .impl_block(Some(ImplBlockDefBuilder::default()
+                          .trait_name("native::Shader")
+                          .build().unwrap()))
+                      .build().unwrap(),
+
+                    MethodDefBuilder::default()
+                        .name("add_shader_constant_vec3_f64")
+                        .arguments(vec![
+                            ArgumentDefBuilder::default()
+                                .name("name")
+                                .data_type(STRING.clone())
+                                .build().unwrap(),
+                            ArgumentDefBuilder::default()
+                                .name("v0")
+                                .data_type(DOUBLE.clone())
+                                .build().unwrap(),
+                            ArgumentDefBuilder::default()
+                                .name("v1")
+                                .data_type(DOUBLE.clone())
+                                .build().unwrap(),
+                            ArgumentDefBuilder::default()
+                                .name("v2")
+                                .data_type(DOUBLE.clone())
+                                .build().unwrap()
+                        ])
+                        .impl_block(Some(ImplBlockDefBuilder::default()
+                            .trait_name("native::Shader")
+                            .build().unwrap()))
+                        .build().unwrap(),
+
+                    MethodDefBuilder::default()
+                        .name("add_shader_constant_vec4_f64")
+                        .arguments(vec![
+                            ArgumentDefBuilder::default()
+                                .name("name")
+                                .data_type(STRING.clone())
+                                .build().unwrap(),
+                            ArgumentDefBuilder::default()
+                                .name("v0")
+                                .data_type(DOUBLE.clone())
+                                .build().unwrap(),
+                                ArgumentDefBuilder::default()
+                                    .name("v1")
+                                    .data_type(DOUBLE.clone())
+                                    .build().unwrap(),
+                                ArgumentDefBuilder::default()
+                                    .name("v2")
+                                    .data_type(DOUBLE.clone())
+                                    .build().unwrap(),
+                                ArgumentDefBuilder::default()
+                                    .name("v3")
+                                    .data_type(DOUBLE.clone())
+                                    .build().unwrap()
+                        ])
+                        .impl_block(Some(ImplBlockDefBuilder::default()
+                            .trait_name("native::Shader")
+                            .build().unwrap()))
+                        .build().unwrap()
           ])
          .build().unwrap(),
 
@@ -1099,6 +1145,81 @@ lazy_static! {
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("value")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap()
+                ])
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("crate::ui::Sprite")
+                    .build().unwrap()))
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("set_shader_variable_vec2_f64")
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("variable_name")
+                        .data_type(STRING.clone())
+                        .build().unwrap(),
+                    ArgumentDefBuilder::default()
+                        .name("v0")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap(),
+                    ArgumentDefBuilder::default()
+                        .name("v1")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap()
+                ])
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("crate::ui::Sprite")
+                    .build().unwrap()))
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("set_shader_variable_vec3_f64")
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("variable_name")
+                        .data_type(STRING.clone())
+                        .build().unwrap(),
+                    ArgumentDefBuilder::default()
+                        .name("v0")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap(),
+                    ArgumentDefBuilder::default()
+                        .name("v1")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap(),
+                    ArgumentDefBuilder::default()
+                        .name("v2")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap()
+                ])
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("crate::ui::Sprite")
+                    .build().unwrap()))
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("set_shader_variable_vec4_f64")
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("variable_name")
+                        .data_type(STRING.clone())
+                        .build().unwrap(),
+                    ArgumentDefBuilder::default()
+                        .name("v0")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap(),
+                    ArgumentDefBuilder::default()
+                        .name("v1")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap(),
+                    ArgumentDefBuilder::default()
+                        .name("v2")
+                        .data_type(DOUBLE.clone())
+                        .build().unwrap(),
+                    ArgumentDefBuilder::default()
+                        .name("v3")
                         .data_type(DOUBLE.clone())
                         .build().unwrap()
                 ])

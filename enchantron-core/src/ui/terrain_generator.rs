@@ -397,8 +397,11 @@ where
                         &TEXTURE_SIZE,
                     ),
                 );
-                sprite.set_shader_variable_f64(
-                    "square_texture_height".to_owned(),
+                sprite.set_shader_variable_vec4_f64(
+                    "TERRAIN_RECT".to_owned(),
+                    point.x as f64,
+                    point.y as f64,
+                    texture_terrain_rect.size.width as f64,
                     texture_terrain_rect.size.height as f64,
                 );
                 sprite.set_size(sprite_width, sprite_width);

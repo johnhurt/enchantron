@@ -21,7 +21,6 @@ class Sprite : SKSpriteNode {
             texture: nil,
             color: SKColor.clear,
             size: CGSize(width: 0, height: 0))
-        anchorPoint = CGPoint(x: 0.0, y: 1.0)
         self.isHidden = true
     }
     
@@ -93,6 +92,7 @@ class Sprite : SKSpriteNode {
             self.removeAllActions();
             self.currentTexture = texture
             self.texture = texture.texture
+            self.anchorPoint = texture.anchorPoint
         }
     }
     

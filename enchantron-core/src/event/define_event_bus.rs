@@ -11,6 +11,7 @@ macro_rules! define_event_bus {
             use std::sync::Arc;
             use std::future::Future;
             use std::fmt::Debug;
+            use std::iter::Iterator;
 
             use tokio::stream::{
                 StreamExt

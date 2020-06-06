@@ -1,6 +1,8 @@
 use super::{HasIntSize, ResourceLoader, Texture};
 use crate::view_types::ViewTypes;
 
+const CENTER: usize = 0;
+
 macro_rules! count {
     ($h:expr) => (1);
     ($h:expr, $($t:expr),*) =>
@@ -15,7 +17,8 @@ macro_rules! define_texture_atlas {
               left: $left:expr,
               top: $top:expr,
               width: $width:expr,
-              height: $height:expr) ),*
+              height: $height:expr
+              $(, register: $registration:ident )?) ),*
       }
   ) => {
 
@@ -48,6 +51,12 @@ macro_rules! define_texture_atlas {
                 ($top) * tile_height,
                 ($width) * tile_width,
                 ($height) * tile_height);
+
+          $(
+              if $registration == CENTER {
+                $name.set_center_registration(true);
+              }
+          )?
           counter += 1.;
           progress_callback(counter / sub_tex_count);
         )*
@@ -74,10 +83,10 @@ define_texture_atlas!(Overworld(x_tile_count: 40, y_tile_count: 36) {
 });
 
 define_texture_atlas!(Character(x_tile_count: 17, y_tile_count: 16) {
-    south_rest(left: 0, top: 0, width: 1, height: 2),
-    south_step_left(left: 1, top: 0, width: 1, height: 2),
-    south_step_mid(left: 2, top: 0, width: 1, height: 2),
-    south_step_right(left: 3, top: 0, width: 1, height: 2)
+    south_rest(left: 0, top: 0, width: 1, height: 2, register: CENTER),
+    south_step_left(left: 1, top: 0, width: 1, height: 2, register: CENTER),
+    south_step_mid(left: 2, top: 0, width: 1, height: 2, register: CENTER),
+    south_step_right(left: 3, top: 0, width: 1, height: 2, register: CENTER)
 });
 
 pub struct Textures<T: ViewTypes> {

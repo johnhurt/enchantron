@@ -23,5 +23,8 @@ impl ShaderVariableType {
 
 #[test]
 fn test_sanity() {
-    assert_eq!(ShaderVariableType::Vec4Float.type_name(), VEC4_FLOAT.to_owned());
+    assert_eq!(
+        ShaderVariableType::Vec4Float.type_name(),
+        VEC4_FLOAT.to_owned()
+    );
 }

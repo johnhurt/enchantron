@@ -7,10 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6317D38823B98DCF00DD935B /* FuturesInterop.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6317D38723B98DCF00DD935B /* FuturesInterop.swift */; };
-		6317D38923B98DCF00DD935B /* FuturesInterop.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6317D38723B98DCF00DD935B /* FuturesInterop.swift */; };
-		6317D38B23B98F4F00DD935B /* RustFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6317D38A23B98F4F00DD935B /* RustFuture.swift */; };
-		6317D38C23B98F4F00DD935B /* RustFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6317D38A23B98F4F00DD935B /* RustFuture.swift */; };
 		632D2B052411E5F3002B29D7 /* MultiDragHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632D2B042411E4ED002B29D7 /* MultiDragHandler.swift */; };
 		632D2B062411E5F4002B29D7 /* MultiDragHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632D2B042411E4ED002B29D7 /* MultiDragHandler.swift */; };
 		632D2B082411E813002B29D7 /* TouchLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632D2B072411E813002B29D7 /* TouchLookup.swift */; };
@@ -95,8 +91,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		6317D38723B98DCF00DD935B /* FuturesInterop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FuturesInterop.swift; sourceTree = "<group>"; };
-		6317D38A23B98F4F00DD935B /* RustFuture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RustFuture.swift; sourceTree = "<group>"; };
 		632D2B042411E4ED002B29D7 /* MultiDragHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiDragHandler.swift; sourceTree = "<group>"; };
 		632D2B072411E813002B29D7 /* TouchLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchLookup.swift; sourceTree = "<group>"; };
 		633D0B22240FCA2800A40E2C /* SpriteGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteGroup.swift; sourceTree = "<group>"; };
@@ -194,39 +188,37 @@
 				63D5899C226E59F200A40E2C /* enchantron.h */,
 				6346A2612138921200481721 /* RookAndPawn White.png */,
 				6341097F211CC7BE00D40139 /* Empty.sks */,
+				639CC0D9247098A700A40E2C /* Animation.swift */,
 				63956510212707FF006F2A71 /* BaseView.swift */,
 				63F97AFF211CCB0300784701 /* Button.swift */,
+				639EBFB123DE46D200A40E2C /* ByteBufferExt.swift */,
 				63F97AFD211CCB0300784701 /* ClickHandler.swift */,
 				6346A2642139D1E900481721 /* DragHandler.swift */,
-				632D2B042411E4ED002B29D7 /* MultiDragHandler.swift */,
-				63983248232A865800569093 /* MagnifyHandler.swift */,
 				63410980211CC7BE00D40139 /* GameScene.swift */,
 				63C34FEC212CEB0400076E55 /* GameView.swift */,
 				63F97B01211CCB0400784701 /* HandlerRegistration.swift */,
 				63C34FEF212F2F4700076E55 /* LayoutHandler.swift */,
 				634589FD212645B400D81EAD /* LoadingView.swift */,
+				63983248232A865800569093 /* MagnifyHandler.swift */,
 				63F97B02211CCB0400784701 /* MainMenuView.swift */,
+				632D2B042411E4ED002B29D7 /* MultiDragHandler.swift */,
 				6395650721264645006F2A71 /* ProgressBar.swift */,
+				6395650D212646BD006F2A71 /* ResourceLoader.swift */,
 				63F97AF9211CC9B500784701 /* RustBinder.swift */,
+				639CC0DC2476F94C00A40E2C /* Shader.swift */,
 				63C34FF2212F5CF900076E55 /* Sprite.swift */,
 				633D0B22240FCA2800A40E2C /* SpriteGroup.swift */,
+				6364098F23181E3C00B46512 /* SpriteSource.swift */,
 				63F97B03211CCB0400784701 /* SwiftString.swift */,
 				63E98385212A00EF0056E91C /* SystemView.swift */,
 				63F97AFE211CCB0300784701 /* TextArea.swift */,
 				6395650A2126469C006F2A71 /* Texture.swift */,
-				6395650D212646BD006F2A71 /* ResourceLoader.swift */,
-				63F97B00211CCB0400784701 /* TransitionService.swift */,
-				6364098F23181E3C00B46512 /* SpriteSource.swift */,
-				639AD25322AC8E6900A35225 /* Viewport.swift */,
-				639CC0D9247098A700A40E2C /* Animation.swift */,
-				639CC0DC2476F94C00A40E2C /* Shader.swift */,
 				63F75D84235A977500B963F7 /* Touch.swift */,
+				632D2B072411E813002B29D7 /* TouchLookup.swift */,
+				63F97B00211CCB0400784701 /* TransitionService.swift */,
+				639AD25322AC8E6900A35225 /* Viewport.swift */,
 				63410981211CC7C000D40139 /* Assets.xcassets */,
 				634589F5212624FC00D81EAD /* Resources */,
-				6317D38723B98DCF00DD935B /* FuturesInterop.swift */,
-				6317D38A23B98F4F00DD935B /* RustFuture.swift */,
-				639EBFB123DE46D200A40E2C /* ByteBufferExt.swift */,
-				632D2B072411E813002B29D7 /* TouchLookup.swift */,
 			);
 			path = "Enchantron Shared";
 			sourceTree = "<group>";
@@ -447,7 +439,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6317D38823B98DCF00DD935B /* FuturesInterop.swift in Sources */,
 				63F97B0E211CCB0400784701 /* MainMenuView.swift in Sources */,
 				6346A2652139D1E900481721 /* DragHandler.swift in Sources */,
 				63F97B08211CCB0400784701 /* Button.swift in Sources */,
@@ -472,7 +463,6 @@
 				63F97B0A211CCB0400784701 /* TransitionService.swift in Sources */,
 				63F75D85235A977500B963F7 /* Touch.swift in Sources */,
 				6395650821264645006F2A71 /* ProgressBar.swift in Sources */,
-				6317D38B23B98F4F00DD935B /* RustFuture.swift in Sources */,
 				63E98386212A00EF0056E91C /* SystemView.swift in Sources */,
 				632D2B052411E5F3002B29D7 /* MultiDragHandler.swift in Sources */,
 				63F97B10211CCB0400784701 /* SwiftString.swift in Sources */,
@@ -501,9 +491,7 @@
 				6395650F212646BD006F2A71 /* ResourceLoader.swift in Sources */,
 				63C34FF4212F5CF900076E55 /* Sprite.swift in Sources */,
 				63C34FF1212F2F4700076E55 /* LayoutHandler.swift in Sources */,
-				6317D38C23B98F4F00DD935B /* RustFuture.swift in Sources */,
 				632D2B062411E5F4002B29D7 /* MultiDragHandler.swift in Sources */,
-				6317D38923B98DCF00DD935B /* FuturesInterop.swift in Sources */,
 				63F97B05211CCB0400784701 /* ClickHandler.swift in Sources */,
 				6341099D211CC7C000D40139 /* GameViewController.swift in Sources */,
 				6398324A232A865800569093 /* MagnifyHandler.swift in Sources */,

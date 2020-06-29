@@ -3,7 +3,7 @@ use crate::model::{IPoint, Point};
 use crate::native::RuntimeResources;
 use crate::ui::{
     HasMutableLocation, HasMutableSize, HasMutableVisibility, HasMutableZLevel,
-    Sprite, SpriteGroup, SpriteSource,
+    Sprite,
 };
 use crate::view_types::ViewTypes;
 use std::sync::Arc;
@@ -11,7 +11,13 @@ use std::sync::Arc;
 const UNIT_TERRAIN_TILE_LENGTH_F64: f64 =
     constants::UNIT_TERRAIN_TILE_LENGTH as f64;
 
-const PLAYER_FOOT_DOWN_FROM_CENTER: f64 = 8.;
+/// This adjusts where the player's sprite is placed relative to the sprite's
+/// origin. The player's textures are all referenced from the center, but the
+/// tiled terrain is referenced from the top-left corner of every tile
+const PLAYER_TEXTURE_OFFSET: Point = Point {
+    x: UNIT_TERRAIN_TILE_LENGTH_F64 / 1.75,
+    y: -UNIT_TERRAIN_TILE_LENGTH_F64 / 8.,
+};
 
 /// Get the point that's halfway from the given starting point in the given
 /// direction
@@ -77,6 +83,7 @@ impl<T: ViewTypes> PlayerViewImpl<T> {
         bound_sprite.set_visible(true);
         bound_sprite.set_z_level(constants::ENTITY_Z_LEVEL);
         bound_sprite.set_size(16., 32.);
+        bound_sprite.set_location_point(&PLAYER_TEXTURE_OFFSET);
 
         PlayerViewImpl {
             bound_sprite,
@@ -104,8 +111,10 @@ impl<T: ViewTypes> PlayerView for PlayerViewImpl<T> {
             1. / 8.,
         );
 
-        self.bound_sprite
-            .set_location_point_animated(&midpoint, duration);
+        self.bound_sprite.set_location_point_animated(
+            &(midpoint + &PLAYER_TEXTURE_OFFSET),
+            duration,
+        );
     }
 
     fn finish_walk(
@@ -120,8 +129,10 @@ impl<T: ViewTypes> PlayerView for PlayerViewImpl<T> {
 
         let duration = get_animation_duration(start_time, speed, &self.time);
 
-        self.bound_sprite
-            .set_location_point_animated(&destination, duration);
+        self.bound_sprite.set_location_point_animated(
+            &(destination + &PLAYER_TEXTURE_OFFSET),
+            duration,
+        );
     }
 
     fn rest(&self) {

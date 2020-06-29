@@ -1,6 +1,6 @@
 pub use self::direction::Direction;
 pub use self::game_entity::GameEntity;
-pub use self::game_entity_slot_key::GameEntitySlotKey;
+pub use self::game_entity_slot_key::*;
 pub use self::game_runner::GameRunner;
 pub use self::perlin_terrain_1::PerlinTerrain1;
 pub use self::player::Player;

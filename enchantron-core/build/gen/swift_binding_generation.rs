@@ -870,6 +870,19 @@ lazy_static! {
                     .build().unwrap()))
                 .return_type(Some(DataType::swift_generic(None,
                     DataType::swift_struct("Texture", None))))
+                .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("set_center_registration")
+                .arguments(vec![
+                    ArgumentDefBuilder::default()
+                        .name("center_registered")
+                        .data_type(BOOLEAN.clone())
+                        .build().unwrap()
+                ])
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("native::Texture")
+                    .build().unwrap()))
                 .build().unwrap()
         ])
         .build().unwrap(),

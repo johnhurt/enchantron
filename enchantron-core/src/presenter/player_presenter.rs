@@ -1,7 +1,7 @@
 use crate::event::*;
 use crate::game::{
-    Direction, GameEntity, GameEntitySlotKey, PerlinTerrain1, Player,
-    TerrainProvider, Time, WorldService,
+    Direction, GameEntity, PerlinTerrain1, Player, TerrainProvider, Time,
+    WorldService,
 };
 use crate::model::IPoint;
 use crate::view::PlayerView;

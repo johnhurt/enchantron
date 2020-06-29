@@ -3,12 +3,12 @@ use crate::game::constants::*;
 use crate::view_types::ViewTypes;
 use ShaderVariableType::*;
 
-fn u8_rgb_to_f64_rgba(val: &[u8 ; 3], a: u8) -> [f64; 4] {
+fn u8_rgb_to_f64_rgba(val: &[u8; 3], a: u8) -> [f64; 4] {
     [
         val[0] as f64 / 255.,
         val[1] as f64 / 255.,
         val[2] as f64 / 255.,
-        a as f64 / 255.
+        a as f64 / 255.,
     ]
 }
 

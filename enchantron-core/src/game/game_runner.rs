@@ -1,4 +1,4 @@
-use super::{GameEntity, GameEntitySlotKey, WorldService};
+use super::{GameEntity, LocationKey, Player, WorldService};
 use crate::event::*;
 use crate::model::{IPoint, IRect};
 use std::sync::Arc;
@@ -23,12 +23,15 @@ impl GameRunner {
         eb.spawn(GameRunner::run_player(this, world_key));
     }
 
-    async fn initialize_player(this: &Arc<GameRunner>) -> GameEntitySlotKey {
-        this.clone()
+    async fn initialize_player(this: &Arc<GameRunner>) -> Player {
+        let location_key = this
+            .clone()
             .world_service
             .insert(GameEntity::Player, IPoint::new(0, 0))
-            .await
+            .await;
+
+        Player::new(location_key)
     }
 
-    async fn run_player(this: Arc<GameRunner>, world_key: GameEntitySlotKey) {}
+    async fn run_player(this: Arc<GameRunner>, player: Player) {}
 }

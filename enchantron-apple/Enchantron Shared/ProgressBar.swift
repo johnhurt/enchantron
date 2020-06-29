@@ -87,6 +87,7 @@ class ProgressBar : SKNode {
   }
   
   func setIntValue(_ value: Int64) {
+    sleep(1)
     DispatchQueue.main.async {
       self.progress = value
       self.bar.path = CGPath(

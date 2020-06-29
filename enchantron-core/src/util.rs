@@ -6,10 +6,6 @@ pub use self::harmonic_perlin_generator::HarmonicPerlinGenerator;
 pub use self::ipoint_hasher::IPointHasher;
 pub use self::restricted_xx_hasher::RestrictedXxHasher;
 pub use self::single_perlin_generator::SinglePerlinGenerator;
-pub use self::slot_map::SlotMap;
-pub use self::slot_map::SLOT_MAP_CHUNK_SIZE;
-pub use self::slot_map_key::SlotMapKey;
-pub use self::slot_map_key_data::SlotMapKeyData;
 pub use self::value_rect::ValueRect;
 
 mod boxed_any;
@@ -20,7 +16,4 @@ mod harmonic_perlin_generator;
 mod ipoint_hasher;
 mod restricted_xx_hasher;
 mod single_perlin_generator;
-mod slot_map;
-mod slot_map_key;
-mod slot_map_key_data;
 mod value_rect;

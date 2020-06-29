@@ -1,6 +1,6 @@
-use super::{GameEntity, GameEntitySlotKey};
+use super::{GameEntity, LocationKey};
 use crate::model::{IPoint, IRect, ISize};
-use crate::util::SlotMap;
+use one_way_slot_map::SlotMap;
 use rstar::{PointDistance, RTree, RTreeObject};
 use std::collections::HashMap;
 use std::ptr;
@@ -146,8 +146,8 @@ pub struct WorldService {
 
 struct Inner {
     rtree: RTree<WindowedPointer>,
-    slot_map: SlotMap<GameEntitySlotKey, GameEntity, WindowedPointer>,
-    slot_keys_by_entity: HashMap<GameEntity, GameEntitySlotKey>,
+    slot_map: SlotMap<LocationKey, GameEntity, WindowedPointer>,
+    slot_keys_by_entity: HashMap<GameEntity, LocationKey>,
 }
 
 impl WorldService {
@@ -172,33 +172,21 @@ impl WorldService {
         action(inner)
     }
 
-    pub async fn insert(
-        &self,
-        e: GameEntity,
-        location: IPoint,
-    ) -> GameEntitySlotKey {
+    pub async fn insert(&self, e: GameEntity, location: IPoint) -> LocationKey {
         self.with_inner_mut(|inner| inner.insert(e, location)).await
     }
 
     /// Get the current position for the given key
-    pub async fn get_by_key(&self, key: &GameEntitySlotKey) -> Option<IRect> {
+    pub async fn get_by_key(&self, key: &LocationKey) -> Option<IRect> {
         self.with_inner(|inner| inner.get_by_key(key)).await
     }
 
-    pub async fn move_by_key(
-        &self,
-        key: &GameEntitySlotKey,
-        new_location: IPoint,
-    ) {
+    pub async fn move_by_key(&self, key: &LocationKey, new_location: IPoint) {
         self.with_inner_mut(|inner| inner.move_by_key(key, new_location))
             .await
     }
 
-    pub async fn move_by_key_delta(
-        &self,
-        key: &GameEntitySlotKey,
-        shift: &IPoint,
-    ) {
+    pub async fn move_by_key_delta(&self, key: &LocationKey, shift: &IPoint) {
         self.with_inner_mut(|inner| inner.move_by_key_delta(key, shift))
             .await
     }
@@ -217,7 +205,7 @@ impl Inner {
         }
     }
 
-    fn insert(&mut self, e: GameEntity, location: IPoint) -> GameEntitySlotKey {
+    fn insert(&mut self, e: GameEntity, location: IPoint) -> LocationKey {
         let mut wp = WindowedPointer::new(e, location);
         let wp_clone = wp.clone();
 
@@ -229,7 +217,7 @@ impl Inner {
         result
     }
 
-    fn get_by_key(&self, key: &GameEntitySlotKey) -> Option<IRect> {
+    fn get_by_key(&self, key: &LocationKey) -> Option<IRect> {
         self.slot_map
             .get(key)
             .map(WindowedPointer::read)
@@ -239,7 +227,7 @@ impl Inner {
     fn get_by_entity(
         &self,
         entity: &GameEntity,
-    ) -> Option<(GameEntitySlotKey, IRect)> {
+    ) -> Option<(LocationKey, IRect)> {
         if let Some(key) = self.slot_keys_by_entity.get(entity) {
             Some((
                 *key,
@@ -252,7 +240,7 @@ impl Inner {
         }
     }
 
-    fn move_by_key(&mut self, key: &GameEntitySlotKey, new_location: IPoint) {
+    fn move_by_key(&mut self, key: &LocationKey, new_location: IPoint) {
         if let Some(mut wp) = self.slot_map.get_mut(key) {
             wp.write().location.top_left = new_location;
             if !wp.check_window_contains_location() {
@@ -266,7 +254,7 @@ impl Inner {
         }
     }
 
-    fn move_by_key_delta(&mut self, key: &GameEntitySlotKey, shift: &IPoint) {
+    fn move_by_key_delta(&mut self, key: &LocationKey, shift: &IPoint) {
         if let Some(mut wp) = self.slot_map.get_mut(key) {
             wp.write().location.top_left += shift;
             if !wp.check_window_contains_location() {
@@ -287,7 +275,7 @@ impl Inner {
             .collect()
     }
 
-    fn remove_by_key(&mut self, key: &GameEntitySlotKey) -> Option<IRect> {
+    fn remove_by_key(&mut self, key: &LocationKey) -> Option<IRect> {
         if let Some(mut wp_ref) = self.slot_map.remove(key) {
             let _ = self
                 .rtree

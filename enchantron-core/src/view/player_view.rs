@@ -79,10 +79,10 @@ impl<T: ViewTypes> PlayerViewImpl<T> {
         time: Time,
     ) -> PlayerViewImpl<T> {
         bound_sprite
-            .set_texture(runtime_resources.textures().character.south_rest());
+            .set_texture(runtime_resources.textures().gist.south_rest());
         bound_sprite.set_visible(true);
         bound_sprite.set_z_level(constants::ENTITY_Z_LEVEL);
-        bound_sprite.set_size(16., 32.);
+        bound_sprite.set_size(32., 32.);
         bound_sprite.set_location_point(&PLAYER_TEXTURE_OFFSET);
 
         PlayerViewImpl {
@@ -108,7 +108,7 @@ impl<T: ViewTypes> PlayerView for PlayerViewImpl<T> {
 
         self.bound_sprite.animate(
             &self.runtime_resources.animations().player_walk_south,
-            1. / 8.,
+            1. / 6.,
         );
 
         self.bound_sprite.set_location_point_animated(
@@ -136,8 +136,7 @@ impl<T: ViewTypes> PlayerView for PlayerViewImpl<T> {
     }
 
     fn rest(&self) {
-        self.bound_sprite.set_texture(
-            self.runtime_resources.textures().character.south_rest(),
-        );
+        self.bound_sprite
+            .set_texture(self.runtime_resources.textures().gist.south_rest());
     }
 }

@@ -40,9 +40,9 @@ macro_rules! create_animations {
 
 create_animations! {
     player_walk_south: LOOP [
-        character.south_rest,
-        character.south_step_left,
-        character.south_step_mid,
-        character.south_step_right
+        gist.south_rest,
+        gist.south_step_left,
+        gist.south_step_mid,
+        gist.south_step_right
     ]
 }

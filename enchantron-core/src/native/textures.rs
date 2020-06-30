@@ -89,9 +89,17 @@ define_texture_atlas!(Character(x_tile_count: 17, y_tile_count: 16) {
     south_step_right(left: 3, top: 0, width: 1, height: 2, register: CENTER)
 });
 
+define_texture_atlas!(Gist(x_tile_count: 4, y_tile_count: 1) {
+    south_rest(left: 0, top: 0, width: 1, height: 1, register: CENTER),
+    south_step_left(left: 1, top: 0, width: 1, height: 1, register: CENTER),
+    south_step_mid(left: 2, top: 0, width: 1, height: 1, register: CENTER),
+    south_step_right(left: 3, top: 0, width: 1, height: 1, register: CENTER)
+});
+
 pub struct Textures<T: ViewTypes> {
     pub overworld: Overworld<T>,
     pub character: Character<T>,
+    pub gist: Gist<T>,
 }
 
 impl<T: ViewTypes> Textures<T> {
@@ -109,9 +117,15 @@ impl<T: ViewTypes> Textures<T> {
             |p| progress_callback(p),
         );
 
+        let gist = Gist::new(
+            texture_loader.load_texture(String::from("gist.png")),
+            |p| progress_callback(p),
+        );
+
         Textures {
-            overworld: overworld,
-            character: character,
+            overworld,
+            character,
+            gist,
         }
     }
 }

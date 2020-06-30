@@ -59,6 +59,8 @@
 		639EBFB323DE46D200A40E2C /* ByteBufferExt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639EBFB123DE46D200A40E2C /* ByteBufferExt.swift */; };
 		63B04A96227F06DC00A40E2C /* overworld.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B04A95227F06DC00A40E2C /* overworld.png */; };
 		63B04A97227F06DC00A40E2C /* overworld.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B04A95227F06DC00A40E2C /* overworld.png */; };
+		63B7F4A624AB501A00A40E2C /* gist.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B7F4A524AB501900A40E2C /* gist.png */; };
+		63B7F4A724AB51A700A40E2C /* gist.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B7F4A524AB501900A40E2C /* gist.png */; };
 		63C34FED212CEB0400076E55 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63C34FEC212CEB0400076E55 /* GameView.swift */; };
 		63C34FEE212CEB0400076E55 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63C34FEC212CEB0400076E55 /* GameView.swift */; };
 		63C34FF0212F2F4700076E55 /* LayoutHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63C34FEF212F2F4700076E55 /* LayoutHandler.swift */; };
@@ -126,6 +128,7 @@
 		639CC0E0247828D700A40E2C /* TerrainShader.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = TerrainShader.fsh; path = ../../resources/shaders/apple/TerrainShader.fsh; sourceTree = "<group>"; };
 		639EBFB123DE46D200A40E2C /* ByteBufferExt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ByteBufferExt.swift; sourceTree = "<group>"; };
 		63B04A95227F06DC00A40E2C /* overworld.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = overworld.png; path = ../../resources/textures/overworld.png; sourceTree = "<group>"; };
+		63B7F4A524AB501900A40E2C /* gist.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = gist.png; path = ../../resources/textures/gist.png; sourceTree = "<group>"; };
 		63C34FEC212CEB0400076E55 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		63C34FEF212F2F4700076E55 /* LayoutHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutHandler.swift; sourceTree = "<group>"; };
 		63C34FF2212F5CF900076E55 /* Sprite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sprite.swift; sourceTree = "<group>"; };
@@ -268,6 +271,7 @@
 		634589F62126253700D81EAD /* Textures */ = {
 			isa = PBXGroup;
 			children = (
+				63B7F4A524AB501900A40E2C /* gist.png */,
 				638DC4E22373612000DD724F /* character.png */,
 				63B04A95227F06DC00A40E2C /* overworld.png */,
 			);
@@ -391,6 +395,7 @@
 				63B04A96227F06DC00A40E2C /* overworld.png in Resources */,
 				63410992211CC7C000D40139 /* LaunchScreen.storyboard in Resources */,
 				639CC0E1247828D700A40E2C /* TerrainShader.fsh in Resources */,
+				63B7F4A624AB501A00A40E2C /* gist.png in Resources */,
 				638DC4E32373612000DD724F /* character.png in Resources */,
 				6346A2622138921200481721 /* RookAndPawn White.png in Resources */,
 				634109A8211CC7C000D40139 /* Assets.xcassets in Resources */,
@@ -403,6 +408,7 @@
 			files = (
 				63B04A97227F06DC00A40E2C /* overworld.png in Resources */,
 				634109A0211CC7C000D40139 /* Main.storyboard in Resources */,
+				63B7F4A724AB51A700A40E2C /* gist.png in Resources */,
 				634109A5211CC7C000D40139 /* Empty.sks in Resources */,
 				63E983842129C9B90056E91C /* Indira_K.ttf in Resources */,
 				639CC0E2247828D700A40E2C /* TerrainShader.fsh in Resources */,

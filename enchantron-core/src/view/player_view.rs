@@ -15,7 +15,7 @@ const UNIT_TERRAIN_TILE_LENGTH_F64: f64 =
 /// origin. The player's textures are all referenced from the center, but the
 /// tiled terrain is referenced from the top-left corner of every tile
 const PLAYER_TEXTURE_OFFSET: Point = Point {
-    x: UNIT_TERRAIN_TILE_LENGTH_F64 / 1.75,
+    x: UNIT_TERRAIN_TILE_LENGTH_F64 / 2.,
     y: -UNIT_TERRAIN_TILE_LENGTH_F64 / 8.,
 };
 

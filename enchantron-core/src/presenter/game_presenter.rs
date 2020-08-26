@@ -1,6 +1,7 @@
 use super::PlayerPresenter;
+use crate::application_context::NUM_CPUS;
 use crate::event::*;
-use crate::game::{Time, WorldService};
+use crate::game::{EntityService, LocationService, Time};
 use crate::model::{Point, Rect, Size};
 use crate::native::{RuntimeResources, SystemView};
 use crate::ui::{
@@ -13,6 +14,7 @@ use crate::ui::{
 use crate::view::{BaseView, PlayerViewImpl};
 use crate::view_types::ViewTypes;
 use std::sync::{Arc, Weak};
+use tokio::runtime::{Builder, Runtime};
 use tokio::sync::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use tokio::stream::StreamExt;
@@ -47,9 +49,9 @@ where
 
     weak_self: RwLock<Option<Box<Weak<GamePresenter<T>>>>>,
 
-    display_state: RwLock<Option<GameDisplayState<T>>>,
+    game_runtime: Runtime,
 
-    player_presenter: Arc<PlayerPresenter<PlayerViewImpl<T>>>,
+    display_state: RwLock<Option<GameDisplayState<T>>>,
 }
 
 impl<T> GamePresenter<T>
@@ -294,9 +296,19 @@ where
     ) -> Arc<GamePresenter<T>> {
         view.initialize_pre_bind();
 
-        let world_service = WorldService::new();
+        let entity_service = EntityService::new(event_bus.clone()).await;
 
         let time = Time::new();
+
+        let runtime = Builder::new()
+            .threaded_scheduler()
+            .core_threads(NUM_CPUS.checked_sub(1).unwrap_or(1)) // one for os
+            .enable_time()
+            .build()
+            .unwrap_or_else(|e| {
+                error!("Failed to create tokio runtime, {:?}", e);
+                panic!("Failed to create tokio runtime");
+            });
 
         let raw_result = GamePresenter {
             view,
@@ -307,14 +319,9 @@ where
             handler_registrations: Mutex::new(Vec::new()),
 
             weak_self: RwLock::new(Default::default()),
-
             display_state: RwLock::new(Default::default()),
 
-            player_presenter: PlayerPresenter::new(
-                event_bus.clone(),
-                world_service.clone(),
-                time.clone(),
-            ),
+            game_runtime: runtime,
         };
 
         let result: Arc<GamePresenter<T>> = Arc::new(raw_result);
@@ -345,15 +352,12 @@ where
             )
         };
 
-        let player = result.player_presenter.init().await;
+        info!("Initializing Entities");
 
-        info!("Starting player presenter");
-
-        PlayerPresenter::run(
-            result.player_presenter.clone(),
-            player,
-            view_provider,
-        );
+        entity_service
+            .initialize()
+            .await
+            .for_each(|(id, entity_data, receiver)| {});
 
         result
     }

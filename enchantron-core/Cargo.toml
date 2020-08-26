@@ -1,3 +1,5 @@
+# spell-checker: disable
+
 [package]
 name = "enchantron-core"
 version = "0.1.0"
@@ -25,8 +27,10 @@ rstar = "0.8.0"
 pdqselect = "0.1"
 array-macro = "1.0.5"
 static_assertions = "1.1.0"
-ev_slotmap = "0.1.0"
-one_way_slot_map = "0.2.0"
+ev_slotmap = "0.2.0"
+one_way_slot_map = "0.3.1"
+num_cpus = "1.13.0"
+evmap = "10.0.2"
 
 [build-dependencies]
 cbindgen = "0.13.1"

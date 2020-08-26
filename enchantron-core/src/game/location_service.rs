@@ -1,4 +1,4 @@
-use super::{GameEntity, LocationKey};
+use super::{Entity, LocationKey};
 use crate::model::{IPoint, IRect, ISize};
 use one_way_slot_map::SlotMap;
 use rstar::{PointDistance, RTree, RTreeObject};
@@ -12,11 +12,11 @@ struct WindowedPointer {
     p: *const WindowedPointerInner,
 }
 
-fn get_windowed_offset_for(entity: &GameEntity) -> usize {
-    use GameEntity::*;
+fn get_windowed_offset_for(entity: &Entity) -> usize {
+    use Entity::*;
 
     match entity {
-        Player => 8,
+        Player(_) => 8,
     }
 }
 
@@ -77,7 +77,7 @@ impl Drop for WindowedPointer {
 
 #[derive(Debug, Clone)]
 struct WindowedPointerInner {
-    entity: GameEntity,
+    entity: Entity,
     location: IRect,
     window: IRect,
 }
@@ -89,7 +89,7 @@ impl PartialEq for WindowedPointerInner {
 }
 
 impl WindowedPointer {
-    fn new(entity: GameEntity, location: IPoint) -> WindowedPointer {
+    fn new(entity: Entity, location: IPoint) -> WindowedPointer {
         let location = IRect {
             top_left: location,
             size: ISize::new(1, 1),
@@ -140,19 +140,19 @@ impl Clone for WindowedPointer {
 }
 
 #[derive(Clone)]
-pub struct WorldService {
+pub struct LocationService {
     inner: Arc<RwLock<Inner>>,
 }
 
 struct Inner {
     rtree: RTree<WindowedPointer>,
-    slot_map: SlotMap<LocationKey, GameEntity, WindowedPointer>,
-    slot_keys_by_entity: HashMap<GameEntity, LocationKey>,
+    slot_map: SlotMap<LocationKey, Entity, WindowedPointer>,
+    slot_keys_by_entity: HashMap<Entity, LocationKey>,
 }
 
-impl WorldService {
-    pub fn new() -> WorldService {
-        WorldService {
+impl LocationService {
+    pub fn new() -> LocationService {
+        LocationService {
             inner: Arc::new(RwLock::new(Inner::new())),
         }
     }
@@ -172,7 +172,7 @@ impl WorldService {
         action(inner)
     }
 
-    pub async fn insert(&self, e: GameEntity, location: IPoint) -> LocationKey {
+    pub async fn insert(&self, e: Entity, location: IPoint) -> LocationKey {
         self.with_inner_mut(|inner| inner.insert(e, location)).await
     }
 
@@ -191,7 +191,7 @@ impl WorldService {
             .await
     }
 
-    pub async fn get_entities_at(&self, point: &IPoint) -> Vec<GameEntity> {
+    pub async fn get_entities_at(&self, point: &IPoint) -> Vec<Entity> {
         self.with_inner(|inner| inner.get_entities_at(point)).await
     }
 }
@@ -205,7 +205,7 @@ impl Inner {
         }
     }
 
-    fn insert(&mut self, e: GameEntity, location: IPoint) -> LocationKey {
+    fn insert(&mut self, e: Entity, location: IPoint) -> LocationKey {
         let mut wp = WindowedPointer::new(e, location);
         let wp_clone = wp.clone();
 
@@ -224,10 +224,7 @@ impl Inner {
             .map(|wp| wp.location)
     }
 
-    fn get_by_entity(
-        &self,
-        entity: &GameEntity,
-    ) -> Option<(LocationKey, IRect)> {
+    fn get_by_entity(&self, entity: &Entity) -> Option<(LocationKey, IRect)> {
         if let Some(key) = self.slot_keys_by_entity.get(entity) {
             Some((
                 *key,
@@ -268,7 +265,7 @@ impl Inner {
         }
     }
 
-    fn get_entities_at(&self, point: &IPoint) -> Vec<GameEntity> {
+    fn get_entities_at(&self, point: &IPoint) -> Vec<Entity> {
         self.rtree
             .locate_all_at_point(point)
             .map(|wp| wp.read().entity)
@@ -300,32 +297,27 @@ mod test {
         Inner::new()
     }
 
+    fn player() -> Entity {
+        Entity::Player(Default::default())
+    }
+
     #[test]
     fn test_crud() {
         let mut s = create_service();
 
-        let key = s.insert(GameEntity::Player, IPoint::new(1, 1));
+        let key = s.insert(player(), IPoint::new(1, 1));
 
         let r = s.get_by_key(&key);
 
         assert_eq!(r, Some(IRect::new(1, 1, 1, 1)));
 
-        assert_eq!(
-            vec![GameEntity::Player],
-            s.get_entities_at(&IPoint::new(1, 1))
-        );
+        assert_eq!(vec![player()], s.get_entities_at(&IPoint::new(1, 1)));
 
         s.move_by_key(&key, IPoint::new(2, 2));
 
-        assert_eq!(
-            Vec::<GameEntity>::new(),
-            s.get_entities_at(&IPoint::new(1, 1))
-        );
+        assert_eq!(Vec::<Entity>::new(), s.get_entities_at(&IPoint::new(1, 1)));
 
-        assert_eq!(
-            vec![GameEntity::Player],
-            s.get_entities_at(&IPoint::new(2, 2))
-        );
+        assert_eq!(vec![player()], s.get_entities_at(&IPoint::new(2, 2)));
 
         let r = s.get_by_key(&key);
 
@@ -333,13 +325,10 @@ mod test {
 
         assert_eq!(Some(IRect::new(2, 2, 1, 1)), s.remove_by_key(&key));
 
-        assert_eq!(
-            Vec::<GameEntity>::new(),
-            s.get_entities_at(&IPoint::new(2, 2))
-        );
+        assert_eq!(Vec::<Entity>::new(), s.get_entities_at(&IPoint::new(2, 2)));
 
         assert_eq!(None, s.get_by_key(&key));
-        assert_eq!(None, s.get_by_entity(&GameEntity::Player));
+        assert_eq!(None, s.get_by_entity(&player()));
 
         assert_eq!(0, s.slot_keys_by_entity.len());
         assert_eq!(0, s.slot_map.len());
@@ -350,16 +339,13 @@ mod test {
     fn test_movement_within_and_out_of_window() {
         let mut s = create_service();
 
-        let key = s.insert(GameEntity::Player, IPoint::new(1, 1));
+        let key = s.insert(player(), IPoint::new(1, 1));
 
         let initial_window = s.slot_map.get(&key).unwrap().read().window;
 
         s.move_by_key(&key, IPoint::new(2, 2));
 
-        assert_eq!(
-            vec![GameEntity::Player],
-            s.get_entities_at(&IPoint::new(2, 2))
-        );
+        assert_eq!(vec![player()], s.get_entities_at(&IPoint::new(2, 2)));
 
         assert_eq!(initial_window, s.slot_map.get(&key).unwrap().read().window);
 
@@ -367,9 +353,6 @@ mod test {
 
         assert_ne!(initial_window, s.slot_map.get(&key).unwrap().read().window);
 
-        assert_eq!(
-            vec![GameEntity::Player],
-            s.get_entities_at(&IPoint::new(1000, 1000))
-        );
+        assert_eq!(vec![player()], s.get_entities_at(&IPoint::new(1000, 1000)));
     }
 }

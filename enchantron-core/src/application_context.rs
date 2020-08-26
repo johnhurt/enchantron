@@ -12,10 +12,11 @@ use crate::native::RuntimeResources;
 
 use crate::presenter::{GamePresenter, LoadingPresenter, MainMenuPresenter};
 
-lazy_static::lazy_static! {
+lazy_static! {
     static ref LOGGER_RESULT: Result<(), SetLoggerError> = CombinedLogger::init(
         vec![SimpleLogger::new(LevelFilter::Debug, Config::default())]
     );
+    pub static ref NUM_CPUS: usize = num_cpus::get();
 }
 
 pub struct ApplicationContext<T: ViewTypes>(Arc<ApplicationContextInner<T>>);
@@ -28,6 +29,7 @@ impl<T: ViewTypes> ApplicationContext<T> {
 
         let runtime = Builder::new()
             .threaded_scheduler()
+            .core_threads(*NUM_CPUS)
             .enable_time()
             .build()
             .unwrap_or_else(|e| {

@@ -1,7 +1,7 @@
 use crate::event::*;
 use crate::game::{
-    Direction, GameEntity, PerlinTerrain1, Player, TerrainProvider, Time,
-    WorldService,
+    Direction, Entity, EntityService, LocationService, PerlinTerrain1, Player,
+    TerrainProvider, Time,
 };
 use crate::model::IPoint;
 use crate::view::PlayerView;
@@ -10,36 +10,29 @@ use std::sync::Arc;
 
 pub struct PlayerPresenter<V: PlayerView> {
     event_bus: EventBus,
-    world_service: WorldService,
+    location_service: LocationService,
     time: Time,
-    phantom_view: PhantomData<V>,
+    player: Player,
+
+    _phantom_view: PhantomData<V>,
 }
 
 impl<V: PlayerView> PlayerPresenter<V> {
     pub fn new(
         event_bus: EventBus,
-        world_service: WorldService,
+        entity_service: EntityService,
         time: Time,
     ) -> Arc<PlayerPresenter<V>> {
         Arc::new(PlayerPresenter {
             event_bus,
-            world_service,
+            location_service: entity_service.location_service(),
             time,
-            phantom_view: Default::default(),
+            _phantom_view: Default::default(),
         })
-    }
-
-    pub async fn init(&self) -> Player {
-        let location_key = self
-            .world_service
-            .insert(GameEntity::Player, IPoint::new(0, 0))
-            .await;
-        Player::new(location_key)
     }
 
     pub fn run(
         this: Arc<PlayerPresenter<V>>,
-        player: Player,
         view_provider: impl Fn() -> V + 'static + Send,
     ) {
         info!("About to spawn player");
@@ -55,13 +48,13 @@ impl<V: PlayerView> PlayerPresenter<V> {
                 view.rest();
 
                 let start_tile = &this
-                    .world_service
-                    .get_by_key(&player.location_key)
+                    .location_service
+                    .get_by_key(&this.player.location_key)
                     .await
                     .unwrap()
                     .top_left;
 
-                info!("resing in {:?}", terrain_generator.get_for(start_tile));
+                info!("resting in {:?}", terrain_generator.get_for(start_tile));
 
                 this.time.sleep(0.5).await;
 
@@ -76,9 +69,9 @@ impl<V: PlayerView> PlayerPresenter<V> {
 
                 this.time.sleep(1.0).await;
 
-                this.world_service
+                this.location_service
                     .move_by_key_delta(
-                        &player.location_key,
+                        &this.player.location_key,
                         Direction::SOUTH.get_point(),
                     )
                     .await;

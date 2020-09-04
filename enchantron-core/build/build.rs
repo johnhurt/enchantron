@@ -18,6 +18,7 @@ use gen::*;
 mod gen;
 
 fn main() {
+
     // let url = format!("vscode://vadimcn.vscode-lldb/launch/config?{{request:'attach',pid:{}}}", std::process::id());
     // std::process::Command::new("code")
     //     .arg("--open-url")
@@ -27,12 +28,6 @@ fn main() {
     // std::thread::sleep_ms(10000);
 
     CombinedLogger::init(vec![
-        TermLogger::new(
-            LevelFilter::Info,
-            Config::default(),
-            TerminalMode::default(),
-        )
-        .unwrap(),
         WriteLogger::new(
             LevelFilter::Info,
             Config::default(),

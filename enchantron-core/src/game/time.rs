@@ -1,34 +1,20 @@
-use std::ops::Deref;
-use std::sync::Arc;
-use std::time::SystemTime;
+use tokio::runtime::Handle;
 use tokio::time::{delay_for, Duration};
 
-#[derive(Clone)]
-pub struct Time(Arc<Inner>);
+#[derive(Clone, Debug)]
+pub struct Time(Handle);
 
-#[derive(derive_new::new)]
-pub struct Inner {}
+fn u64_millis_to_secs_f64(millis: u64) -> f64 {
+    millis as f64 / 1000.
+}
 
 impl Time {
-    pub fn new() -> Time {
-        Time(Arc::new(Inner::new()))
+    pub fn new(runtime_handle: Handle) -> Time {
+        Time(runtime_handle)
     }
-}
 
-impl Deref for Time {
-    type Target = Inner;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl Inner {
     pub fn now(&self) -> f64 {
-        SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .expect("Uh, time went backwards?")
-            .as_secs_f64()
+        u64_millis_to_secs_f64(self.0.elapsed_millis())
     }
 
     pub async fn sleep(&self, secs: f64) {

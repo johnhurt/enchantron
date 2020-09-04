@@ -1,12 +1,13 @@
 use crate::application_context::NUM_CPUS;
 use crate::util::ImmutableThreadLocal;
-use ev_slotmap::{new, MapReadRef, ReadHandle, WriteHandle};
+use ev_slotmap::{MapReadRef, ReadGuard, ReadHandle, WriteHandle};
 use evmap::ShallowCopy;
 use one_way_slot_map::{SlotMap, SlotMapKey};
 use tokio::sync::Mutex;
 
 /// Centralization of the components of a ev_slotmap in a component that can
 /// be shared safely across a _limited_ number of threads
+#[derive(Debug)]
 pub struct ConcurrentSlotmap<K, P, V>
 where
     K: SlotMapKey<P> + Send,
@@ -49,26 +50,14 @@ where
         self.writer.lock().await.insert(pointer, value)
     }
 
-    pub fn get(&self, key: &K) -> Option<&V> {
-        self.readers.get().get(key).map(|v| v.as_ref())
+    pub fn get(&self, key: &K) -> Option<ReadGuard<V>> {
+        self.readers.get().get(key)
     }
 
-    pub fn values(&self) -> impl Iterator<Item = &V> {
+    pub fn reader(&self) -> MapReadRef<'_, K, P, V> {
         self.readers
             .get()
             .read()
-            .expect("Reader should always be ready")
-            .values()
-    }
-
-    pub fn iter<F>(&self, pointer_finder: F) -> impl Iterator<Item = (K, &V)>
-    where
-        F: FnMut(&V) -> P,
-    {
-        self.readers
-            .get()
-            .read()
-            .expect("Reader should always be ready")
-            .iter(pointer_finder)
+            .expect("Should always be readable")
     }
 }

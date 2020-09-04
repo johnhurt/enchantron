@@ -4,7 +4,7 @@ use super::thread_id;
 /// 1. Doesn't allow mutation of entries,
 /// 2. Doesn't allow mutation of the underlying store of entries
 /// 3. Requires all instances for all threads on construction
-#[derive(derive_new::new)]
+#[derive(derive_new::new, Debug)]
 pub struct ImmutableThreadLocal<T>
 where
     T: Send,

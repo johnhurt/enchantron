@@ -1,7 +1,7 @@
 use super::PlayerPresenter;
 use crate::application_context::NUM_CPUS;
 use crate::event::*;
-use crate::game::{EntityService, LocationService, Time};
+use crate::game::{EntityType, SavedGame, Services};
 use crate::model::{Point, Rect, Size};
 use crate::native::{RuntimeResources, SystemView};
 use crate::ui::{
@@ -14,6 +14,7 @@ use crate::ui::{
 use crate::view::{BaseView, PlayerViewImpl};
 use crate::view_types::ViewTypes;
 use std::sync::{Arc, Weak};
+use std::time::Duration;
 use tokio::runtime::{Builder, Runtime};
 use tokio::sync::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
@@ -296,19 +297,23 @@ where
     ) -> Arc<GamePresenter<T>> {
         view.initialize_pre_bind();
 
-        let entity_service = EntityService::new(event_bus.clone()).await;
-
-        let time = Time::new();
+        let saved_game = SavedGame::new(Default::default());
 
         let runtime = Builder::new()
             .threaded_scheduler()
             .core_threads(NUM_CPUS.checked_sub(1).unwrap_or(1)) // one for os
             .enable_time()
+            .pausable_time(
+                true,
+                Duration::from_millis(saved_game.elapsed_millis),
+            )
             .build()
             .unwrap_or_else(|e| {
                 error!("Failed to create tokio runtime, {:?}", e);
                 panic!("Failed to create tokio runtime");
             });
+
+        let runtime_handle = runtime.handle().clone();
 
         let raw_result = GamePresenter {
             view,
@@ -339,25 +344,41 @@ where
 
         result.view.initialize_post_bind(Box::new(result.clone()));
 
-        let entity_sprite_group = result.view.create_group();
+        let entity_sprite_group = Arc::new(result.view.create_group());
         let runtime_resources = result.runtime_resources.clone();
 
-        let view_provider = move || {
-            info!("Providing new player sprite");
-
-            PlayerViewImpl::<T>::new(
-                entity_sprite_group.create_sprite(),
-                runtime_resources.clone(),
-                time.clone(),
-            )
-        };
+        let (services, run_bundles) =
+            Services::new(runtime_handle.clone(), saved_game);
+        let time = services.time();
 
         info!("Initializing Entities");
 
-        entity_service
-            .initialize()
-            .await
-            .for_each(|(id, entity_data, receiver)| {});
+        for run_bundle in run_bundles.into_iter() {
+            let entity_sprite_group = entity_sprite_group.clone();
+            let runtime_resources = runtime_resources.clone();
+            let time = time.clone();
+
+            match &run_bundle.entity_data.entity_type {
+                EntityType::Player => {
+                    let player_view_provider = move || {
+                        info!("Providing new player sprite");
+
+                        PlayerViewImpl::<T>::new(
+                            entity_sprite_group.create_sprite(),
+                            runtime_resources.clone(),
+                            time.clone(),
+                        )
+                    };
+
+                    runtime_handle.spawn(async move {
+                        PlayerPresenter::run(run_bundle, player_view_provider)
+                            .await
+                    });
+                }
+            }
+        }
+
+        event_bus.spawn(async move { runtime_handle.resume() });
 
         result
     }

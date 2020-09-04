@@ -7,6 +7,13 @@ use std::ptr;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+#[derive(Debug, Copy, Clone, derive_new::new)]
+pub struct SaveableLocation {
+    pub location: IRect,
+    pub entity: Entity,
+}
+
+#[derive(Debug)]
 struct WindowedPointer {
     owner: bool,
     p: *const WindowedPointerInner,
@@ -88,6 +95,12 @@ impl PartialEq for WindowedPointerInner {
     }
 }
 
+impl From<&SaveableLocation> for WindowedPointer {
+    fn from(src: &SaveableLocation) -> Self {
+        Self::new(src.entity, src.location.top_left)
+    }
+}
+
 impl WindowedPointer {
     fn new(entity: Entity, location: IPoint) -> WindowedPointer {
         let location = IRect {
@@ -111,7 +124,7 @@ impl WindowedPointer {
         unsafe { &*self.p }
     }
 
-    pub fn write<'a>(&'a self) -> &'a mut WindowedPointerInner {
+    pub fn write<'a>(&'a mut self) -> &'a mut WindowedPointerInner {
         unsafe { &mut *(self.p as *mut WindowedPointerInner) }
     }
 
@@ -139,11 +152,12 @@ impl Clone for WindowedPointer {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LocationService {
     inner: Arc<RwLock<Inner>>,
 }
 
+#[derive(Debug)]
 struct Inner {
     rtree: RTree<WindowedPointer>,
     slot_map: SlotMap<LocationKey, Entity, WindowedPointer>,
@@ -154,6 +168,14 @@ impl LocationService {
     pub fn new() -> LocationService {
         LocationService {
             inner: Arc::new(RwLock::new(Inner::new())),
+        }
+    }
+
+    pub fn new_from_data(
+        data: &SlotMap<LocationKey, Entity, SaveableLocation>,
+    ) -> LocationService {
+        LocationService {
+            inner: Arc::new(RwLock::new(Inner::new_from_data(data))),
         }
     }
 
@@ -202,6 +224,31 @@ impl Inner {
             rtree: RTree::new(),
             slot_map: SlotMap::new(),
             slot_keys_by_entity: Default::default(),
+        }
+    }
+
+    fn new_from_data(
+        data: &SlotMap<LocationKey, Entity, SaveableLocation>,
+    ) -> Inner {
+        let mut rtree = RTree::new();
+        let mut slot_keys_by_entity = HashMap::default();
+
+        data.iter(|loc| loc.entity).for_each(|(location_key, loc)| {
+            slot_keys_by_entity.insert(loc.entity, location_key);
+        });
+
+        let slot_map = data.map(|loc| {
+            let wp = WindowedPointer::from(loc);
+            let wp_clone = wp.clone();
+
+            rtree.insert(wp);
+            wp_clone
+        });
+
+        Inner {
+            rtree,
+            slot_map,
+            slot_keys_by_entity,
         }
     }
 

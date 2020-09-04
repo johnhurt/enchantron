@@ -5,7 +5,7 @@ name = "enchantron-core"
 version = "0.1.0"
 authors = ["Kevin Guthrie <kevin.guthrie@gmail.com>"]
 edition = "2018"
-#build = "build/build.rs"
+build = "build/build.rs"
 
 
 [dependencies]
@@ -18,7 +18,7 @@ getset = "0.1.1"
 derive_builder = "0.9.0"
 atomic-counter = "1.0.1"
 twox-hash = "1.5.0"
-tokio = { path = "/Users/kguthrie/Projects/OpenSource/tokio/tokio" , features = [ "time", "sync", "rt-threaded", "rt-core", "stream", "macros" ] }
+tokio = { git = "https://github.com/RookAndPawn/pausable-tokio.git" , features = [ "time", "sync", "rt-threaded", "rt-core", "stream", "macros", "blocking" ] }
 futures = "0.3.5"
 png = "0.16.2"
 rand = "0.7.3"
@@ -31,6 +31,7 @@ ev_slotmap = "0.2.0"
 one_way_slot_map = "0.3.1"
 num_cpus = "1.13.0"
 evmap = "10.0.2"
+owning_ref = "0.4.1"
 
 [build-dependencies]
 cbindgen = "0.13.1"

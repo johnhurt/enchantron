@@ -11,10 +11,10 @@ impl SlotMapKey<EntityType> for Entity {}
 
 impl From<(EntityType, SlotMapKeyData)> for Entity {
     fn from(params: (EntityType, SlotMapKeyData)) -> Entity {
-        let (entity_type, key_Data) = params;
+        let (entity_type, key_data) = params;
 
         match entity_type {
-            EntityType::Player => Entity::Player(key_Data),
+            EntityType::Player => Entity::Player(key_data),
         }
     }
 }

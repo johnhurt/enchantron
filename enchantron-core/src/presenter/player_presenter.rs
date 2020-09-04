@@ -1,7 +1,7 @@
 use crate::event::*;
 use crate::game::{
-    Direction, Entity, EntityService, LocationService, PerlinTerrain1, Player,
-    TerrainProvider, Time,
+    Direction, Entity, EntityRunBundle, EntityService, LocationService,
+    PerlinTerrain1, Player, TerrainProvider, Time,
 };
 use crate::model::IPoint;
 use crate::view::PlayerView;
@@ -9,84 +9,59 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 
 pub struct PlayerPresenter<V: PlayerView> {
-    event_bus: EventBus,
-    location_service: LocationService,
-    time: Time,
-    player: Player,
-
     _phantom_view: PhantomData<V>,
 }
 
 impl<V: PlayerView> PlayerPresenter<V> {
-    pub fn new(
-        event_bus: EventBus,
-        entity_service: EntityService,
-        time: Time,
-    ) -> Arc<PlayerPresenter<V>> {
-        Arc::new(PlayerPresenter {
-            event_bus,
-            location_service: entity_service.location_service(),
-            time,
-            _phantom_view: Default::default(),
-        })
-    }
-
-    pub fn run(
-        this: Arc<PlayerPresenter<V>>,
+    pub async fn run(
+        entity_bundle: EntityRunBundle,
         view_provider: impl Fn() -> V + 'static + Send,
     ) {
-        info!("About to spawn player");
+        info!("Player presenter spawned");
 
-        let _ = this.event_bus.clone().spawn(async move {
-            info!("Player presenter spawned");
+        let EntityRunBundle {
+            entity,
+            entity_data,
+            entity_message_source: mut recv,
+            services,
+        } = entity_bundle;
 
-            let terrain_generator = PerlinTerrain1::default();
+        let player = Player::from(&entity_data);
+        let terrain_generator = PerlinTerrain1::default();
+        let location_service = services.location_service();
+        let time = services.time();
 
-            let view: V = view_provider();
+        let view: V = view_provider();
 
-            loop {
-                view.rest();
+        loop {
+            view.rest();
 
-                let start_tile = &this
-                    .location_service
-                    .get_by_key(&this.player.location_key)
-                    .await
-                    .unwrap()
-                    .top_left;
+            let start_tile = location_service
+                .get_by_key(&player.location_key)
+                .await
+                .unwrap()
+                .top_left;
 
-                info!("resting in {:?}", terrain_generator.get_for(start_tile));
+            info!("resting in {:?}", terrain_generator.get_for(&start_tile));
 
-                this.time.sleep(0.5).await;
+            time.sleep(0.5).await;
 
-                info!("walking");
+            info!("walking");
 
-                view.start_walk(
-                    Direction::SOUTH,
-                    &start_tile,
-                    this.time.now(),
-                    0.5,
-                );
+            view.start_walk(Direction::SOUTH, &start_tile, time.now(), 0.5);
 
-                this.time.sleep(1.0).await;
+            time.sleep(1.0).await;
 
-                this.location_service
-                    .move_by_key_delta(
-                        &this.player.location_key,
-                        Direction::SOUTH.get_point(),
-                    )
-                    .await;
+            location_service
+                .move_by_key_delta(
+                    &player.location_key,
+                    Direction::SOUTH.get_point(),
+                )
+                .await;
 
-                view.finish_walk(
-                    Direction::SOUTH,
-                    &start_tile,
-                    this.time.now(),
-                    0.5,
-                );
+            view.finish_walk(Direction::SOUTH, &start_tile, time.now(), 0.5);
 
-                this.time.sleep(1.).await;
-            }
-        });
-
-        info!("Finished spawning player");
+            time.sleep(1.).await;
+        }
     }
 }

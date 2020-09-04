@@ -1,4 +1,4 @@
-use super::{EntityType, LocationKey};
+use super::{Entity, EntityType, LocationKey};
 use evmap::ShallowCopy;
 use std::mem::ManuallyDrop;
 
@@ -7,6 +7,7 @@ use std::mem::ManuallyDrop;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EntityData {
     pub entity_type: EntityType,
+    pub entity: Option<Entity>,
     pub location_key: Option<LocationKey>,
 }
 
@@ -14,6 +15,7 @@ impl EntityData {
     pub fn default_for_type(entity_type: EntityType) -> EntityData {
         EntityData {
             entity_type,
+            entity: Default::default(),
             location_key: Default::default(),
         }
     }

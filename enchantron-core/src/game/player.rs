@@ -5,8 +5,8 @@ pub struct Player {
     pub location_key: LocationKey,
 }
 
-impl From<EntityData> for Player {
-    fn from(entity_data: EntityData) -> Player {
+impl From<&EntityData> for Player {
+    fn from(entity_data: &EntityData) -> Player {
         debug_assert_eq!(entity_data.entity_type, EntityType::Player);
 
         Player {

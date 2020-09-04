@@ -74,7 +74,7 @@ impl {{wrapper_name}} {
 {{~#unless is_drop}}
 
 #[no_mangle]
-#[allow(non_snake_case)]
+#[allow(non_snake_case, clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn {{name}}
 (_self: *mut {{type_name}}
     {{#each arguments}}, {{snake_case name}}: {{data_type.rust_name_incoming}}
@@ -89,7 +89,7 @@ pub extern "C" fn {{name}}
 {{~#if is_drop}}
 
 #[no_mangle]
-#[allow(non_snake_case)]
+#[allow(non_snake_case, clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn {{name}}
 (_self: *mut {{type_name}}
     {{#each arguments}}, {{snake_case name}}: {{data_type.rust_name_incoming}}

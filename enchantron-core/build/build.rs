@@ -18,7 +18,6 @@ use gen::*;
 mod gen;
 
 fn main() {
-
     // let url = format!("vscode://vadimcn.vscode-lldb/launch/config?{{request:'attach',pid:{}}}", std::process::id());
     // std::process::Command::new("code")
     //     .arg("--open-url")
@@ -27,13 +26,11 @@ fn main() {
     //     .unwrap();
     // std::thread::sleep_ms(10000);
 
-    CombinedLogger::init(vec![
-        WriteLogger::new(
-            LevelFilter::Info,
-            Config::default(),
-            File::create("enchantron_build.log").unwrap(),
-        ),
-    ])
+    CombinedLogger::init(vec![WriteLogger::new(
+        LevelFilter::Info,
+        Config::default(),
+        File::create("enchantron_build.log").unwrap(),
+    )])
     .expect("Umm logger?");
 
     info!("Running build script");

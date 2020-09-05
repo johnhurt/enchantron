@@ -1,4 +1,3 @@
-use crate::event::*;
 use crate::game::{
     Direction, Entity, EntityRunBundle, EntityService, LocationService,
     PerlinTerrain1, Player, TerrainProvider, Time,
@@ -10,6 +9,13 @@ use std::sync::Arc;
 
 pub struct PlayerPresenter<V: PlayerView> {
     _phantom_view: PhantomData<V>,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum PlayerPresenterState {
+    Idle(f64),
+    WalkingOut(f64),
+    WalkingIn(f64),
 }
 
 impl<V: PlayerView> PlayerPresenter<V> {
@@ -32,36 +38,44 @@ impl<V: PlayerView> PlayerPresenter<V> {
         let time = services.time();
 
         let view: V = view_provider();
+        let mut state = PlayerPresenterState::Idle(time.now());
 
         loop {
-            view.rest();
+            match state {
+                PlayerPresenterState::Idle(start) => {
+                    view.rest();
+                    time.sleep_until(start + 0.5).await;
+                    state = PlayerPresenterState::WalkingIn(time.now());
+                }
+                PlayerPresenterState::WalkingIn(start) => {
+                    let tile = location_service
+                        .get_by_key(&player.location_key)
+                        .await
+                        .unwrap()
+                        .top_left;
+                    view.start_walk(Direction::SOUTH, &tile, start, 0.5);
+                    time.sleep_until(start + 1.0).await;
+                    state = PlayerPresenterState::WalkingOut(time.now());
+                }
+                PlayerPresenterState::WalkingOut(start) => {
+                    let tile = location_service
+                        .get_by_key(&player.location_key)
+                        .await
+                        .unwrap()
+                        .top_left;
 
-            let start_tile = location_service
-                .get_by_key(&player.location_key)
-                .await
-                .unwrap()
-                .top_left;
+                    location_service
+                        .move_by_key_delta(
+                            &player.location_key,
+                            Direction::SOUTH.get_point(),
+                        )
+                        .await;
 
-            info!("resting in {:?}", terrain_generator.get_for(&start_tile));
-
-            time.sleep(0.5).await;
-
-            info!("walking");
-
-            view.start_walk(Direction::SOUTH, &start_tile, time.now(), 0.5);
-
-            time.sleep(1.0).await;
-
-            location_service
-                .move_by_key_delta(
-                    &player.location_key,
-                    Direction::SOUTH.get_point(),
-                )
-                .await;
-
-            view.finish_walk(Direction::SOUTH, &start_tile, time.now(), 0.5);
-
-            time.sleep(1.).await;
+                    view.finish_walk(Direction::SOUTH, &tile, start, 0.5);
+                    time.sleep_until(start + 1.0).await;
+                    state = PlayerPresenterState::Idle(time.now());
+                }
+            }
         }
     }
 }

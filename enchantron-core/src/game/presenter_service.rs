@@ -1,11 +1,28 @@
-use super::{Entity, EntityType, EntityRunBundle};
+use super::{Entity, EntityRunBundle, EntityType, Services};
+use crate::native::RuntimeResources;
 use crate::presenter::*;
+use crate::ui::SpriteSource;
 use crate::view::*;
+use crate::view_types::ViewTypes;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 use std::sync::Arc;
-use tokio::sync::RwLock;
 use tokio::runtime::Handle;
+use tokio::sync::RwLock;
+
+/// This is how the presenter service shares the state of each presenter with
+/// the actual presenters. The presenters each get a loan of the state that they
+/// can mutate as if they owned it, but since the presenters only run when time
+/// is not paused, the presenter service can read from the state whenever time
+/// is paused. The presenter service could also modify the presenter's state,
+/// while time is paused, but that doesn't seem smart
+pub struct PresenterServiceLoan<T> {
+    loaned: *const T,
+}
+
+unsafe impl<T> Send for PresenterServiceLoan<T> where T: Send + Sync {}
+unsafe impl<T> Sync for PresenterServiceLoan<T> where T: Send + Sync {}
+
 #[derive(Clone, Debug)]
 pub struct PresenterService {
     inner: Arc<Inner>,
@@ -31,34 +48,15 @@ impl PresenterService {
         }
     }
 
-    pub fn run(runtime_handle: Handle, run_bundles: impl Iterator<Item = EntityRunBundle>) {
-
-        info!("Initializing Entities");
-
-        for run_bundle in run_bundles {
-            let entity_sprite_group = entity_sprite_group.clone();
-            let runtime_resources = runtime_resources.clone();
-            let time = time.clone();
-
-            match &run_bundle.entity_data.entity_type {
-                EntityType::Player => {
-                    let player_view_provider = move || {
-                        info!("Providing new player sprite");
-
-                        PlayerViewImpl::<T>::new(
-                            entity_sprite_group.create_sprite(),
-                            runtime_resources.clone(),
-                            time.clone(),
-                        )
-                    };
-
-                    runtime_handle.spawn(async move {
-                        PlayerPresenter::run(run_bundle, player_view_provider)
-                            .await
-                    });
-                }
-            }
-        }
-
+    pub async fn get_player_presenter_state(
+        &self,
+        player_entity: Entity,
+    ) -> Option<&PlayerPresenterState> {
+        return self
+            .player_entity
+            .read()
+            .expect("Unable to read player-presenter states")
+            .get(&player_entity)
+            .map(Box::as_ref);
     }
 }

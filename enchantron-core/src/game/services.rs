@@ -4,6 +4,7 @@ use super::{
     Time,
 };
 use crate::model::IPoint;
+use crate::view_types::ViewTypes;
 use one_way_slot_map::SlotMap;
 use std::sync::Arc;
 use tokio::runtime::Handle;
@@ -90,11 +91,56 @@ impl Services {
         (services, run_bundles)
     }
 
+    pub fn run<T: ViewTypes>(
+        runtime_handle: Handle,
+        services: Services,
+        entity_sprite_group: Arc<T::SpriteGroup>,
+        runtime_resources: Arc<RuntimeResources<T>>,
+        run_bundles: impl Iterator<Item = EntityRunBundle>,
+    ) {
+        info!("Initializing Entities");
+
+        let presenter_service = services.presenter_service();
+
+        for run_bundle in run_bundles {
+            let entity_sprite_group = entity_sprite_group.clone();
+            let runtime_resources = runtime_resources.clone();
+            let time = services.time();
+
+            match &run_bundle.entity_data.entity_type {
+                EntityType::Player => {
+                    let player_view_provider = move || {
+                        info!("Providing new player sprite");
+
+                        PlayerViewImpl::<T>::new(
+                            entity_sprite_group.create_sprite(),
+                            runtime_resources.clone(),
+                            time.clone(),
+                        )
+                    };
+
+                    let player_presenter =
+                        presenter_service.runtime_handle.spawn(async move {
+                            PlayerPresenter::run(
+                                run_bundle,
+                                player_view_provider,
+                            )
+                            .await
+                        });
+                }
+            }
+        }
+    }
+
     pub fn location_service(&self) -> LocationService {
         self.location_service.clone()
     }
 
     pub fn time(&self) -> Time {
         self.time.clone()
+    }
+
+    pub fn presenter_service() -> PresenterService {
+        self.presenter_service.clone()
     }
 }

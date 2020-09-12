@@ -3,6 +3,7 @@ use crate::model::{IPoint, IRect, ISize};
 use one_way_slot_map::SlotMap;
 use rstar::{PointDistance, RTree, RTreeObject};
 use std::collections::HashMap;
+use std::marker::PhantomData;
 use std::ptr;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -17,6 +18,7 @@ pub struct SaveableLocation {
 struct WindowedPointer {
     owner: bool,
     p: *const WindowedPointerInner,
+    _marker: PhantomData<WindowedPointerInner>,
 }
 
 fn get_windowed_offset_for(entity: &Entity) -> usize {

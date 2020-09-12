@@ -351,33 +351,6 @@ where
             Services::new(runtime_handle.clone(), saved_game);
         let time = services.time();
 
-        info!("Initializing Entities");
-
-        for run_bundle in run_bundles.into_iter() {
-            let entity_sprite_group = entity_sprite_group.clone();
-            let runtime_resources = runtime_resources.clone();
-            let time = time.clone();
-
-            match &run_bundle.entity_data.entity_type {
-                EntityType::Player => {
-                    let player_view_provider = move || {
-                        info!("Providing new player sprite");
-
-                        PlayerViewImpl::<T>::new(
-                            entity_sprite_group.create_sprite(),
-                            runtime_resources.clone(),
-                            time.clone(),
-                        )
-                    };
-
-                    runtime_handle.spawn(async move {
-                        PlayerPresenter::run(run_bundle, player_view_provider)
-                            .await
-                    });
-                }
-            }
-        }
-
         event_bus.spawn(async move { runtime_handle.resume() });
 
         result

@@ -1,6 +1,7 @@
 use super::{
     Entity, EntityData, EntityMessage, EntityRunBundle, EntityService,
-    EntityType, LocationService, MessageService, SavedGame, Time,
+    EntityType, LocationService, MessageService, PresenterService, SavedGame,
+    Time,
 };
 use crate::model::IPoint;
 use one_way_slot_map::SlotMap;
@@ -35,6 +36,7 @@ pub struct Services {
     location_service: LocationService,
     entity_service: EntityService,
     message_service: MessageService,
+    presenter_service: PresenterService,
 }
 
 impl Services {
@@ -47,6 +49,7 @@ impl Services {
             elapsed_millis,
             entities,
             locations,
+            player_presenter_states,
         } = saved_game;
 
         let time = Time::new(runtime_handle.clone());
@@ -68,11 +71,15 @@ impl Services {
                 .map(|tmp_channel| Box::new(tmp_channel.sender.clone())),
         );
 
+        let presenter_service =
+            PresenterService::new(player_presenter_states.into_iter());
+
         let services = Services {
             time,
             location_service,
             entity_service,
             message_service,
+            presenter_service,
         };
 
         let run_bundles = entity_channels

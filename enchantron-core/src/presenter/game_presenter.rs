@@ -349,7 +349,15 @@ where
 
         let (services, run_bundles) =
             Services::new(runtime_handle.clone(), saved_game);
-        let time = services.time();
+
+        services
+            .run(
+                runtime_handle.clone(),
+                entity_sprite_group,
+                runtime_resources,
+                run_bundles.into_iter(),
+            )
+            .await;
 
         event_bus.spawn(async move { runtime_handle.resume() });
 

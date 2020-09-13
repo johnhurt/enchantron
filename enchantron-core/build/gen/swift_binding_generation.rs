@@ -1,14 +1,13 @@
 use std::collections::BTreeSet;
 use std::env;
 use std::fs;
-use std::fs::{remove_file, File, OpenOptions};
+use std::fs::{File, OpenOptions};
 use std::path::Path;
 
 use cbindgen;
 use cbindgen::Language;
 use handlebars::{handlebars_helper, Handlebars, StringWriter};
 use heck::{MixedCase, SnakeCase};
-use itertools::Itertools;
 
 use super::data_type::*;
 use super::{
@@ -2006,7 +2005,7 @@ pub fn generate() {
     let mut rust_imports_set: BTreeSet<String> = BTreeSet::new();
 
     info!("Building Renderable Types");
-    let mut renderable_types: Vec<RenderableType> = TYPES
+    let renderable_types: Vec<RenderableType> = TYPES
         .iter()
         .map(|type_def| {
             info!("Building Renderable Types for {:?}", type_def.name);

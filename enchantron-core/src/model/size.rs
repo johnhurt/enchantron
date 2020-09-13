@@ -32,10 +32,7 @@ impl MulAssign<f64> for Size {
 
 impl Size {
     pub fn new(width: f64, height: f64) -> Size {
-        Size {
-            width: width,
-            height: height,
-        }
+        Size { width, height }
     }
 
     pub fn aspect_ratio(&self) -> f64 {

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
@@ -7,9 +9,7 @@ extern crate derive_builder;
 #[macro_use]
 extern crate log;
 
-use simplelog::{
-    CombinedLogger, Config, LevelFilter, TermLogger, TerminalMode, WriteLogger,
-};
+use simplelog::{CombinedLogger, Config, LevelFilter, WriteLogger};
 use std::fs::File;
 use std::panic;
 

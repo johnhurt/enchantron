@@ -119,6 +119,7 @@ impl WindowedPointer {
         WindowedPointer {
             owner: true,
             p: Box::into_raw(Box::new(inner)),
+            _marker: Default::default(),
         }
     }
 
@@ -150,6 +151,7 @@ impl Clone for WindowedPointer {
         WindowedPointer {
             owner: false,
             p: self.p,
+            _marker: Default::default(),
         }
     }
 }

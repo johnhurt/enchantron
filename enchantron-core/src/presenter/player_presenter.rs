@@ -1,6 +1,6 @@
 use crate::game::{
     Direction, Entity, EntityRunBundle, EntityService, LocationService,
-    PerlinTerrain1, Player, TerrainProvider, Time,
+    PerlinTerrain1, Player, PresenterServiceLease, TerrainProvider, Time,
 };
 use crate::model::IPoint;
 use crate::view::PlayerView;
@@ -22,7 +22,7 @@ pub enum PlayerPresenterState {
 impl<V: PlayerView> PlayerPresenter<V> {
     pub async fn run(
         entity_bundle: EntityRunBundle,
-        mut state: Box<PlayerPresenterState>,
+        mut state: PresenterServiceLease<PlayerPresenterState>,
         view_provider: impl Fn() -> V + 'static + Send,
     ) {
         info!("Player presenter spawned");

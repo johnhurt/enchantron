@@ -10,7 +10,7 @@ pub use self::location_service::{LocationService, SaveableLocation};
 pub use self::message_service::MessageService;
 pub use self::perlin_terrain_1::PerlinTerrain1;
 pub use self::player::Player;
-pub use self::presenter_service::PresenterService;
+pub use self::presenter_service::{PresenterService, PresenterServiceLease};
 pub use self::saved_game::SavedGame;
 pub use self::services::Services;
 pub use self::terrain_provider::TerrainProvider;

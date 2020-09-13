@@ -6,8 +6,8 @@ use crate::view::*;
 use crate::view_types::ViewTypes;
 use std::collections::HashMap;
 use std::iter::FromIterator;
+use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
-use tokio::runtime::Handle;
 use tokio::sync::RwLock;
 
 /// This is how the presenter service shares the state of each presenter with
@@ -16,12 +16,41 @@ use tokio::sync::RwLock;
 /// is not paused, the presenter service can read from the state whenever time
 /// is paused. The presenter service could also modify the presenter's state,
 /// while time is paused, but that doesn't seem smart
-pub struct PresenterServiceLoan<T> {
+pub struct PresenterServiceLease<T> {
     loaned: *const T,
 }
 
-unsafe impl<T> Send for PresenterServiceLoan<T> where T: Send + Sync {}
-unsafe impl<T> Sync for PresenterServiceLoan<T> where T: Send + Sync {}
+/// SAFETY: This type is only shared once to the presenter it belongs to.
+/// The presenter and the presenter service are forced through pausable-tokio
+/// time to not operate on the data at the same time
+unsafe impl<T> Send for PresenterServiceLease<T> where T: Send + Sync {}
+unsafe impl<T> Sync for PresenterServiceLease<T> where T: Send + Sync {}
+
+impl<T> PresenterServiceLease<T> {
+    fn new(original: &Box<T>) -> PresenterServiceLease<T> {
+        PresenterServiceLease {
+            loaned: original.deref(),
+        }
+    }
+}
+
+impl<T> Deref for PresenterServiceLease<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        // SAFETY: This method is only called by the presenter and the
+        // presenter only operates when time is not paused
+        unsafe { &*self.loaned }
+    }
+}
+
+impl<T> DerefMut for PresenterServiceLease<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        // SAFETY: This method is only called by the presenter and the
+        // presenter only operates when time is not paused
+        unsafe { &mut *(self.loaned as *mut T) }
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct PresenterService {
@@ -51,12 +80,25 @@ impl PresenterService {
     pub async fn get_player_presenter_state(
         &self,
         player_entity: Entity,
-    ) -> Option<&PlayerPresenterState> {
-        return self
-            .player_entity
+    ) -> Option<PlayerPresenterState> {
+        self.inner
+            .player_presenter_states
             .read()
-            .expect("Unable to read player-presenter states")
+            .await
             .get(&player_entity)
-            .map(Box::as_ref);
+            .map(Box::as_ref)
+            .map(|state| *state)
+    }
+
+    pub async fn rent_player_presenter_state(
+        &self,
+        player_entity: &Entity,
+    ) -> Option<PresenterServiceLease<PlayerPresenterState>> {
+        self.inner
+            .player_presenter_states
+            .read()
+            .await
+            .get(player_entity)
+            .map(PresenterServiceLease::new)
     }
 }

@@ -16,7 +16,7 @@ impl IPoint {
     /// assert_eq!(p.y, -2.0);
     /// ```
     pub fn new(x: i64, y: i64) -> IPoint {
-        IPoint { x: x, y: y }
+        IPoint { x, y }
     }
 
     /// Get the distance to the given point

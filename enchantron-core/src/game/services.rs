@@ -4,6 +4,10 @@ use super::{
     Time,
 };
 use crate::model::IPoint;
+use crate::native::RuntimeResources;
+use crate::presenter::*;
+use crate::ui::SpriteSource;
+use crate::view::*;
 use crate::view_types::ViewTypes;
 use one_way_slot_map::SlotMap;
 use std::sync::Arc;
@@ -91,21 +95,21 @@ impl Services {
         (services, run_bundles)
     }
 
-    pub fn run<T: ViewTypes>(
+    pub async fn run<T: ViewTypes>(
+        &self,
         runtime_handle: Handle,
-        services: Services,
         entity_sprite_group: Arc<T::SpriteGroup>,
         runtime_resources: Arc<RuntimeResources<T>>,
         run_bundles: impl Iterator<Item = EntityRunBundle>,
     ) {
         info!("Initializing Entities");
 
-        let presenter_service = services.presenter_service();
+        let presenter_service = self.presenter_service();
 
         for run_bundle in run_bundles {
             let entity_sprite_group = entity_sprite_group.clone();
             let runtime_resources = runtime_resources.clone();
-            let time = services.time();
+            let time = self.time();
 
             match &run_bundle.entity_data.entity_type {
                 EntityType::Player => {
@@ -119,14 +123,19 @@ impl Services {
                         )
                     };
 
-                    let player_presenter =
-                        presenter_service.runtime_handle.spawn(async move {
-                            PlayerPresenter::run(
-                                run_bundle,
-                                player_view_provider,
-                            )
-                            .await
-                        });
+                    let player_presenter_state = presenter_service
+                        .rent_player_presenter_state(&run_bundle.entity)
+                        .await
+                        .expect("missing player presenter state");
+
+                    runtime_handle.spawn(async move {
+                        PlayerPresenter::run(
+                            run_bundle,
+                            player_presenter_state,
+                            player_view_provider,
+                        )
+                        .await
+                    });
                 }
             }
         }
@@ -140,7 +149,7 @@ impl Services {
         self.time.clone()
     }
 
-    pub fn presenter_service() -> PresenterService {
+    pub fn presenter_service(&self) -> PresenterService {
         self.presenter_service.clone()
     }
 }

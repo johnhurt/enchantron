@@ -5,7 +5,7 @@ use heck::SnakeCase;
 use super::{
     DataType, FieldDef, ImplDef, MethodDef, RenderableArgument,
     RenderableDataType, RenderableFunctionBuilder, RenderableImplBlock,
-    RenderableImplBlockBuilder, SwiftStructDataType,
+    RenderableImplBlockBuilder,
 };
 
 #[derive(Serialize, Builder, Clone, Default)]

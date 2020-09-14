@@ -1,4 +1,4 @@
-use crate::model::{Point, Rect};
+use crate::model::Point;
 use crate::ui::{DragEventType, DragPoint, ViewportInfo};
 
 define_event_bus!(
@@ -18,11 +18,5 @@ define_event_bus!(
     Magnify{
         pub scale_change_additive: f64,
         pub global_center: Point
-    },
-    EnteredViewport{
-
-    },
-    ExitedViewport{
-
     }
 );

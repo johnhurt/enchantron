@@ -20,8 +20,8 @@ impl ViewportInfo {
         viewport_rect.size = screen_size.clone();
 
         ViewportInfo {
-            viewport_rect: viewport_rect,
-            screen_size: screen_size,
+            viewport_rect,
+            screen_size,
             viewport_scale: 1.,
         }
     }
@@ -53,7 +53,7 @@ impl ViewportInfo {
     /// change the scale of the area shown by the viewport by the given
     /// additive amount and center the zoom on the given point in screen
     /// coordinates
-    pub fn change_scale_additive_around_centerpoint(
+    pub fn change_scale_additive_around_center_point(
         &mut self,
         scale_change_additive: f64,
         magnify_center_screen_point: Point,

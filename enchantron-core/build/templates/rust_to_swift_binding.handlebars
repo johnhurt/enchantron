@@ -1,4 +1,4 @@
-
+#[allow(unused_imports)]
 
 use std::sync::RwLock;
 use lazy_static::lazy_static;
@@ -80,8 +80,8 @@ pub extern "C" fn {{name}}
     {{#each arguments}}, {{snake_case name}}: {{data_type.rust_name_incoming}}
     {{/each}}    ){{#if return_type}} -> {{return_type.rust_name_outgoing}}{{/if}} {
   let s = unsafe { &*_self };
-  {{#if return_type}}{{return_type.rust_type_coersion_prefix_outgoing}}{{/if}}s.{{impl_name~}} ( {{~#each arguments}}
-      {{data_type.rust_type_coersion_prefix_incoming}}{{snake_case name}}{{data_type.rust_type_coersion_postfix_incoming}},{{/each}}){{#if return_type}}{{return_type.rust_type_coersion_postfix_outgoing}}{{else}};{{/if}}
+  {{#if return_type}}{{return_type.rust_type_coercion_prefix_outgoing}}{{/if}}s.{{impl_name~}} ( {{~#each arguments}}
+      {{data_type.rust_type_coercion_prefix_incoming}}{{snake_case name}}{{data_type.rust_type_coercion_postfix_incoming}},{{/each}}){{#if return_type}}{{return_type.rust_type_coercion_postfix_outgoing}}{{else}};{{/if}}
 }
 
 {{~/unless}}
@@ -135,9 +135,9 @@ impl {{#if trait_name}}{{trait_name}} for {{/if}}{{../name}} {
       {{~/each}})
           {{#if return_type}}-> {{return_type.rust_name_internal}}{{/if}} {
     {{#if custom_rust_code}}{{custom_rust_code}}{{/if}}
-    {{#if return_type}}{{return_type.rust_type_coersion_prefix_incoming}}{{/if}}({{upper_case name}})(self.0
-        {{#each arguments}}, {{data_type.rust_type_coersion_prefix_outgoing}}{{snake_case name}}{{data_type.rust_type_coersion_postfix_outgoing}}
-        {{~/each}}){{#if return_type}}{{return_type.rust_type_coersion_postfix_incoming}}{{/if}}
+    {{#if return_type}}{{return_type.rust_type_coercion_prefix_incoming}}{{/if}}({{upper_case name}})(self.0
+        {{#each arguments}}, {{data_type.rust_type_coercion_prefix_outgoing}}{{snake_case name}}{{data_type.rust_type_coercion_postfix_outgoing}}
+        {{~/each}}){{#if return_type}}{{return_type.rust_type_coercion_postfix_incoming}}{{/if}}
   }
   {{~/each}}
 }
@@ -173,7 +173,7 @@ pub extern "C" fn set_{{name}}(binding_fn: extern "C" fn(_self: *mut Opaque_{{ty
     {{#each arguments}}, {{snake_case name}}: {{data_type.rust_name_outgoing}}{{/each}})
         {{#if return_type}}-> {{return_type.rust_name_incoming}}{{/if}}) {
   with_mutable_bindings(move |bindings| {
-    if let Some(_) = bindings.{{name}} {
+    if bindings.{{name}}.is_some() {
       panic!("{{name}} is already bound")
     }
     bindings.{{name}} = Some(binding_fn);

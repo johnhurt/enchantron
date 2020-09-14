@@ -2,8 +2,7 @@
 extern crate log;
 #[macro_use]
 extern crate getset;
-#[macro_use]
-extern crate static_assertions;
+
 #[macro_use]
 extern crate lazy_static;
 pub use self::lib_gen::*;

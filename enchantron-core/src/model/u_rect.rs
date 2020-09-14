@@ -6,6 +6,7 @@ pub struct URect {
     pub size: ISize,
 }
 
+#[allow(dead_code)]
 impl URect {
     pub fn new(left: usize, top: usize, width: usize, height: usize) -> URect {
         URect {
@@ -47,12 +48,10 @@ impl URect {
             } else {
                 (u_point.x - right) as f64
             }
+        } else if u_point.y < self.top_left.y {
+            (self.top_left.y - u_point.y) as f64
         } else {
-            if u_point.y < self.top_left.y {
-                (self.top_left.y - u_point.y) as f64
-            } else {
-                (u_point.y - bottom) as f64
-            }
+            (u_point.y - bottom) as f64
         }
     }
 

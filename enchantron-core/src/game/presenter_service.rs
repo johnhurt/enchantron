@@ -1,9 +1,5 @@
-use super::{Entity, EntityRunBundle, EntityType, Services};
-use crate::native::RuntimeResources;
+use super::Entity;
 use crate::presenter::*;
-use crate::ui::SpriteSource;
-use crate::view::*;
-use crate::view_types::ViewTypes;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
@@ -27,10 +23,8 @@ unsafe impl<T> Send for PresenterServiceLease<T> where T: Send + Sync {}
 unsafe impl<T> Sync for PresenterServiceLease<T> where T: Send + Sync {}
 
 impl<T> PresenterServiceLease<T> {
-    fn new(original: &Box<T>) -> PresenterServiceLease<T> {
-        PresenterServiceLease {
-            loaned: original.deref(),
-        }
+    fn new(original: &T) -> PresenterServiceLease<T> {
+        PresenterServiceLease { loaned: original }
     }
 }
 
@@ -99,6 +93,7 @@ impl PresenterService {
             .read()
             .await
             .get(player_entity)
+            .map(Box::as_ref)
             .map(PresenterServiceLease::new)
     }
 }

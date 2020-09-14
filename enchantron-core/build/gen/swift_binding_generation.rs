@@ -1973,7 +1973,7 @@ handlebars_helper!(lower_camel: |to_convert: str| {
 });
 
 pub fn generate() {
-    info!("Generating swift binindings");
+    info!("Generating swift bindings");
 
     info!("Building Handlebars");
     let mut hb = Handlebars::new();
@@ -2101,7 +2101,7 @@ pub fn generate() {
 
         let raw_cbindgen_contents = cbindgen_contents_writer.into_string();
 
-        // Split the generated header into 2 on the first insteance
+        // Split the generated header into 2 on the first instance
         // of "typedef".  Everything above should be headers and constants, and
         // everything below should be types and methods
         let split_index =
@@ -2132,5 +2132,5 @@ pub fn generate() {
             .expect("Failed to render c header");
     }
 
-    info!("Finished Rendering Swift Bingings");
+    info!("Finished Rendering Swift Bindings");
 }

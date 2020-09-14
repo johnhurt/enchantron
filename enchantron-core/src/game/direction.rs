@@ -5,6 +5,7 @@ const EAST_POINT: IPoint = IPoint { x: 1, y: 0 };
 const SOUTH_POINT: IPoint = IPoint { x: 0, y: 1 };
 const WEST_POINT: IPoint = IPoint { x: -1, y: 0 };
 
+#[allow(dead_code)]
 pub enum Direction {
     NORTH,
     EAST,

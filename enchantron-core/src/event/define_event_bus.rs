@@ -132,7 +132,7 @@ macro_rules! define_event_bus {
                     (listener_registration, result_stream)
                 }
 
-                /// Convienient passthrough to the tokio spawner
+                /// Convenient passthrough to the tokio spawner
                 pub fn spawn<F>(&self, future: F) -> JoinHandle<F::Output>
                 where
                     F: Future + Send + 'static,

@@ -1,6 +1,5 @@
 use crate::model::ISize;
-use crate::util::ByteBuffer;
-use png::{BitDepth, ColorType, Compression, Encoder};
+use png::{BitDepth, ColorType, Encoder};
 
 pub struct PngGenerator {}
 
@@ -22,8 +21,10 @@ impl PngGenerator {
 }
 
 #[cfg(test)]
+#[allow(unused_imports)]
 mod test {
     use super::*;
+    use crate::util::ByteBuffer;
     use rand::{thread_rng, RngCore};
     use std::fs::File;
     use std::io::prelude::*;

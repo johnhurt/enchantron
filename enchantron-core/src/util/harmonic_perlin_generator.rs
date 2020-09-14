@@ -30,11 +30,9 @@ impl<H: IPointHasher + Default> HarmonicPerlinGenerator<H> {
             hasher.seed_i64(offset.x);
             hasher.seed_i64(offset.y);
 
-            result.harmonics.push(SinglePerlinGenerator::new(
-                scale,
-                offset.clone(),
-                hasher,
-            ));
+            result
+                .harmonics
+                .push(SinglePerlinGenerator::new(scale, offset, hasher));
             scale *= multiplier as u32;
             offset += &offset_shift;
         }
@@ -59,8 +57,6 @@ impl<H: IPointHasher + Default> HarmonicPerlinGenerator<H> {
         let mut working_space =
             ValueRect::new_from_rect_with_defaults(rect.clone(), 1, 1);
 
-        let mut i = 0;
-
         for harmonic in &self.harmonics {
             harmonic.fill_rect(&mut working_space);
 
@@ -78,7 +74,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_repeatablity() {
+    fn test_repeatability() {
         let gen = HarmonicPerlinGenerator::<RestrictedXxHasher>::new(
             8,
             IPoint::new(3, 2),

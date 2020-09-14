@@ -53,8 +53,8 @@ class {{name}} {
   func {{lower_camel impl_name}}(
       {{#each arguments}}{{#unless @first}}, {{/unless}}{{lower_camel name}}: {{data_type.swift_name_internal}}{{/each}})
           {{#if return_type}}-> {{return_type.swift_name_internal}}{{/if}} {
-    {{#if return_type}}return {{return_type.swift_type_coersion_prefix_incoming}}{{/if}}{{name}}(self.ref
-        {{#each arguments}}, {{data_type.swift_type_coersion_prefix_outgoing}}{{lower_camel name}}{{data_type.swift_type_coersion_postfix_outgoing}}{{/each}}){{#if return_type}}{{return_type.swift_type_coersion_postfix_incoming}}{{/if}}
+    {{#if return_type}}return {{return_type.swift_type_coercion_prefix_incoming}}{{/if}}{{name}}(self.ref
+        {{#each arguments}}, {{data_type.swift_type_coercion_prefix_outgoing}}{{lower_camel name}}{{data_type.swift_type_coercion_postfix_outgoing}}{{/each}}){{#if return_type}}{{return_type.swift_type_coercion_postfix_incoming}}{{/if}}
   }
 {{~/if}}
 {{~/each}}
@@ -87,13 +87,13 @@ private func {{name}}(ref: OpaquePointer?
         -> {{#if return_type}}{{return_type.swift_name_outgoing}}{{else}}Void{{/if}} {
   let _self : {{type_name}} = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
 {{~#if is_getter}}
-  return  {{return_type.swift_type_coersion_prefix_outgoing}}_self.{{lower_camel field_name}}{{return_type.swift_type_coersion_postfix_outgoing}}
+  return  {{return_type.swift_type_coercion_prefix_outgoing}}_self.{{lower_camel field_name}}{{return_type.swift_type_coercion_postfix_outgoing}}
 {{~else}}
 {{~#if is_setter}}
-  _self.{{lower_camel field_name}} = {{#each arguments}}{{data_type.swift_type_coersion_prefix_incoming}}{{lower_camel name}}{{data_type.swift_type_coersion_postfix_incoming}}{{/each}}
+  _self.{{lower_camel field_name}} = {{#each arguments}}{{data_type.swift_type_coercion_prefix_incoming}}{{lower_camel name}}{{data_type.swift_type_coercion_postfix_incoming}}{{/each}}
 {{~else}}
-  {{#if return_type}}return {{return_type.swift_type_coersion_prefix_outgoing}}{{/if}}_self.{{lower_camel impl_name}}(
-      {{#each arguments}}{{#unless @first}}, {{/unless}}{{data_type.swift_type_coersion_prefix_incoming}}{{lower_camel name}}{{data_type.swift_type_coersion_postfix_incoming}}{{/each}}){{#if return_type}}{{return_type.swift_type_coersion_postfix_outgoing}}{{/if}}
+  {{#if return_type}}return {{return_type.swift_type_coercion_prefix_outgoing}}{{/if}}_self.{{lower_camel impl_name}}(
+      {{#each arguments}}{{#unless @first}}, {{/unless}}{{data_type.swift_type_coercion_prefix_incoming}}{{lower_camel name}}{{data_type.swift_type_coercion_postfix_incoming}}{{/each}}){{#if return_type}}{{return_type.swift_type_coercion_postfix_outgoing}}{{/if}}
 {{/if}}
 {{/if}}
 }

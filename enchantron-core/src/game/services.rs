@@ -1,19 +1,15 @@
 use super::{
-    Entity, EntityData, EntityMessage, EntityRunBundle, EntityService,
-    EntityType, LocationService, MessageService, PresenterService, SavedGame,
-    Time,
+    EntityData, EntityMessage, EntityRunBundle, EntityService, EntityType,
+    LocationService, MessageService, PresenterService, SavedGame, Time,
 };
-use crate::model::IPoint;
 use crate::native::RuntimeResources;
 use crate::presenter::*;
 use crate::ui::SpriteSource;
 use crate::view::*;
 use crate::view_types::ViewTypes;
-use one_way_slot_map::SlotMap;
 use std::sync::Arc;
 use tokio::runtime::Handle;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
-use tokio::sync::Mutex;
 
 const ENTITY_MESSAGE_CHANNEL_SIZE: usize = 8;
 
@@ -25,7 +21,7 @@ struct TemporaryChannel {
 }
 
 impl TemporaryChannel {
-    fn to_run_bundle(&mut self, services: &Services) -> EntityRunBundle {
+    fn as_run_bundle(&mut self, services: &Services) -> EntityRunBundle {
         EntityRunBundle::new(
             self.entity.entity.unwrap(),
             self.entity,
@@ -89,7 +85,7 @@ impl Services {
 
         let run_bundles = entity_channels
             .drain()
-            .map(|tmp_channel| tmp_channel.to_run_bundle(&services))
+            .map(|tmp_channel| tmp_channel.as_run_bundle(&services))
             .collect();
 
         (services, run_bundles)

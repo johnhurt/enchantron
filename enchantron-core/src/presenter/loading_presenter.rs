@@ -64,7 +64,7 @@ where
         result
             .view
             .get_progress_indicator()
-            .set_text(format!("Loading..."));
+            .set_text("Loading...".to_owned());
 
         result.event_bus.post(LoadResources {});
 

@@ -79,7 +79,7 @@ fn check_layer_needs_update(layer_index: usize, frac_zoom_level: f64) -> bool {
     if frac_zoom_level % layer_count_f64 >= layer_index_f64 {
         closest_layer_below += layer_index_f64;
     } else {
-        closest_layer_below += (layer_index_f64 - layer_count_f64);
+        closest_layer_below += layer_index_f64 - layer_count_f64;
     }
 
     let closest_layer_above = closest_layer_below + layer_count_f64 as f64;
@@ -439,9 +439,6 @@ where
         }
     }
 
-    /// Set the z level for the whole layer
-    fn set_z_level(&self, new_z_level: f64) {}
-
     /// Get the terrain rect required to cover the given viewport rect based on
     /// the current size of the terrain sprites array.
     fn viewport_rect_to_terrain_rect(&self, viewport_rect: &Rect) -> IRect {
@@ -555,7 +552,7 @@ where
         })
     }
 
-    /// Add the two points together whithin the bounds of the sprite grid system
+    /// Add the two points together within the bounds of the sprite grid system
     fn sprite_grid_add(&self, lhs: &UPoint, rhs: &IPoint) -> UPoint {
         let sprite_grid_width = self.terrain_sprites_size.width as i64;
         let sprite_grid_height = self.terrain_sprites_size.height as i64;
@@ -726,7 +723,7 @@ where
         self.sprite_terrain_coverage = update_info.terrain_rect;
     }
 
-    /// Increase the size of the 2d array of terrain sprites to accomodate the
+    /// Increase the size of the 2d array of terrain sprites to accommodate the
     /// given size
     fn increase_size_for(
         &mut self,
@@ -781,7 +778,7 @@ where
         valid_rect
     }
 
-    /// Icnrease the size of all the existing rows in the terrain to the given
+    /// Increase the size of all the existing rows in the terrain to the given
     /// width
     fn increase_row_width_by(
         &mut self,

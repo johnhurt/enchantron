@@ -1,11 +1,8 @@
 use crate::game::{
-    Direction, Entity, EntityRunBundle, EntityService, LocationService,
-    PerlinTerrain1, Player, PresenterServiceLease, TerrainProvider, Time,
+    Direction, EntityRunBundle, PerlinTerrain1, Player, PresenterServiceLease,
 };
-use crate::model::IPoint;
 use crate::view::PlayerView;
 use std::marker::PhantomData;
-use std::sync::Arc;
 
 pub struct PlayerPresenter<V: PlayerView> {
     _phantom_view: PhantomData<V>,
@@ -28,14 +25,13 @@ impl<V: PlayerView> PlayerPresenter<V> {
         info!("Player presenter spawned");
 
         let EntityRunBundle {
-            entity,
+            entity: _,
             entity_data,
             entity_message_source: mut recv,
             services,
         } = entity_bundle;
 
         let player = Player::from(&entity_data);
-        let terrain_generator = PerlinTerrain1::default();
         let location_service = services.location_service();
         let time = services.time();
 

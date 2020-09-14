@@ -19,7 +19,7 @@ impl RenderableWrappedType {
                 def.wrapped_type_imports
                     .clone()
                     .into_iter()
-                    .map(|import| String::from(import))
+                    .map(String::from)
                     .collect(),
             )
             .build()

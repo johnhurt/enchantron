@@ -61,6 +61,7 @@ impl MultiDragHandler {
         ));
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn on_two_drags_start(
         &self,
         drag_id_1: i64,
@@ -85,6 +86,7 @@ impl MultiDragHandler {
         ));
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn on_two_drags_move(
         &self,
         drag_id_1: i64,
@@ -109,6 +111,7 @@ impl MultiDragHandler {
         ));
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn on_two_drags_end(
         &self,
         drag_id_1: i64,

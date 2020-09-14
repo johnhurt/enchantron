@@ -18,9 +18,7 @@ impl MagnifyHandler {
     pub fn new(
         on_magnify: Box<dyn Fn(f64, f64, f64) + Send + 'static>,
     ) -> MagnifyHandler {
-        MagnifyHandler {
-            on_magnify: on_magnify,
-        }
+        MagnifyHandler { on_magnify }
     }
 
     pub fn on_magnify(

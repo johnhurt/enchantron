@@ -16,7 +16,7 @@ impl Point {
     /// assert_eq!(p.y, -2.0);
     /// ```
     pub fn new(x: f64, y: f64) -> Point {
-        Point { x: x, y: y }
+        Point { x, y }
     }
 
     pub fn distance_to(&self, point: &Point) -> f64 {

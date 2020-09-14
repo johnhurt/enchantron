@@ -8,6 +8,7 @@ pub struct IRect {
     pub size: ISize,
 }
 
+#[allow(dead_code)]
 impl IRect {
     pub fn new(left: i64, top: i64, width: usize, height: usize) -> IRect {
         IRect {
@@ -42,8 +43,8 @@ impl IRect {
     /// zero size
     pub fn bottom_right_exclusive(&self) -> IPoint {
         IPoint {
-            x: &self.top_left.x + self.size.width as i64,
-            y: &self.top_left.y + self.size.height as i64,
+            x: self.top_left.x + self.size.width as i64,
+            y: self.top_left.y + self.size.height as i64,
         }
     }
 
@@ -76,9 +77,9 @@ impl IRect {
             }
         } else {
             let d = if i_point.y < self.top_left.y {
-                (self.top_left.y - i_point.y)
+                self.top_left.y - i_point.y
             } else {
-                (i_point.y - bottom)
+                i_point.y - bottom
             };
 
             d * d
@@ -110,7 +111,7 @@ impl IRect {
         &self,
         action: impl Fn(&IPoint) -> T,
     ) -> (T, T, T, T) {
-        let mut corner = self.top_left.clone();
+        let mut corner = self.top_left;
 
         // top left
         let t1 = action(&corner);

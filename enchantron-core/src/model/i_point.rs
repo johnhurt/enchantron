@@ -70,7 +70,7 @@ impl Mul<i64> for &IPoint {
     type Output = IPoint;
 
     fn mul(self, rhs: i64) -> IPoint {
-        self.clone() * rhs
+        *self * rhs
     }
 }
 

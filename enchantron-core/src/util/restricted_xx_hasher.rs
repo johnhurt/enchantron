@@ -10,7 +10,7 @@ const PRIME_4: u64 = 9_650_029_242_287_828_579;
 
 /// Implementation of XxHash that is not generalized to behave like a rust
 /// hasher.  Instead this implementation only accepts 64 bit (or multiples)
-/// values, and the number of values it will accept is limitted to 6
+/// values, and the number of values it will accept is limited to 6
 #[derive(Default)]
 pub struct RestrictedXxHasher {
     index: usize,
@@ -25,9 +25,8 @@ impl RestrictedXxHasher {
     fn finish_if_seeded(&mut self) {
         self.index += 1;
 
-        match self.index {
-            4 => self.finish(),
-            _ => {}
+        if self.index == 4 {
+            self.finish()
         }
     }
 

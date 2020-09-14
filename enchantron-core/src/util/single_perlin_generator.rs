@@ -1,5 +1,3 @@
-use std::hash::Hasher;
-
 use super::{IPointHasher, ValueRect};
 use crate::model::{IPoint, IRect, ISize, Point};
 
@@ -48,7 +46,7 @@ where
 
     /// Precompute all the perlin gradients for all the node points that will
     /// be needed to compute the tiles in the given rectangle.
-    fn get_perlin_gradients_ceofs_for_rect(
+    fn get_perlin_gradients_coefs_for_rect(
         &self,
         rect: &IRect,
     ) -> ValueRect<PerlinGradientCoefs> {
@@ -78,7 +76,7 @@ where
             *value = self.perlin_gradient(point);
         });
 
-        // Now generate the perlin coeficients based on the computed gradients
+        // Now generate the perlin coefficients based on the computed gradients
         let mut result =
             ValueRect::<PerlinGradientCoefs>::new_from_point_and_strides_with_defaults(
                 gradients.rect().top_left.clone(),
@@ -135,7 +133,7 @@ where
     }
 
     /// Linear interpolation of a function f given its values at 0 and 1 and
-    /// the propotional difference in between them
+    /// the proportional difference in between them
     fn linear_interp(&self, f_at_x0: f64, f_at_x1: f64, x: f64) -> f64 {
         (1. - x) * f_at_x0 + x * f_at_x1
     }
@@ -256,7 +254,7 @@ where
     /// Get a filled rectangle of perlin values
     pub fn fill_rect(&self, target: &mut ValueRect<f64>) {
         let perlin_gradient_coefs =
-            self.get_perlin_gradients_ceofs_for_rect(target.rect());
+            self.get_perlin_gradients_coefs_for_rect(target.rect());
 
         let first_perlin_rect = IRect {
             top_left: perlin_gradient_coefs.rect().top_left.clone(),
@@ -402,7 +400,7 @@ mod test {
     }
 
     #[test]
-    fn test_repeatablity() {
+    fn test_repeatability() {
         let gen = new_generator(123, 16, 6, 9);
         let terrain_rect = IRect::new(0, 0, 4, 4);
 

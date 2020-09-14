@@ -40,9 +40,9 @@ impl DragHandler {
         on_drag_end: Box<dyn Fn(f64, f64, f64, f64) + Send + 'static>,
     ) -> DragHandler {
         DragHandler {
-            on_drag_start: on_drag_start,
-            on_drag_move: on_drag_move,
-            on_drag_end: on_drag_end,
+            on_drag_start,
+            on_drag_move,
+            on_drag_end,
         }
     }
 

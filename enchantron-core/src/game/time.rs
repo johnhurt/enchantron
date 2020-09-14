@@ -22,7 +22,6 @@ impl Time {
     }
 
     pub async fn sleep_until(&self, wake_time: f64) {
-        delay_for(Duration::from_secs_f64((wake_time - self.now()).max(0.)))
-            .await
+        self.sleep((wake_time - self.now()).max(0.)).await
     }
 }

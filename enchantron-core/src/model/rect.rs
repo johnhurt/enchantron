@@ -6,6 +6,7 @@ pub struct Rect {
     pub size: Size,
 }
 
+#[allow(dead_code)]
 impl Rect {
     pub fn new(left: f64, top: f64, width: f64, height: f64) -> Rect {
         Rect {
@@ -54,12 +55,10 @@ impl Rect {
             } else {
                 point.x - right
             }
+        } else if point.y < self.top_left.y {
+            self.top_left.y - point.y
         } else {
-            if point.y < self.top_left.y {
-                self.top_left.y - point.y
-            } else {
-                point.y - bottom
-            }
+            point.y - bottom
         }
     }
 

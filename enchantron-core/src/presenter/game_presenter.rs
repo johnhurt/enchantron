@@ -1,22 +1,20 @@
-use super::PlayerPresenter;
 use crate::application_context::NUM_CPUS;
 use crate::event::*;
-use crate::game::{EntityType, SavedGame, Services};
-use crate::model::{Point, Rect, Size};
-use crate::native::{RuntimeResources, SystemView};
+use crate::game::{SavedGame, Services};
+use crate::model::{Point, Size};
+use crate::native::RuntimeResources;
 use crate::ui::{
-    DragEventType, DragState, DragTrackerEvent::*, GameDisplayState,
-    HandlerRegistration, HasLayoutHandlers, HasMagnifyHandlers,
-    HasMultiDragHandlers, HasMutableLocation, HasMutableScale, HasViewport,
-    LayoutHandler, MagnifyHandler, MultiDragHandler, Sprite, SpriteSource,
-    ViewportInfo,
+    DragTrackerEvent::*, GameDisplayState, HandlerRegistration,
+    HasLayoutHandlers, HasMagnifyHandlers, HasMultiDragHandlers,
+    HasMutableLocation, HasMutableScale, HasViewport, LayoutHandler,
+    MagnifyHandler, MultiDragHandler, SpriteSource, ViewportInfo,
 };
-use crate::view::{BaseView, PlayerViewImpl};
+use crate::view::BaseView;
 use crate::view_types::ViewTypes;
 use std::sync::{Arc, Weak};
 use std::time::Duration;
 use tokio::runtime::{Builder, Runtime};
-use tokio::sync::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use tokio::sync::{Mutex, RwLock};
 
 use tokio::stream::StreamExt;
 
@@ -62,7 +60,7 @@ where
     /// Get a weak arc pointer to this presenter or panic if none has been
     /// created yet
     async fn weak_self(&self) -> Weak<GamePresenter<T>> {
-        let ref weak_self_lock = self.weak_self.read().await;
+        let weak_self_lock = self.weak_self.read().await;
 
         weak_self_lock
             .as_ref()
@@ -107,7 +105,7 @@ where
         &self,
         action: impl FnOnce(&mut GameDisplayState<T>) -> R,
     ) -> R {
-        let ref mut display_state_lock = self.display_state.write().await;
+        let mut display_state_lock = self.display_state.write().await;
 
         let display_state = display_state_lock.as_mut().unwrap_or_else(|| {
             error!("No Game State created yet");
@@ -162,7 +160,7 @@ where
                 Point::new(zoom_center_x, zoom_center_y);
 
             let viewport_info = display_state
-                .change_scale_additive_around_centerpoint(
+                .change_scale_additive_around_center_point(
                     scale_change_additive,
                     magnify_center_screen_point,
                 );
@@ -231,7 +229,7 @@ where
 
     /// Initialize the display state with the initial game state
     async fn initialize_game_state(&self) {
-        let mut display_state: GameDisplayState<T> = GameDisplayState::new(
+        let display_state: GameDisplayState<T> = GameDisplayState::new(
             self.event_bus.clone(),
             &self.view,
             self.runtime_resources.clone(),

@@ -1,7 +1,7 @@
-const FLOAT: &'static str = "FLOAT";
-const VEC2_FLOAT: &'static str = "VEC2_FLOAT";
-const VEC3_FLOAT: &'static str = "VEC3_FLOAT";
-const VEC4_FLOAT: &'static str = "VEC4_FLOAT";
+const FLOAT: &str = "FLOAT";
+const VEC2_FLOAT: &str = "VEC2_FLOAT";
+const VEC3_FLOAT: &str = "VEC3_FLOAT";
+const VEC4_FLOAT: &str = "VEC4_FLOAT";
 
 pub enum ShaderVariableType {
     Float,

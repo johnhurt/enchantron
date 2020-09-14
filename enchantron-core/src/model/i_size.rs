@@ -19,7 +19,7 @@ impl Mul<usize> for &ISize {
     type Output = ISize;
 
     fn mul(self, rhs: usize) -> ISize {
-        self.clone() * rhs
+        *self * rhs
     }
 }
 

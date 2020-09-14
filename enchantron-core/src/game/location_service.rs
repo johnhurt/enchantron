@@ -123,11 +123,11 @@ impl WindowedPointer {
         }
     }
 
-    pub fn read<'a>(&'a self) -> &'a WindowedPointerInner {
+    pub fn read(&self) -> &'_ WindowedPointerInner {
         unsafe { &*self.p }
     }
 
-    pub fn write<'a>(&'a mut self) -> &'a mut WindowedPointerInner {
+    pub fn write(&mut self) -> &'_ mut WindowedPointerInner {
         unsafe { &mut *(self.p as *mut WindowedPointerInner) }
     }
 
@@ -168,6 +168,7 @@ struct Inner {
     slot_keys_by_entity: HashMap<Entity, LocationKey>,
 }
 
+#[allow(dead_code)]
 impl LocationService {
     pub fn new() -> LocationService {
         LocationService {
@@ -184,18 +185,18 @@ impl LocationService {
     }
 
     async fn with_inner<T>(&self, action: impl FnOnce(&Inner) -> T) -> T {
-        let ref mut inner = self.inner.read().await;
+        let inner = self.inner.read().await;
 
-        action(inner)
+        action(&*inner)
     }
 
     async fn with_inner_mut<T>(
         &self,
         action: impl FnOnce(&mut Inner) -> T,
     ) -> T {
-        let ref mut inner = self.inner.write().await;
+        let mut inner = self.inner.write().await;
 
-        action(inner)
+        action(&mut *inner)
     }
 
     pub async fn insert(&self, e: Entity, location: IPoint) -> LocationKey {
@@ -222,6 +223,7 @@ impl LocationService {
     }
 }
 
+#[allow(dead_code)]
 impl Inner {
     fn new() -> Inner {
         Inner {
@@ -257,7 +259,7 @@ impl Inner {
     }
 
     fn insert(&mut self, e: Entity, location: IPoint) -> LocationKey {
-        let mut wp = WindowedPointer::new(e, location);
+        let wp = WindowedPointer::new(e, location);
         let wp_clone = wp.clone();
 
         self.rtree.insert(wp);
@@ -289,7 +291,7 @@ impl Inner {
     }
 
     fn move_by_key(&mut self, key: &LocationKey, new_location: IPoint) {
-        if let Some(mut wp) = self.slot_map.get_mut(key) {
+        if let Some(wp) = self.slot_map.get_mut(key) {
             wp.write().location.top_left = new_location;
             if !wp.check_window_contains_location() {
                 let mut owned_wp = self
@@ -303,7 +305,7 @@ impl Inner {
     }
 
     fn move_by_key_delta(&mut self, key: &LocationKey, shift: &IPoint) {
-        if let Some(mut wp) = self.slot_map.get_mut(key) {
+        if let Some(wp) = self.slot_map.get_mut(key) {
             wp.write().location.top_left += shift;
             if !wp.check_window_contains_location() {
                 let mut owned_wp = self
@@ -324,7 +326,7 @@ impl Inner {
     }
 
     fn remove_by_key(&mut self, key: &LocationKey) -> Option<IRect> {
-        if let Some(mut wp_ref) = self.slot_map.remove(key) {
+        if let Some(wp_ref) = self.slot_map.remove(key) {
             let _ = self
                 .rtree
                 .remove(wp_ref)

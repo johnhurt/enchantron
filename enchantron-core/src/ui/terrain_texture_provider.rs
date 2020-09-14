@@ -2,8 +2,8 @@ use crate::game::constants;
 use crate::game::{PerlinTerrain1, TerrainProvider, TerrainType};
 use crate::img::PngGenerator;
 use crate::model::{IPoint, IRect, ISize};
-use crate::native::{ResourceLoader, RuntimeResources, Texture};
-use crate::util::{ByteBuffer, ValueRect};
+use crate::native::{ResourceLoader, RuntimeResources};
+use crate::util::ByteBuffer;
 use crate::view_types::ViewTypes;
 use std::ptr::copy_nonoverlapping;
 use std::sync::Arc;
@@ -11,7 +11,7 @@ use std::sync::Arc;
 const BROWN_BYTES: [u8; 3] = constants::DIRT_BROWN_RGB;
 const GREEN_BYTES: [u8; 3] = constants::GRASS_GREEN_RGB;
 
-/// Write to the given image-data slice in the locations corresponsing to
+/// Write to the given image-data slice in the locations corresponding to
 /// the
 unsafe fn fill_rect_with_terrain(
     target: *mut u8,
@@ -99,17 +99,6 @@ where
         }
     }
 
-    pub fn get_texture_at(&self, position: &IPoint) -> &T::Texture {
-        match self.terrain_generator.get_for(position) {
-            TerrainType::Grass => {
-                self.runtime_resources.textures().overworld.grass()
-            }
-            TerrainType::Dirt => {
-                self.runtime_resources.textures().overworld.dirt()
-            }
-        }
-    }
-
     pub fn get_texture_for_rect(
         &self,
         rect: &IRect,
@@ -130,12 +119,13 @@ where
     }
 }
 
+#[allow(dead_code)]
 #[cfg(test)]
 mod test {
     use super::*;
     use std::fs::File;
     use std::io::prelude::*;
-    use std::time::{Duration, SystemTime};
+    use std::time::SystemTime;
 
     #[test]
     fn test_generate_texture_data() {
@@ -146,7 +136,7 @@ mod test {
 
         let now = SystemTime::now();
 
-        let result = get_texture_data_for_rect(
+        let _ = get_texture_data_for_rect(
             &terrain_rect,
             &image_size,
             &terrain_generator,

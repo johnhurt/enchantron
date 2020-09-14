@@ -1,5 +1,5 @@
 use crate::model::{IPoint, IRect, ISize, UPoint};
-use std::cmp::{Eq, PartialEq};
+use std::cmp::PartialEq;
 use std::ops::AddAssign;
 
 /// Representation of a set of values over rectangular region
@@ -23,6 +23,7 @@ pub struct ValueRect<T> {
     values_height: usize,
 }
 
+#[allow(dead_code)]
 impl<T> ValueRect<T> {
     pub fn new_from_rect(
         rect: IRect,

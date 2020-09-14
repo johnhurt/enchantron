@@ -14,7 +14,7 @@ impl UPoint {
     /// assert_eq!(p.y, 8);
     /// ```
     pub fn new(x: usize, y: usize) -> UPoint {
-        UPoint { x: x, y: y }
+        UPoint { x, y }
     }
 
     pub fn distance_to(&self, i_point: &UPoint) -> f64 {

@@ -53,9 +53,9 @@ impl<T: ViewTypes> MainMenuPresenter<T> {
         view.initialize_pre_bind();
 
         let result = MainMenuPresenter {
-            view: view,
+            view,
             handler_registrations: Mutex::new(Vec::new()),
-            event_bus: event_bus,
+            event_bus,
         };
 
         let result: Arc<MainMenuPresenter<T>> = result.bind().await;

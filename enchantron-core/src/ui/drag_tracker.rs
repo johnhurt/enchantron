@@ -2,10 +2,11 @@ use super::{DragEventType::*, DragPoint};
 use crate::event::DragEvent;
 use crate::model::Point;
 
-fn calcualte_shift(prev_drag: &DragPoint, curr_drag: &DragPoint) -> Point {
+fn calculate_shift(prev_drag: &DragPoint, curr_drag: &DragPoint) -> Point {
     &curr_drag.global_point - &prev_drag.global_point
 }
 
+#[allow(clippy::many_single_char_names)]
 fn calculate_shift_and_scale(
     prev_drag_1: &DragPoint,
     prev_drag_2: &DragPoint,
@@ -121,7 +122,7 @@ impl DragTracker {
     ) -> Option<DragTrackerEvent> {
         Some(match (&mut self.drag_1, &mut self.drag_2) {
             (Some(current_drag), None) | (None, Some(current_drag)) => {
-                let shift = calcualte_shift(&moved_drag_point, current_drag);
+                let shift = calculate_shift(&moved_drag_point, current_drag);
                 *current_drag = moved_drag_point;
                 DragTrackerEvent::Move(shift)
             }

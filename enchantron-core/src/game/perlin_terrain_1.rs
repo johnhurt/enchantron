@@ -5,7 +5,7 @@ use crate::util::{HarmonicPerlinGenerator, RestrictedXxHasher, ValueRect};
 const DEFAULT_OCTAVE_SCALE: u32 = 8;
 const DEFAULT_OCTAVE_COUNT: u8 = 12;
 const DEFAULT_MULTIPLIER: u8 = 2;
-const DEAFULT_OFFSET: IPoint = IPoint { x: 0, y: 0 };
+const DEFAULT_OFFSET: IPoint = IPoint { x: 0, y: 0 };
 const DEFAULT_OFFSET_SHIFT: IPoint = IPoint { x: 6, y: 6 };
 
 pub struct PerlinTerrain1 {
@@ -16,7 +16,7 @@ impl Default for PerlinTerrain1 {
     fn default() -> PerlinTerrain1 {
         PerlinTerrain1::new(
             DEFAULT_OCTAVE_SCALE,
-            DEAFULT_OFFSET,
+            DEFAULT_OFFSET,
             DEFAULT_MULTIPLIER,
             DEFAULT_OFFSET_SHIFT,
             DEFAULT_OCTAVE_COUNT,
@@ -90,7 +90,7 @@ mod test {
 
             let now = SystemTime::now();
 
-            let values = gen.get_for_rect(&rect);
+            let _ = gen.get_for_rect(&rect);
 
             println!("batch {:?}", now.elapsed());
         }
@@ -112,7 +112,7 @@ mod test {
     }
 
     #[test]
-    fn test_repeatablity() {
+    fn test_repeatability() {
         let gen = PerlinTerrain1::default();
         let terrain_rect = IRect::new(0, 0, 4, 4);
 

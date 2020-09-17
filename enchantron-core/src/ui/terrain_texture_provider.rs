@@ -119,7 +119,7 @@ where
     }
 }
 
-#[allow(dead_code)]
+#[allow(dead_code, unused_imports)]
 #[cfg(test)]
 mod test {
     use super::*;

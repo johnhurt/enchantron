@@ -31,7 +31,7 @@ impl<T: ViewTypes> MainMenuPresenter<T> {
         let this = result.clone();
 
         result.event_bus.spawn(async move {
-            if let Some(_) = start_game_event_future.await {
+            if start_game_event_future.await.is_some() {
                 this.view.transition_to_game_view();
             }
         });

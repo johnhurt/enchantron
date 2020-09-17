@@ -45,9 +45,9 @@ impl<T> ValueRect<T> {
         let filler_ref = &mut filler;
 
         (0..values_height).for_each(|v_y| {
-            coord.x = &rect.top_left.y + (v_y * y_stride) as i64;
+            coord.x = rect.top_left.y + (v_y * y_stride) as i64;
             (0..values_width).for_each(|v_x| {
-                coord.y = &rect.top_left.x + (v_x * x_stride) as i64;
+                coord.y = rect.top_left.x + (v_x * x_stride) as i64;
                 values.push(filler_ref(&coord))
             });
         });
@@ -80,14 +80,11 @@ impl<T> ValueRect<T> {
         ValueRect::new_from_rect(rect, x_stride, y_stride, filler)
     }
 
-    pub fn get_by_point<'a>(
-        &'a self,
-        value_coordinate: &UPoint,
-    ) -> Option<&'a T> {
+    pub fn get_by_point(&self, value_coordinate: &UPoint) -> Option<&T> {
         self.get(value_coordinate.x, value_coordinate.y)
     }
 
-    pub fn get<'a>(&'a self, value_x: usize, value_y: usize) -> Option<&'a T> {
+    pub fn get(&self, value_x: usize, value_y: usize) -> Option<&T> {
         self.values.get(value_y * self.values_width + value_x)
     }
 
@@ -107,7 +104,7 @@ impl<T> ValueRect<T> {
         }
 
         ValueRect {
-            rect: self.rect.clone(),
+            rect: self.rect,
             values,
             x_stride: self.x_stride,
             y_stride: self.y_stride,

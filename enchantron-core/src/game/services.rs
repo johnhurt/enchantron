@@ -53,7 +53,7 @@ impl Services {
             player_presenter_states,
         } = saved_game;
 
-        let time = Time::new(runtime_handle.clone());
+        let time = Time::new(runtime_handle);
         let location_service = LocationService::new_from_data(&locations);
 
         let mut entity_channels = entities.map(|data| {

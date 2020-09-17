@@ -65,18 +65,18 @@ where
 
     /// Update the layout of the display based on a change in the size of
     /// screen
-    pub fn layout<'a>(&'a mut self, new_size: Size) -> &'a ViewportInfo {
+    pub fn layout(&mut self, new_size: Size) -> &ViewportInfo {
         self.viewport_info.resize_screen(new_size);
         &self.viewport_info
     }
 
     /// change the scale of the area shown by the viewport by the given
     /// additive amount, and return the new scale. The center of the zoom
-    pub fn change_scale_additive_around_center_point<'a>(
-        &'a mut self,
+    pub fn change_scale_additive_around_center_point(
+        &mut self,
         scale_change_additive: f64,
         magnify_center_screen_point: Point,
-    ) -> &'a ViewportInfo {
+    ) -> &ViewportInfo {
         self.viewport_info
             .change_scale_additive_around_center_point(
                 scale_change_additive,

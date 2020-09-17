@@ -51,11 +51,10 @@ impl<H: IPointHasher + Default> HarmonicPerlinGenerator<H> {
     }
 
     pub fn get_rect(&self, rect: &IRect) -> ValueRect<f64> {
-        let mut result =
-            ValueRect::new_from_rect_with_defaults(rect.clone(), 1, 1);
+        let mut result = ValueRect::new_from_rect_with_defaults(*rect, 1, 1);
 
         let mut working_space =
-            ValueRect::new_from_rect_with_defaults(rect.clone(), 1, 1);
+            ValueRect::new_from_rect_with_defaults(*rect, 1, 1);
 
         for harmonic in &self.harmonics {
             harmonic.fill_rect(&mut working_space);

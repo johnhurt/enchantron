@@ -269,12 +269,12 @@ where
         self.add_handler_registration(Box::new(self.view.add_magnify_handler(
             create_magnify_handler!(
                 on_magnify(scale_change_additive, center_x, center_y) {
-                    result_for_magnify.upgrade().map(|p| {
+                    if let Some(p) = result_for_magnify.upgrade() {
                         p.event_bus.post(Magnify {
                             scale_change_additive,
                             global_center: Point { x: center_x, y: center_y }
                         });
-                    });
+                    }
                 }
             ),
         )))

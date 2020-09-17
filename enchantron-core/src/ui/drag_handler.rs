@@ -1,32 +1,3 @@
-macro_rules! create_drag_handler {
-    (
-    on_drag_start($start_global_x:ident, $start_global_y:ident, $start_local_x:ident, $start_local_y:ident) $start_body:block ,
-    on_drag_move($move_global_x:ident, $move_global_y:ident, $move_local_x:ident, $move_local_y:ident) $move_body:block ,
-    on_drag_end($end_global_x:ident, $end_global_y:ident, $end_local_x:ident, $end_local_y:ident) $end_body:block
-  ) => {
-        DragHandler::new(
-            Box::new(
-                move |$start_global_x,
-                      $start_global_y,
-                      $start_local_x,
-                      $start_local_y| $start_body,
-            ),
-            Box::new(
-                move |$move_global_x,
-                      $move_global_y,
-                      $move_local_x,
-                      $move_local_y| $move_body,
-            ),
-            Box::new(
-                move |$end_global_x,
-                      $end_global_y,
-                      $end_local_x,
-                      $end_local_y| $end_body,
-            ),
-        )
-    };
-}
-
 pub struct DragHandler {
     on_drag_start: Box<dyn Fn(f64, f64, f64, f64) + Send + 'static>,
     on_drag_move: Box<dyn Fn(f64, f64, f64, f64) + Send + 'static>,

@@ -116,12 +116,12 @@ fn get_min_sprite_covering(
     // increase the array size by 2 in each dimension to account for inclusivity
     // and adding an extra boundary of terrain tiles to the top and bottom
 
-    let mut sprite_array_size = &partial_terrain_size / sprite_width_in_tiles;
+    let mut sprite_array_size = partial_terrain_size / sprite_width_in_tiles;
 
     sprite_array_size.x += 2;
     sprite_array_size.y += 2;
 
-    let terrain_size = &sprite_array_size * sprite_width_in_tiles;
+    let terrain_size = sprite_array_size * sprite_width_in_tiles;
 
     (
         IRect {
@@ -182,7 +182,7 @@ where
             Default::default();
 
         for (index, layer_lock) in layers.iter_mut().enumerate() {
-            let ref mut layer = layer_lock.write().await;
+            let mut layer = layer_lock.write().await;
             layer.layer_index = index;
         }
 
@@ -330,14 +330,15 @@ where
         let terrain_update_info = terrain_update_info_opt.unwrap();
 
         let valid_sprite_rect = {
-            if self
+            let size_increased = self
                 .with_layer(layer, |inner| {
                     inner.check_sprite_array_size_increased(
                         &terrain_update_info.sprite_array_size,
                     )
                 })
-                .await
-            {
+                .await;
+
+            if size_increased {
                 debug!("Size increased");
                 self.with_layer_mut(layer, |inner| {
                     inner.increase_size_for(terrain_update_info, || {
@@ -382,7 +383,7 @@ where
                 sprite.set_visible(false);
 
                 let texture_terrain_rect = IRect {
-                    top_left: point.clone(),
+                    top_left: *point,
                     size: ISize::new(
                         inner.sprite_width_in_tiles,
                         inner.sprite_width_in_tiles,
@@ -469,7 +470,7 @@ where
         layer_index: usize,
         viewport_info: &ViewportInfo,
     ) -> Option<TerrainUpdateInfo> {
-        let ref viewport_rect = viewport_info.viewport_rect;
+        let viewport_rect = &viewport_info.viewport_rect;
 
         let new_fractional_zoom = get_fractional_zoom_level(viewport_info);
 
@@ -595,7 +596,7 @@ where
             return None;
         }
 
-        let ref new_terrain_rect = terrain_update_info.terrain_rect;
+        let new_terrain_rect = &terrain_update_info.terrain_rect;
         let tiles_per_sprite = terrain_update_info.sprite_length_in_tiles;
 
         self.sprite_terrain_coverage
@@ -614,7 +615,7 @@ where
 
                 let new_valid_rect = URect {
                     top_left: valid_sprites_top_left,
-                    size: &itx_rect.size / tiles_per_sprite,
+                    size: itx_rect.size / tiles_per_sprite,
                 };
 
                 // determine the new top left of the viewport rect
@@ -730,14 +731,14 @@ where
         terrain_update_info: TerrainUpdateInfo,
         sprite_source: impl Fn() -> T,
     ) -> URect {
-        let ref min_sprite_array_size = terrain_update_info.sprite_array_size;
+        let min_sprite_array_size = &terrain_update_info.sprite_array_size;
 
         if !self.check_sprite_array_size_increased(min_sprite_array_size) {
             // ^ double checked lock
             debug!("Double checked lock tripped");
             return URect {
                 top_left: self.top_left_sprite.clone(),
-                size: self.terrain_sprites_size.clone(),
+                size: self.terrain_sprites_size,
             };
         }
 

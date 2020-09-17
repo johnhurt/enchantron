@@ -1,7 +1,7 @@
 use crate::game::constants;
 use crate::game::{PerlinTerrain1, TerrainProvider, TerrainType};
 use crate::img::PngGenerator;
-use crate::model::{IPoint, IRect, ISize};
+use crate::model::{IRect, ISize};
 use crate::native::{ResourceLoader, RuntimeResources};
 use crate::util::ByteBuffer;
 use crate::view_types::ViewTypes;
@@ -41,7 +41,7 @@ fn get_texture_data_for_rect(
     texture_size: &ISize,
     terrain_generator: &impl TerrainProvider,
 ) -> ByteBuffer {
-    let ref texture_size = rect.size;
+    let texture_size = &rect.size;
 
     let x_tile_pixels = texture_size.width / rect.size.width;
     let y_tile_pixels = texture_size.height / rect.size.height;
@@ -93,8 +93,8 @@ where
         texture_loader: T::ResourceLoader,
     ) -> TerrainTextureProvider<T> {
         TerrainTextureProvider {
-            runtime_resources: runtime_resources,
-            texture_loader: texture_loader,
+            runtime_resources,
+            texture_loader,
             terrain_generator: Arc::new(Default::default()),
         }
     }

@@ -80,10 +80,10 @@ where
         view.initialize_pre_bind();
 
         let result: Arc<LoadingPresenter<T>> = LoadingPresenter {
-            view: view,
-            system_view: system_view,
-            event_bus: event_bus,
-            resources_sink: resources_sink,
+            view,
+            system_view,
+            event_bus,
+            resources_sink,
         }
         .bind()
         .await;

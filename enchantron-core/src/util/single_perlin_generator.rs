@@ -54,8 +54,8 @@ where
 
         let stride = self.scale as usize;
 
-        let perlin_rect_count_x = &bounding_rect.size.width / stride;
-        let perlin_rect_count_y = &bounding_rect.size.height / stride;
+        let perlin_rect_count_x = bounding_rect.size.width / stride;
+        let perlin_rect_count_y = bounding_rect.size.height / stride;
 
         // We need an extra perlin node value on the bottom and right of the
         // bounding rect to make sure for each tile we have the 4 corners in
@@ -79,7 +79,7 @@ where
         // Now generate the perlin coefficients based on the computed gradients
         let mut result =
             ValueRect::<PerlinGradientCoefs>::new_from_point_and_strides_with_defaults(
-                gradients.rect().top_left.clone(),
+                gradients.rect().top_left,
                 stride,
                 stride,
                 perlin_rect_count_x,
@@ -95,10 +95,10 @@ where
                 let row = index / perlin_rect_count_x;
                 let col = index % perlin_rect_count_x;
 
-                let ref g_tl = gradients.get(col, row).unwrap();
-                let ref g_tr = gradients.get(col + 1, row).unwrap();
-                let ref g_br = gradients.get(col + 1, row + 1).unwrap();
-                let ref g_bl = gradients.get(col, row + 1).unwrap();
+                let g_tl = &gradients.get(col, row).unwrap();
+                let g_tr = &gradients.get(col + 1, row).unwrap();
+                let g_br = &gradients.get(col + 1, row + 1).unwrap();
+                let g_bl = &gradients.get(col, row + 1).unwrap();
 
                 coefs.dx_coef = one_over_scale * (g_tl.x - g_tr.x);
                 coefs.dy_coef = one_over_scale * (g_tl.y - g_bl.y);
@@ -108,7 +108,7 @@ where
                     * (g_tr.x + g_tr.y + g_bl.x + g_bl.y
                         - (g_tl.x + g_tl.y + g_br.x + g_br.y));
                 coefs.dx_2_dy_coef =
-                    &one_over_scale_3 * (g_tl.x + g_br.x - (g_tr.x + g_bl.x));
+                    one_over_scale_3 * (g_tl.x + g_br.x - (g_tr.x + g_bl.x));
                 coefs.dx_dy_2_coef =
                     one_over_scale_3 * (g_tl.y + g_br.y - (g_tr.y + g_bl.y));
             },
@@ -143,10 +143,10 @@ where
         let side_size = self.scale as i64;
 
         IRect::new(
-            (&point.x - &self.offset.x).div_euclid(side_size) * side_size
-                + &self.offset.x,
-            (&point.y - &self.offset.y).div_euclid(side_size) * side_size
-                + &self.offset.y,
+            (point.x - self.offset.x).div_euclid(side_size) * side_size
+                + self.offset.x,
+            (point.y - self.offset.y).div_euclid(side_size) * side_size
+                + self.offset.y,
             side_size as usize,
             side_size as usize,
         )
@@ -181,30 +181,30 @@ where
     ) -> f64 {
         // This will be a vector somewhere in the square { [0, 1), [0, 1) }
         let mut scaled_offset = Point::new(
-            (&point.x - &perlin_node_top_left.x) as f64 / self.scale as f64,
-            (&point.y - &perlin_node_top_left.y) as f64 / self.scale as f64,
+            (point.x - perlin_node_top_left.x) as f64 / self.scale as f64,
+            (point.y - perlin_node_top_left.y) as f64 / self.scale as f64,
         );
 
         let dg_top_left = top_left_gradient.dot(&scaled_offset);
 
         // move the scaled offset to being from the top right, and dot the
         // top-right gradient dotted with the result
-        scaled_offset.x = scaled_offset.x - 1.;
+        scaled_offset.x -= 1.;
         let dg_top_right = top_right_gradient.dot(&scaled_offset);
 
         // move the scaled offset to being from the bottom right, and dot the
         // bottom-right gradient dotted with the result
-        scaled_offset.y = scaled_offset.y - 1.;
+        scaled_offset.y -= 1.;
         let dg_bottom_right = bottom_right_gradient.dot(&scaled_offset);
 
         // move the scaled offset to being from the bottom left, and dot the
         // bottom-left gradient dotted with the result
-        scaled_offset.x = scaled_offset.x + 1.;
+        scaled_offset.x += 1.;
         let dg_bottom_left = bottom_left_gradient.dot(&scaled_offset);
 
         // Bring the scaled offset back to being referenced off the top left,
         // and perform the linear interpolation to get the final result
-        scaled_offset.y = scaled_offset.y + 1.;
+        scaled_offset.y += 1.;
 
         let ix0 =
             self.linear_interp(dg_top_left, dg_top_right, scaled_offset.x);
@@ -245,8 +245,7 @@ where
     }
 
     pub fn get_rect(&self, rect: &IRect) -> ValueRect<f64> {
-        let mut result =
-            ValueRect::new_from_rect_with_defaults(rect.clone(), 1, 1);
+        let mut result = ValueRect::new_from_rect_with_defaults(*rect, 1, 1);
         self.fill_rect(&mut result);
         result
     }
@@ -257,7 +256,7 @@ where
             self.get_perlin_gradients_coefs_for_rect(target.rect());
 
         let first_perlin_rect = IRect {
-            top_left: perlin_gradient_coefs.rect().top_left.clone(),
+            top_left: perlin_gradient_coefs.rect().top_left,
             size: ISize::new(self.scale as usize, self.scale as usize),
         };
 

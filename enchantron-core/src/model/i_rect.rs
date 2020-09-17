@@ -217,7 +217,7 @@ impl Envelope for IRect {
     }
 
     fn merged(&self, other: &Self) -> Self {
-        let mut result = self.clone();
+        let mut result = *self;
         result.merge(other);
         result
     }
@@ -283,8 +283,8 @@ impl Envelope for IRect {
         envelopes: &mut [T],
     ) {
         envelopes.sort_by(|l, r| {
-            let ref lp = l.envelope().top_left;
-            let ref rp = r.envelope().top_left;
+            let lp = &l.envelope().top_left;
+            let rp = &r.envelope().top_left;
 
             if axis == 0 {
                 lp.x.cmp(&rp.x)
@@ -300,8 +300,8 @@ impl Envelope for IRect {
         selection_size: usize,
     ) {
         pdqselect::select_by(envelopes, selection_size, |l, r| {
-            let ref lp = l.envelope().top_left;
-            let ref rp = r.envelope().top_left;
+            let lp = &l.envelope().top_left;
+            let rp = &r.envelope().top_left;
 
             if axis == 0 {
                 lp.x.cmp(&rp.x)

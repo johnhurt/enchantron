@@ -102,7 +102,7 @@ impl Div<i64> for &IPoint {
     type Output = IPoint;
 
     fn div(self, rhs: i64) -> IPoint {
-        self.clone() / rhs
+        *self / rhs
     }
 }
 

@@ -1,6 +1,4 @@
-use crate::game::{
-    Direction, EntityRunBundle, PerlinTerrain1, Player, PresenterServiceLease,
-};
+use crate::game::{Direction, EntityRunBundle, Player, PresenterServiceLease};
 use crate::view::PlayerView;
 use std::marker::PhantomData;
 

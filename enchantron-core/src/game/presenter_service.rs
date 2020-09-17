@@ -81,7 +81,7 @@ impl PresenterService {
             .await
             .get(&player_entity)
             .map(Box::as_ref)
-            .map(|state| *state)
+            .copied()
     }
 
     pub async fn rent_player_presenter_state(

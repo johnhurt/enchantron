@@ -36,7 +36,7 @@ impl Div<usize> for &ISize {
     type Output = ISize;
 
     fn div(self, rhs: usize) -> ISize {
-        self.clone() / rhs
+        *self / rhs
     }
 }
 
@@ -56,10 +56,7 @@ impl MulAssign<usize> for ISize {
 
 impl ISize {
     pub fn new(width: usize, height: usize) -> ISize {
-        ISize {
-            width: width,
-            height: height,
-        }
+        ISize { width, height }
     }
 
     pub fn area(&self) -> usize {

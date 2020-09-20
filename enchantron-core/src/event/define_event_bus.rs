@@ -7,8 +7,8 @@ macro_rules! define_event_bus {
         mod event_bus_hidden {
             #![allow(non_snake_case)]
 
+            use crate::application_context::Ao;
             use crate::event::{ ListenerRegistration };
-            use std::sync::Arc;
             use std::future::Future;
             use std::fmt::Debug;
 
@@ -31,7 +31,7 @@ macro_rules! define_event_bus {
 
             #[derive(Clone)]
             pub struct EventBus {
-                inner: Arc<Inner>
+                inner: Ao<Inner>
             }
 
             pub struct Inner {
@@ -48,10 +48,14 @@ macro_rules! define_event_bus {
 
             impl EventBus {
 
-                pub fn new(runtime_handle: &Handle) -> EventBus {
-                    EventBus {
-                        inner: Arc::new(Inner::new(runtime_handle.clone()))
-                    }
+                pub fn new(runtime_handle: &Handle) -> (EventBus, impl FnOnce()) {
+                    let inner = Box::new(Inner::new(runtime_handle.clone()));
+
+                    let result = EventBus {
+                        inner: Ao::new(&inner)
+                    };
+
+                    (result, move || { drop(inner) })
                 }
 
                 pub fn post<E: Event>(&self, event: E) {

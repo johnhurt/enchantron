@@ -1,3 +1,4 @@
+use crate::application_context::Ao;
 use crate::game::constants;
 use crate::game::{PerlinTerrain1, TerrainProvider, TerrainType};
 use crate::img::PngGenerator;
@@ -80,7 +81,7 @@ fn get_texture_data_for_rect(
 }
 pub struct TerrainTextureProvider<T: ViewTypes> {
     terrain_generator: Arc<PerlinTerrain1>,
-    runtime_resources: Arc<RuntimeResources<T>>,
+    runtime_resources: Ao<RuntimeResources<T>>,
     texture_loader: T::ResourceLoader,
 }
 
@@ -89,7 +90,7 @@ where
     T: ViewTypes,
 {
     pub fn new(
-        runtime_resources: Arc<RuntimeResources<T>>,
+        runtime_resources: Ao<RuntimeResources<T>>,
         texture_loader: T::ResourceLoader,
     ) -> TerrainTextureProvider<T> {
         TerrainTextureProvider {

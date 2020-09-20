@@ -1,5 +1,4 @@
-use std::sync::Arc;
-
+use crate::application_context::Ao;
 use crate::event::EventBus;
 use crate::model::{Point, Rect, Size};
 use crate::native::{RuntimeResources, SystemView};
@@ -8,6 +7,7 @@ use crate::ui::{
     ViewportInfo,
 };
 use crate::view_types::ViewTypes;
+use std::sync::Arc;
 
 pub struct GameDisplayState<T>
 where
@@ -30,8 +30,8 @@ where
             S = T::Sprite,
             G = T::SpriteGroup,
         >,
-        runtime_resources: Arc<RuntimeResources<T>>,
-        system_view: Arc<T::SystemView>,
+        runtime_resources: Ao<RuntimeResources<T>>,
+        system_view: Ao<T::SystemView>,
     ) -> GameDisplayState<T> {
         GameDisplayState {
             viewport_info: Default::default(),

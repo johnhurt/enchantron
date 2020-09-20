@@ -2,6 +2,7 @@ use super::{
     EntityData, EntityMessage, EntityRunBundle, EntityService, EntityType,
     LocationService, MessageService, PresenterService, SavedGame, Time,
 };
+use crate::application_context::Ao;
 use crate::native::RuntimeResources;
 use crate::presenter::*;
 use crate::ui::SpriteSource;
@@ -95,7 +96,7 @@ impl Services {
         &self,
         runtime_handle: Handle,
         entity_sprite_group: Arc<T::SpriteGroup>,
-        runtime_resources: Arc<RuntimeResources<T>>,
+        runtime_resources: Ao<RuntimeResources<T>>,
         run_bundles: impl Iterator<Item = EntityRunBundle>,
     ) {
         info!("Initializing Entities");

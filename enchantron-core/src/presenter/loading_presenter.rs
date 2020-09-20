@@ -1,23 +1,19 @@
+use crate::application_context::Ao;
 use crate::event::{EventBus, LoadResources};
-
-use std::sync::Arc;
-
 use crate::native::{
     Animations, RuntimeResources, Shaders, SystemView, Textures,
 };
-
 use crate::ui::{HasIntValue, HasText};
-
 use crate::view::{BaseView, LoadingView};
-
 use crate::view_types::ViewTypes;
+use std::sync::Arc;
 
 pub struct LoadingPresenter<T>
 where
     T: ViewTypes,
 {
     view: T::LoadingView,
-    system_view: Arc<T::SystemView>,
+    system_view: Ao<T::SystemView>,
     resources_sink: Box<dyn Fn(RuntimeResources<T>) + Send + Sync>,
     event_bus: EventBus,
 }
@@ -73,7 +69,7 @@ where
 
     pub async fn new(
         view: T::LoadingView,
-        system_view: Arc<T::SystemView>,
+        system_view: Ao<T::SystemView>,
         event_bus: EventBus,
         resources_sink: Box<dyn Fn(RuntimeResources<T>) + Send + Sync>,
     ) {

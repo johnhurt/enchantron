@@ -1,20 +1,66 @@
 use crate::event::EventBus;
+use crate::native::RuntimeResources;
+use crate::presenter::{GamePresenter, LoadingPresenter, MainMenuPresenter};
 use crate::view_types::ViewTypes;
 use log::SetLoggerError;
 use simplelog::{CombinedLogger, Config, LevelFilter, SimpleLogger};
-use std::ops::Deref;
-use std::sync::{Arc, RwLock};
+use std::fmt::{Debug, Formatter, Result as FmtResult};
+use std::ops::{Deref, Drop};
+use std::sync::{Arc, Mutex, RwLock};
 use tokio::runtime::{Builder, Runtime};
-
-use crate::native::RuntimeResources;
-
-use crate::presenter::{GamePresenter, LoadingPresenter, MainMenuPresenter};
 
 lazy_static! {
     static ref LOGGER_RESULT: Result<(), SetLoggerError> = CombinedLogger::init(
         vec![SimpleLogger::new(LevelFilter::Debug, Config::default())]
     );
     pub static ref NUM_CPUS: usize = num_cpus::get();
+}
+
+/// Reference that is owned by the application context, and can be shared freely
+/// throughout the application, but not modified
+pub struct Ao<T> {
+    value: *const T,
+}
+
+// SAFETY: Application owned pointers can only be accessed as shared ref while
+// the application runtime is running, and will only be dropped after the
+// runtime is dropped
+unsafe impl<T> Send for Ao<T> where T: Send + Sync {}
+unsafe impl<T> Sync for Ao<T> where T: Send + Sync {}
+
+impl<T> Ao<T> {
+    pub fn new(original: &Box<T>) -> Ao<T> {
+        Ao {
+            value: original.deref(),
+        }
+    }
+}
+
+impl<T> Clone for Ao<T> {
+    fn clone(&self) -> Self {
+        Ao { value: self.value }
+    }
+}
+
+impl<T> Debug for Ao<T>
+where
+    T: Debug,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        self.deref().fmt(f)
+    }
+}
+
+impl<T> Deref for Ao<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        // SAFETY: This value cannot be written to, and since it is owned by
+        // the application context, it can be used by any parts of the
+        // application because we make sure the application runtime is shutdown
+        // before the boxes they are associated with are dropped
+        unsafe { &*self.value }
+    }
 }
 
 pub struct ApplicationContext<T: ViewTypes>(Arc<ApplicationContextInner<T>>);
@@ -35,13 +81,22 @@ impl<T: ViewTypes> ApplicationContext<T> {
                 panic!("Failed to create tokio runtime");
             });
 
-        let event_bus = EventBus::new(runtime.handle());
+        let (event_bus, eb_dropper) = EventBus::new(runtime.handle());
+
+        let boxed_system_view = Box::new(system_view);
+        let system_view = Ao::new(&boxed_system_view);
+
+        let system_view_dropper = move || drop(boxed_system_view);
 
         ApplicationContext(Arc::new(ApplicationContextInner {
-            tokio_runtime: runtime,
+            tokio_runtime: Some(runtime),
             event_bus,
-            system_view: Arc::new(system_view),
+            system_view,
             runtime_resources: RwLock::new(None),
+            ao_droppers: Mutex::new(vec![
+                Box::new(eb_dropper),
+                Box::new(system_view_dropper),
+            ]),
         }))
     }
 }
@@ -55,10 +110,12 @@ impl<T: ViewTypes> Deref for ApplicationContext<T> {
 }
 
 pub struct ApplicationContextInner<T: ViewTypes> {
-    tokio_runtime: Runtime,
+    tokio_runtime: Option<Runtime>,
     event_bus: EventBus,
-    system_view: Arc<T::SystemView>,
-    runtime_resources: RwLock<Option<Arc<RuntimeResources<T>>>>,
+    system_view: Ao<T::SystemView>,
+    runtime_resources: RwLock<Option<Ao<RuntimeResources<T>>>>,
+
+    ao_droppers: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
 }
 
 impl<T: ViewTypes> ApplicationContext<T> {
@@ -67,14 +124,16 @@ impl<T: ViewTypes> ApplicationContext<T> {
 
         let self_copy = self.0.clone();
 
-        (*self).tokio_runtime.handle().spawn(LoadingPresenter::new(
-            view,
-            self.system_view.clone(),
-            self.event_bus.clone(),
-            Box::new(move |resources| {
-                self_copy.set_runtime_resources(resources);
-            }),
-        ));
+        (*self).tokio_runtime.as_ref().unwrap().handle().spawn(
+            LoadingPresenter::new(
+                view,
+                self.system_view.clone(),
+                self.event_bus.clone(),
+                Box::new(move |resources| {
+                    self_copy.set_runtime_resources(resources);
+                }),
+            ),
+        );
     }
 
     pub fn transition_to_main_menu_view(&self, view: T::MainMenuView) {
@@ -82,20 +141,21 @@ impl<T: ViewTypes> ApplicationContext<T> {
 
         (*self)
             .tokio_runtime
+            .as_ref()
+            .unwrap()
             .handle()
             .spawn(MainMenuPresenter::<T>::new(view, self.event_bus.clone()));
     }
 
     pub fn transition_to_game_view(&self, view: T::GameView) {
-        (*self)
-            .tokio_runtime
-            .handle()
-            .spawn(GamePresenter::<T>::new(
+        (*self).tokio_runtime.as_ref().unwrap().handle().spawn(
+            GamePresenter::<T>::new(
                 view,
                 self.event_bus.clone(),
                 self.get_runtime_resources(),
                 self.system_view.clone(),
-            ));
+            ),
+        );
     }
 }
 
@@ -104,15 +164,21 @@ impl<T: ViewTypes> ApplicationContextInner<T> {
         &self,
         runtime_resources: RuntimeResources<T>,
     ) {
-        if let Ok(mut runtime_resources_guard) = self.runtime_resources.write()
+        let boxed_runtime_resources = Box::new(runtime_resources);
+        let runtime_resources_ao = Ao::new(&boxed_runtime_resources);
+        let runtime_resources_dropper = move || drop(boxed_runtime_resources);
+
+        if let (Ok(mut runtime_resources_guard), Ok(mut droppers_guard)) =
+            (self.runtime_resources.write(), self.ao_droppers.lock())
         {
-            *runtime_resources_guard = Some(Arc::new(runtime_resources));
+            *runtime_resources_guard = Some(runtime_resources_ao);
+            droppers_guard.push(Box::new(runtime_resources_dropper));
         } else {
             error!("Failed to unlock runtime_resources for writing");
         }
     }
 
-    pub fn get_runtime_resources(&self) -> Arc<RuntimeResources<T>> {
+    pub fn get_runtime_resources(&self) -> Ao<RuntimeResources<T>> {
         if let Ok(runtime_resources_guard) = self.runtime_resources.read() {
             if let Some(runtime_resources) = runtime_resources_guard.as_ref() {
                 runtime_resources.clone()
@@ -123,6 +189,25 @@ impl<T: ViewTypes> ApplicationContextInner<T> {
         } else {
             error!("Failed to unlock runtime_resources for reading");
             panic!("Failed to unlock runtime_resources for reading");
+        }
+    }
+}
+
+impl<T> Drop for ApplicationContextInner<T>
+where
+    T: ViewTypes,
+{
+    fn drop(&mut self) {
+        let runtime = self.tokio_runtime.take().unwrap();
+
+        // Drop the runtime and shutdown all tasks currently running
+        // this ensures that all ApplicationOwned pointers will not be in use
+        drop(runtime);
+
+        let mut dropper_lock = self.ao_droppers.lock().unwrap();
+
+        for ao_dropper in dropper_lock.drain(..) {
+            ao_dropper();
         }
     }
 }

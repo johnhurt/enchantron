@@ -1,3 +1,4 @@
+use crate::application_context::Ao;
 use crate::game::{constants, Direction, Time};
 use crate::model::{IPoint, Point};
 use crate::native::RuntimeResources;
@@ -68,14 +69,14 @@ pub trait PlayerView: 'static + Send + Sync + Unpin {
 
 pub struct PlayerViewImpl<T: ViewTypes> {
     bound_sprite: T::Sprite,
-    runtime_resources: Arc<RuntimeResources<T>>,
+    runtime_resources: Ao<RuntimeResources<T>>,
     time: Time,
 }
 
 impl<T: ViewTypes> PlayerViewImpl<T> {
     pub fn new(
         bound_sprite: T::Sprite,
-        runtime_resources: Arc<RuntimeResources<T>>,
+        runtime_resources: Ao<RuntimeResources<T>>,
         time: Time,
     ) -> PlayerViewImpl<T> {
         bound_sprite

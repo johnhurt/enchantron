@@ -1,4 +1,4 @@
-use crate::application_context::NUM_CPUS;
+use crate::application_context::{Ao, NUM_CPUS};
 use crate::event::*;
 use crate::game::{SavedGame, Services};
 use crate::model::{Point, Size};
@@ -14,9 +14,8 @@ use crate::view_types::ViewTypes;
 use std::sync::{Arc, Weak};
 use std::time::Duration;
 use tokio::runtime::{Builder, Runtime};
-use tokio::sync::{Mutex, RwLock};
-
 use tokio::stream::StreamExt;
+use tokio::sync::{Mutex, RwLock};
 
 macro_rules! handle_event {
     ($event_type:ident => $self_id:ident.$method_name:ident) => {
@@ -41,8 +40,8 @@ where
 {
     view: T::GameView,
     event_bus: EventBus,
-    system_view: Arc<T::SystemView>,
-    runtime_resources: Arc<RuntimeResources<T>>,
+    system_view: Ao<T::SystemView>,
+    runtime_resources: Ao<RuntimeResources<T>>,
     listener_registrations: Mutex<Vec<ListenerRegistration>>,
     handler_registrations: Mutex<Vec<Box<dyn HandlerRegistration>>>,
 
@@ -290,8 +289,8 @@ where
     pub async fn new(
         view: T::GameView,
         event_bus: EventBus,
-        runtime_resources: Arc<RuntimeResources<T>>,
-        system_view: Arc<T::SystemView>,
+        runtime_resources: Ao<RuntimeResources<T>>,
+        system_view: Ao<T::SystemView>,
     ) -> Arc<GamePresenter<T>> {
         view.initialize_pre_bind();
 

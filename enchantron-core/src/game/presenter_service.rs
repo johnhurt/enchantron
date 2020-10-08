@@ -1,9 +1,8 @@
-use super::Entity;
+use super::{Entity, Gor};
 use crate::presenter::*;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
-use std::sync::Arc;
 use tokio::sync::RwLock;
 
 /// This is how the presenter service shares the state of each presenter with
@@ -48,7 +47,7 @@ impl<T> DerefMut for PresenterServiceLease<T> {
 
 #[derive(Clone, Debug)]
 pub struct PresenterService {
-    inner: Arc<Inner>,
+    inner: Gor<Inner>,
 }
 
 #[derive(Debug)]
@@ -61,14 +60,15 @@ impl PresenterService {
         player_presenter_states: impl Iterator<
             Item = (Entity, PlayerPresenterState),
         >,
-    ) -> PresenterService {
-        PresenterService {
-            inner: Arc::new(Inner {
-                player_presenter_states: RwLock::new(HashMap::from_iter(
-                    player_presenter_states.map(|(k, v)| (k, Box::new(v))),
-                )),
-            }),
-        }
+    ) -> (PresenterService, impl FnOnce()) {
+        let boxed_inner = Box::new(Inner {
+            player_presenter_states: RwLock::new(HashMap::from_iter(
+                player_presenter_states.map(|(k, v)| (k, Box::new(v))),
+            )),
+        });
+        let inner = Gor::new(&boxed_inner);
+
+        (PresenterService { inner }, move || drop(boxed_inner))
     }
 
     pub async fn get_player_presenter_state(

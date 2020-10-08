@@ -1,12 +1,12 @@
+use super::Gor;
 use super::{Entity, EntityMessage, EntityType};
 use crate::util::ConcurrentSlotmap;
 use one_way_slot_map::SlotMap;
-use std::sync::Arc;
 use tokio::sync::mpsc::Sender;
 
 #[derive(Clone, Debug)]
 pub struct MessageService {
-    inner: Arc<Inner>,
+    inner: Gor<Inner>,
 }
 
 #[derive(Debug)]
@@ -18,11 +18,13 @@ struct Inner {
 impl MessageService {
     pub fn new(
         messagers: SlotMap<Entity, EntityType, Box<Sender<EntityMessage>>>,
-    ) -> MessageService {
-        MessageService {
-            inner: Arc::new(Inner {
-                entity_messagers: ConcurrentSlotmap::new_with_data(messagers),
-            }),
-        }
+    ) -> (MessageService, impl FnOnce()) {
+        let boxed_inner = Box::new(Inner {
+            entity_messagers: ConcurrentSlotmap::new_with_data(messagers),
+        });
+
+        let inner = Gor::new(&boxed_inner);
+
+        (MessageService { inner }, move || drop(boxed_inner))
     }
 }

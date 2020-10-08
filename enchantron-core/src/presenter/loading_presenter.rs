@@ -52,7 +52,7 @@ where
         let this = result.clone();
 
         let _ = result.event_bus.spawn(async move {
-            if let Some(_) = load_resources_future.await {
+            if load_resources_future.await.is_some() {
                 this.load_resources().await
             }
         });

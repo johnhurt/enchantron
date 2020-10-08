@@ -1,24 +1,25 @@
-use super::{Entity, EntityData, EntityType};
+use super::{Entity, EntityData, EntityType, Gor};
 use crate::util::ConcurrentSlotmap;
 use one_way_slot_map::SlotMap;
-use std::sync::Arc;
 
 /// This is effectively the main service. It controls entity creation, storage,
 /// and messaging.
 #[derive(Clone, Debug)]
 pub struct EntityService {
-    inner: Arc<Inner>,
+    inner: Gor<Inner>,
 }
 
 impl EntityService {
     pub fn new_with_data(
         entities_data: SlotMap<Entity, EntityType, EntityData>,
-    ) -> EntityService {
+    ) -> (EntityService, impl FnOnce()) {
         let entities = ConcurrentSlotmap::new_with_data(entities_data);
 
-        EntityService {
-            inner: Arc::new(Inner::new(entities)),
-        }
+        let boxed_inner = Box::new(Inner::new(entities));
+        let inner = Gor::new(&boxed_inner);
+        let dropper = move || drop(boxed_inner);
+
+        (EntityService { inner }, dropper)
     }
 
     // pub async fn initialize<F>(&self) -> impl Iter<Item = EntityRunBundle> {

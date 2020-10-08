@@ -8,8 +8,6 @@ use crate::presenter::*;
 use crate::ui::SpriteSource;
 use crate::view::*;
 use crate::view_types::ViewTypes;
-use std::ops::Drop;
-use std::sync::Arc;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
@@ -76,14 +74,15 @@ impl Services {
             }
         });
 
-        let entity_service = EntityService::new_with_data(entities);
+        let (entity_service, entity_service_dropper) =
+            EntityService::new_with_data(entities);
 
-        let message_service = MessageService::new(
+        let (message_service, message_service_dropper) = MessageService::new(
             entity_channels
                 .map(|tmp_channel| Box::new(tmp_channel.sender.clone())),
         );
 
-        let presenter_service =
+        let (presenter_service, presenter_service_dropper) =
             PresenterService::new(player_presenter_states.into_iter());
 
         let services = Services {
@@ -103,6 +102,9 @@ impl Services {
         let droppers: Vec<Box<dyn FnOnce() + Send>> = vec![
             Box::new(runtime_dropper),
             Box::new(location_service_dropper),
+            Box::new(entity_service_dropper),
+            Box::new(message_service_dropper),
+            Box::new(presenter_service_dropper),
         ];
 
         (services, run_bundles, droppers)
@@ -110,7 +112,7 @@ impl Services {
 
     pub async fn run<T: ViewTypes>(
         &self,
-        entity_sprite_group: Arc<T::SpriteGroup>,
+        entity_sprite_group: Gor<T::SpriteGroup>,
         runtime_resources: Ao<RuntimeResources<T>>,
         run_bundles: impl Iterator<Item = EntityRunBundle>,
     ) {

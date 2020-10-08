@@ -88,7 +88,7 @@ impl RenderableDataType {
                 .swift_name_incoming("OpaquePointer?".to_owned())
                 .swift_name_outgoing("OpaquePointer?".to_owned())
                 .swift_type_coercion_prefix_incoming(
-                    struct_type.name.to_owned() + &"(",
+                    struct_type.name.to_owned() + "(",
                 )
                 .swift_type_coercion_postfix_incoming(")".to_owned())
                 .swift_type_coercion_prefix_outgoing("".to_owned())

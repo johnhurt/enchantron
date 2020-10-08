@@ -1,4 +1,3 @@
-use crate::application_context::Ao;
 use crate::event::{EventBus, ListenerRegistration, ViewportChange};
 use crate::game::constants;
 use crate::model::{IPoint, IRect, ISize, Rect, UPoint, URect};
@@ -208,7 +207,7 @@ where
         for layer in 0..LAYER_COUNT {
             let weak_self = Arc::downgrade(&arc_result);
 
-            let (listener_registration, mut event_stream) =
+            let (listener_registration, event_stream) =
                 event_bus.register_to_watch::<ViewportChange>();
 
             arc_result

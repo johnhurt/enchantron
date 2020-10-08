@@ -50,7 +50,7 @@ macro_rules! define_event_bus {
 
             fn as_stream<T>(mut r: WatchReceiver<T>) -> impl Stream<Item = T> where T : Clone + Unpin {
                 stream! {
-                    while let Ok(_) = r.changed().await {
+                    while r.changed().await.is_ok() {
                         let val : T = r.borrow().clone();
                         yield val;
                     }

@@ -1,6 +1,6 @@
 use crate::application_context::{Ao, NUM_CPUS};
 use crate::event::*;
-use crate::game::{SavedGame, Services};
+use crate::game::{Gor, SavedGame, Services};
 use crate::model::{Point, Size};
 use crate::native::RuntimeResources;
 use crate::ui::{
@@ -315,8 +315,13 @@ where
                 }),
         );
 
-        let (services, run_bundles, droppers) =
+        let (services, run_bundles, mut droppers) =
             Services::new(boxed_runtime, saved_game);
+
+        let boxed_entity_sprite_group = Box::new(view.create_group());
+        let entity_sprite_group = Gor::new(&boxed_entity_sprite_group);
+
+        droppers.push(Box::new(move || drop(boxed_entity_sprite_group)));
 
         let raw_result = GamePresenter {
             view,
@@ -347,7 +352,6 @@ where
 
         result.view.initialize_post_bind(Box::new(result.clone()));
 
-        let entity_sprite_group = Arc::new(result.view.create_group());
         let runtime_resources = result.runtime_resources.clone();
 
         services

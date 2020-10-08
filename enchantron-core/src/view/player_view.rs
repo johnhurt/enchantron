@@ -7,7 +7,6 @@ use crate::ui::{
     Sprite,
 };
 use crate::view_types::ViewTypes;
-use std::sync::Arc;
 
 const UNIT_TERRAIN_TILE_LENGTH_F64: f64 =
     constants::UNIT_TERRAIN_TILE_LENGTH as f64;

@@ -71,17 +71,23 @@ impl<T: ViewTypes> ApplicationContext<T> {
             println!("Failed to set logger")
         }
 
-        let runtime = Builder::new()
-            .threaded_scheduler()
-            .core_threads(*NUM_CPUS)
-            .enable_time()
-            .build()
-            .unwrap_or_else(|e| {
-                error!("Failed to create tokio runtime, {:?}", e);
-                panic!("Failed to create tokio runtime");
-            });
+        let boxed_runtime = Box::new(
+            Builder::new()
+                .threaded_scheduler()
+                .core_threads(*NUM_CPUS)
+                .enable_time()
+                .build()
+                .unwrap_or_else(|e| {
+                    error!("Failed to create tokio runtime, {:?}", e);
+                    panic!("Failed to create tokio runtime");
+                }),
+        );
 
-        let (event_bus, eb_dropper) = EventBus::new(runtime.handle());
+        let runtime = Ao::new(&boxed_runtime);
+
+        let runtime_dropper = move || drop(boxed_runtime);
+
+        let (event_bus, eb_dropper) = EventBus::new(runtime.clone());
 
         let boxed_system_view = Box::new(system_view);
         let system_view = Ao::new(&boxed_system_view);
@@ -89,11 +95,12 @@ impl<T: ViewTypes> ApplicationContext<T> {
         let system_view_dropper = move || drop(boxed_system_view);
 
         ApplicationContext(Arc::new(ApplicationContextInner {
-            tokio_runtime: Some(runtime),
+            tokio_runtime: runtime,
             event_bus,
             system_view,
             runtime_resources: RwLock::new(None),
             ao_droppers: Mutex::new(vec![
+                Box::new(runtime_dropper),
                 Box::new(eb_dropper),
                 Box::new(system_view_dropper),
             ]),
@@ -110,7 +117,7 @@ impl<T: ViewTypes> Deref for ApplicationContext<T> {
 }
 
 pub struct ApplicationContextInner<T: ViewTypes> {
-    tokio_runtime: Option<Runtime>,
+    tokio_runtime: Ao<Runtime>,
     event_bus: EventBus,
     system_view: Ao<T::SystemView>,
     runtime_resources: RwLock<Option<Ao<RuntimeResources<T>>>>,
@@ -124,16 +131,14 @@ impl<T: ViewTypes> ApplicationContext<T> {
 
         let self_copy = self.0.clone();
 
-        (*self).tokio_runtime.as_ref().unwrap().handle().spawn(
-            LoadingPresenter::new(
-                view,
-                self.system_view.clone(),
-                self.event_bus.clone(),
-                Box::new(move |resources| {
-                    self_copy.set_runtime_resources(resources);
-                }),
-            ),
-        );
+        (*self).tokio_runtime.spawn(LoadingPresenter::new(
+            view,
+            self.system_view.clone(),
+            self.event_bus.clone(),
+            Box::new(move |resources| {
+                self_copy.set_runtime_resources(resources);
+            }),
+        ));
     }
 
     pub fn transition_to_main_menu_view(&self, view: T::MainMenuView) {
@@ -141,21 +146,16 @@ impl<T: ViewTypes> ApplicationContext<T> {
 
         (*self)
             .tokio_runtime
-            .as_ref()
-            .unwrap()
-            .handle()
             .spawn(MainMenuPresenter::<T>::new(view, self.event_bus.clone()));
     }
 
     pub fn transition_to_game_view(&self, view: T::GameView) {
-        (*self).tokio_runtime.as_ref().unwrap().handle().spawn(
-            GamePresenter::<T>::new(
-                view,
-                self.event_bus.clone(),
-                self.get_runtime_resources(),
-                self.system_view.clone(),
-            ),
-        );
+        (*self).tokio_runtime.spawn(GamePresenter::<T>::new(
+            view,
+            self.event_bus.clone(),
+            self.get_runtime_resources(),
+            self.system_view.clone(),
+        ));
     }
 }
 
@@ -198,15 +198,9 @@ where
     T: ViewTypes,
 {
     fn drop(&mut self) {
-        let runtime = self.tokio_runtime.take().unwrap();
-
-        // Drop the runtime and shutdown all tasks currently running
-        // this ensures that all ApplicationOwned pointers will not be in use
-        drop(runtime);
-
-        let mut dropper_lock = self.ao_droppers.lock().unwrap();
-
-        for ao_dropper in dropper_lock.drain(..) {
+        // Run the droppers in the stored order so that the runtime is dropped
+        // first. This is what ensures that the whole Ao system is safe
+        for ao_dropper in self.ao_droppers.lock().unwrap().drain(..) {
             ao_dropper();
         }
     }

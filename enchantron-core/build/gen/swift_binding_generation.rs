@@ -31,12 +31,12 @@ lazy_static! {
 
             MethodDefBuilder::default()
                 .name("get_length")
-                .return_type(Some(LONG.clone()))
+                .return_type(Some(*LONG))
                 .build().unwrap(),
 
             MethodDefBuilder::default()
                 .name("get_content")
-                .return_type(Some(MUTABLE_BYTE_POINTER.clone()))
+                .return_type(Some(*MUTABLE_BYTE_POINTER))
                 .build().unwrap()
         ])
         .build().unwrap(),
@@ -47,14 +47,14 @@ lazy_static! {
         .fields(vec![
             FieldDefBuilder::default()
                 .name("length")
-                .data_type(LONG.clone())
+                .data_type(*LONG)
                 .setter(false)
                 .build().unwrap()
         ])
         .methods(vec![
             MethodDefBuilder::default()
                 .name("get_content")
-                .return_type(Some(MUTABLE_BYTE_POINTER.clone()))
+                .return_type(Some(*MUTABLE_BYTE_POINTER))
                 .build().unwrap()
         ])
         .build().unwrap(),
@@ -152,15 +152,15 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("scale_change_additive")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("zoom_center_x")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("zoom_center_y")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap()
                 ])
                 .build().unwrap()
@@ -177,22 +177,22 @@ lazy_static! {
                 .arguments(vec![
                   ArgumentDefBuilder::default()
                       .name("global_x")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("global_y")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("local_x")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("local_y")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
                 ])
                 .build().unwrap(),
@@ -202,22 +202,22 @@ lazy_static! {
                 .arguments(vec![
                   ArgumentDefBuilder::default()
                       .name("global_x")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("global_y")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("local_x")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("local_y")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
                 ])
                 .build().unwrap(),
@@ -227,22 +227,22 @@ lazy_static! {
                 .arguments(vec![
                   ArgumentDefBuilder::default()
                       .name("global_x")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("global_y")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("local_x")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("local_y")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
                 ])
                 .build().unwrap()
@@ -259,27 +259,27 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("drag_id")
-                        .data_type(LONG.clone())
+                        .data_type(*LONG)
                         .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("global_x")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("global_y")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("local_x")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("local_y")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
                 ])
                 .build().unwrap(),
@@ -289,27 +289,27 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("drag_id")
-                        .data_type(LONG.clone())
+                        .data_type(*LONG)
                         .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("global_x")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("global_y")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("local_x")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("local_y")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
                 ])
                 .build().unwrap(),
@@ -319,27 +319,27 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("drag_id")
-                        .data_type(LONG.clone())
+                        .data_type(*LONG)
                         .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("global_x")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("global_y")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("local_x")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("local_y")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
                 ])
                 .build().unwrap(),
@@ -349,52 +349,52 @@ lazy_static! {
                     .arguments(vec![
                         ArgumentDefBuilder::default()
                             .name("drag_id_1")
-                            .data_type(LONG.clone())
+                            .data_type(*LONG)
                             .build().unwrap(),
 
                       ArgumentDefBuilder::default()
                           .name("global_x_1")
-                          .data_type(DOUBLE.clone())
+                          .data_type(*DOUBLE)
                           .build().unwrap(),
 
                       ArgumentDefBuilder::default()
                           .name("global_y_1")
-                          .data_type(DOUBLE.clone())
+                          .data_type(*DOUBLE)
                           .build().unwrap(),
 
                       ArgumentDefBuilder::default()
                           .name("local_x_1")
-                          .data_type(DOUBLE.clone())
+                          .data_type(*DOUBLE)
                           .build().unwrap(),
 
                       ArgumentDefBuilder::default()
                           .name("local_y_1")
-                          .data_type(DOUBLE.clone())
+                          .data_type(*DOUBLE)
                           .build().unwrap(),
 
                     ArgumentDefBuilder::default()
                         .name("drag_id_2")
-                        .data_type(LONG.clone())
+                        .data_type(*LONG)
                         .build().unwrap(),
 
                     ArgumentDefBuilder::default()
                         .name("global_x_2")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap(),
 
                     ArgumentDefBuilder::default()
                         .name("global_y_2")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap(),
 
                     ArgumentDefBuilder::default()
                         .name("local_x_2")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap(),
 
                     ArgumentDefBuilder::default()
                         .name("local_y_2")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap(),
                     ])
                     .build().unwrap(),
@@ -404,52 +404,52 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("drag_id_1")
-                        .data_type(LONG.clone())
+                        .data_type(*LONG)
                         .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("global_x_1")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("global_y_1")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("local_x_1")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                   ArgumentDefBuilder::default()
                       .name("local_y_1")
-                      .data_type(DOUBLE.clone())
+                      .data_type(*DOUBLE)
                       .build().unwrap(),
 
                 ArgumentDefBuilder::default()
                     .name("drag_id_2")
-                    .data_type(LONG.clone())
+                    .data_type(*LONG)
                     .build().unwrap(),
 
                 ArgumentDefBuilder::default()
                     .name("global_x_2")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap(),
 
                 ArgumentDefBuilder::default()
                     .name("global_y_2")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap(),
 
                 ArgumentDefBuilder::default()
                     .name("local_x_2")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap(),
 
                 ArgumentDefBuilder::default()
                     .name("local_y_2")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap(),
                 ])
                 .build().unwrap(),
@@ -459,52 +459,52 @@ lazy_static! {
                     .arguments(vec![
                         ArgumentDefBuilder::default()
                             .name("drag_id_1")
-                            .data_type(LONG.clone())
+                            .data_type(*LONG)
                             .build().unwrap(),
 
                       ArgumentDefBuilder::default()
                           .name("global_x_1")
-                          .data_type(DOUBLE.clone())
+                          .data_type(*DOUBLE)
                           .build().unwrap(),
 
                       ArgumentDefBuilder::default()
                           .name("global_y_1")
-                          .data_type(DOUBLE.clone())
+                          .data_type(*DOUBLE)
                           .build().unwrap(),
 
                       ArgumentDefBuilder::default()
                           .name("local_x_1")
-                          .data_type(DOUBLE.clone())
+                          .data_type(*DOUBLE)
                           .build().unwrap(),
 
                       ArgumentDefBuilder::default()
                           .name("local_y_1")
-                          .data_type(DOUBLE.clone())
+                          .data_type(*DOUBLE)
                           .build().unwrap(),
 
                     ArgumentDefBuilder::default()
                         .name("drag_id_2")
-                        .data_type(LONG.clone())
+                        .data_type(*LONG)
                         .build().unwrap(),
 
                     ArgumentDefBuilder::default()
                         .name("global_x_2")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap(),
 
                     ArgumentDefBuilder::default()
                         .name("global_y_2")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap(),
 
                     ArgumentDefBuilder::default()
                         .name("local_x_2")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap(),
 
                     ArgumentDefBuilder::default()
                         .name("local_y_2")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap(),
                     ])
                     .build().unwrap(),
@@ -521,11 +521,11 @@ lazy_static! {
                 .arguments(vec![
                   ArgumentDefBuilder::default()
                       .name("width")
-                      .data_type(LONG.clone())
+                      .data_type(*LONG)
                       .build().unwrap(),
                   ArgumentDefBuilder::default()
                       .name("height")
-                      .data_type(LONG.clone())
+                      .data_type(*LONG)
                       .build().unwrap()
                 ])
                 .build().unwrap()
@@ -639,7 +639,7 @@ lazy_static! {
 
             MethodDefBuilder::default()
                 .name("get_text")
-                .return_type(Some(STRING.clone()))
+                .return_type(Some(*STRING))
                 .impl_block(Some(ImplBlockDefBuilder::default()
                     .trait_name("HasText")
                     .build().unwrap()))
@@ -649,7 +649,7 @@ lazy_static! {
                 .name("set_text")
                 .arguments(vec![ArgumentDefBuilder::default()
                     .name("value")
-                    .data_type(STRING.clone())
+                    .data_type(*STRING)
                     .build().unwrap()])
                 .impl_block(Some(ImplBlockDefBuilder::default()
                     .trait_name("HasText")
@@ -693,7 +693,7 @@ lazy_static! {
                 .setter_impl(Some(ImplBlockDefBuilder::default()
                     .trait_name("HasText")
                     .build().unwrap()))
-                .data_type(STRING.clone())
+                .data_type(*STRING)
                 .setter(true)
                 .build().unwrap()
         ])
@@ -718,7 +718,7 @@ lazy_static! {
         .methods(vec![
             MethodDefBuilder::default()
                 .name("get_text")
-                .return_type(Some(STRING.clone()))
+                .return_type(Some(*STRING))
                 .impl_block(Some(ImplBlockDefBuilder::default()
                     .trait_name("HasText")
                     .build().unwrap()))
@@ -728,7 +728,7 @@ lazy_static! {
                 .name("set_text")
                 .arguments(vec![ArgumentDefBuilder::default()
                     .name("value")
-                    .data_type(STRING.clone())
+                    .data_type(*STRING)
                     .build().unwrap()])
                 .impl_block(Some(ImplBlockDefBuilder::default()
                     .trait_name("HasText")
@@ -737,7 +737,7 @@ lazy_static! {
 
             MethodDefBuilder::default()
                 .name("get_int_value")
-                .return_type(Some(LONG.clone()))
+                .return_type(Some(*LONG))
                 .impl_block(Some(ImplBlockDefBuilder::default()
                     .trait_name("HasIntValue")
                     .build().unwrap()))
@@ -747,7 +747,7 @@ lazy_static! {
                 .name("set_int_value")
                 .arguments(vec![ArgumentDefBuilder::default()
                     .name("value")
-                    .data_type(LONG.clone())
+                    .data_type(*LONG)
                     .build().unwrap()])
                 .impl_block(Some(ImplBlockDefBuilder::default()
                     .trait_name("HasIntValue")
@@ -794,7 +794,7 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("is_loop")
-                        .data_type(BOOLEAN.clone())
+                        .data_type(*BOOLEAN)
                         .build().unwrap()
                 ])
                 .build().unwrap(),
@@ -807,7 +807,7 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("name")
-                        .data_type(STRING.clone())
+                        .data_type(*STRING)
                         .build().unwrap()
                 ])
                 .build().unwrap()
@@ -830,7 +830,7 @@ lazy_static! {
         .methods(vec![
             MethodDefBuilder::default()
                 .name("get_width")
-                .return_type(Some(LONG.clone()))
+                .return_type(Some(*LONG))
                 .impl_block(Some(ImplBlockDefBuilder::default()
                     .trait_name("HasIntSize")
                     .build().unwrap()))
@@ -838,7 +838,7 @@ lazy_static! {
 
             MethodDefBuilder::default()
                 .name("get_height")
-                .return_type(Some(LONG.clone()))
+                .return_type(Some(*LONG))
                 .impl_block(Some(ImplBlockDefBuilder::default()
                     .trait_name("HasIntSize")
                     .build().unwrap()))
@@ -849,19 +849,19 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("left")
-                        .data_type(LONG.clone())
+                        .data_type(*LONG)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("top")
-                        .data_type(LONG.clone())
+                        .data_type(*LONG)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("width")
-                        .data_type(LONG.clone())
+                        .data_type(*LONG)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("height")
-                        .data_type(LONG.clone())
+                        .data_type(*LONG)
                         .build().unwrap()
                 ])
                 .impl_block(Some(ImplBlockDefBuilder::default()
@@ -876,7 +876,7 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("center_registered")
-                        .data_type(BOOLEAN.clone())
+                        .data_type(*BOOLEAN)
                         .build().unwrap()
                 ])
                 .impl_block(Some(ImplBlockDefBuilder::default()
@@ -901,11 +901,11 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("name")
-                        .data_type(STRING.clone())
+                        .data_type(*STRING)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("var_type")
-                        .data_type(STRING.clone())
+                        .data_type(*STRING)
                         .build().unwrap()
                 ])
                 .impl_block(Some(ImplBlockDefBuilder::default()
@@ -918,11 +918,11 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("name")
-                        .data_type(STRING.clone())
+                        .data_type(*STRING)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("value")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap()
                 ])
                 .impl_block(Some(ImplBlockDefBuilder::default()
@@ -935,15 +935,15 @@ lazy_static! {
                       .arguments(vec![
                           ArgumentDefBuilder::default()
                               .name("name")
-                              .data_type(STRING.clone())
+                              .data_type(*STRING)
                               .build().unwrap(),
                           ArgumentDefBuilder::default()
                               .name("v0")
-                              .data_type(DOUBLE.clone())
+                              .data_type(*DOUBLE)
                               .build().unwrap(),
                             ArgumentDefBuilder::default()
                                 .name("v1")
-                                .data_type(DOUBLE.clone())
+                                .data_type(*DOUBLE)
                                 .build().unwrap()
                       ])
                       .impl_block(Some(ImplBlockDefBuilder::default()
@@ -956,19 +956,19 @@ lazy_static! {
                         .arguments(vec![
                             ArgumentDefBuilder::default()
                                 .name("name")
-                                .data_type(STRING.clone())
+                                .data_type(*STRING)
                                 .build().unwrap(),
                             ArgumentDefBuilder::default()
                                 .name("v0")
-                                .data_type(DOUBLE.clone())
+                                .data_type(*DOUBLE)
                                 .build().unwrap(),
                             ArgumentDefBuilder::default()
                                 .name("v1")
-                                .data_type(DOUBLE.clone())
+                                .data_type(*DOUBLE)
                                 .build().unwrap(),
                             ArgumentDefBuilder::default()
                                 .name("v2")
-                                .data_type(DOUBLE.clone())
+                                .data_type(*DOUBLE)
                                 .build().unwrap()
                         ])
                         .impl_block(Some(ImplBlockDefBuilder::default()
@@ -981,23 +981,23 @@ lazy_static! {
                         .arguments(vec![
                             ArgumentDefBuilder::default()
                                 .name("name")
-                                .data_type(STRING.clone())
+                                .data_type(*STRING)
                                 .build().unwrap(),
                             ArgumentDefBuilder::default()
                                 .name("v0")
-                                .data_type(DOUBLE.clone())
+                                .data_type(*DOUBLE)
                                 .build().unwrap(),
                                 ArgumentDefBuilder::default()
                                     .name("v1")
-                                    .data_type(DOUBLE.clone())
+                                    .data_type(*DOUBLE)
                                     .build().unwrap(),
                                 ArgumentDefBuilder::default()
                                     .name("v2")
-                                    .data_type(DOUBLE.clone())
+                                    .data_type(*DOUBLE)
                                     .build().unwrap(),
                                 ArgumentDefBuilder::default()
                                     .name("v3")
-                                    .data_type(DOUBLE.clone())
+                                    .data_type(*DOUBLE)
                                     .build().unwrap()
                         ])
                         .impl_block(Some(ImplBlockDefBuilder::default()
@@ -1119,7 +1119,7 @@ lazy_static! {
 
                     ArgumentDefBuilder::default()
                         .name("frame_duration_sec")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap()
                 ])
                 .impl_block(Some(ImplBlockDefBuilder::default()
@@ -1153,11 +1153,11 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("variable_name")
-                        .data_type(STRING.clone())
+                        .data_type(*STRING)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("value")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap()
                 ])
                 .impl_block(Some(ImplBlockDefBuilder::default()
@@ -1170,15 +1170,15 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("variable_name")
-                        .data_type(STRING.clone())
+                        .data_type(*STRING)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("v0")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("v1")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap()
                 ])
                 .impl_block(Some(ImplBlockDefBuilder::default()
@@ -1191,19 +1191,19 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("variable_name")
-                        .data_type(STRING.clone())
+                        .data_type(*STRING)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("v0")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("v1")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("v2")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap()
                 ])
                 .impl_block(Some(ImplBlockDefBuilder::default()
@@ -1216,23 +1216,23 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("variable_name")
-                        .data_type(STRING.clone())
+                        .data_type(*STRING)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("v0")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("v1")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("v2")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap(),
                     ArgumentDefBuilder::default()
                         .name("v3")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap()
                 ])
                 .impl_block(Some(ImplBlockDefBuilder::default()
@@ -1260,17 +1260,17 @@ lazy_static! {
 
                 ArgumentDefBuilder::default()
                     .name("width")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap(),
 
                 ArgumentDefBuilder::default()
                     .name("height")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap(),
 
                 ArgumentDefBuilder::default()
                     .name("duration_seconds")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap()
               ])
               .impl_block(Some(ImplBlockDefBuilder::default()
@@ -1284,17 +1284,17 @@ lazy_static! {
 
                 ArgumentDefBuilder::default()
                     .name("left")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap(),
 
                 ArgumentDefBuilder::default()
                     .name("top")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap(),
 
                 ArgumentDefBuilder::default()
                     .name("duration_seconds")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap()
               ])
               .impl_block(Some(ImplBlockDefBuilder::default()
@@ -1307,7 +1307,7 @@ lazy_static! {
               .arguments(vec![
                 ArgumentDefBuilder::default()
                     .name("visible")
-                    .data_type(BOOLEAN.clone())
+                    .data_type(*BOOLEAN)
                     .build().unwrap()
               ])
               .impl_block(Some(ImplBlockDefBuilder::default()
@@ -1320,7 +1320,7 @@ lazy_static! {
               .arguments(vec![
                 ArgumentDefBuilder::default()
                     .name("z_level")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap()
               ])
               .impl_block(Some(ImplBlockDefBuilder::default()
@@ -1372,7 +1372,7 @@ lazy_static! {
                   .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("z_level")
-                        .data_type(DOUBLE.clone())
+                        .data_type(*DOUBLE)
                         .build().unwrap()
                   ])
                   .impl_block(Some(ImplBlockDefBuilder::default()
@@ -1384,7 +1384,7 @@ lazy_static! {
                     .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("visible")
-                        .data_type(BOOLEAN.clone())
+                        .data_type(*BOOLEAN)
                         .build().unwrap()
                     ])
                     .impl_block(Some(ImplBlockDefBuilder::default()
@@ -1770,7 +1770,7 @@ lazy_static! {
 
                 ArgumentDefBuilder::default()
                     .name("scale")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap()
               ])
               .impl_block(Some(ImplBlockDefBuilder::default()
@@ -1784,17 +1784,17 @@ lazy_static! {
 
                 ArgumentDefBuilder::default()
                     .name("scale")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap(),
 
                 ArgumentDefBuilder::default()
                     .name("top_left_x")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap(),
 
                 ArgumentDefBuilder::default()
                     .name("top_left_y")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap()
               ])
               .impl_block(Some(ImplBlockDefBuilder::default()
@@ -1808,17 +1808,17 @@ lazy_static! {
 
                 ArgumentDefBuilder::default()
                     .name("left")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap(),
 
                 ArgumentDefBuilder::default()
                     .name("top")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap(),
 
                 ArgumentDefBuilder::default()
                     .name("duration_seconds")
-                    .data_type(DOUBLE.clone())
+                    .data_type(*DOUBLE)
                     .build().unwrap()
               ])
               .impl_block(Some(ImplBlockDefBuilder::default()
@@ -1831,7 +1831,7 @@ lazy_static! {
               .arguments(vec![
                 ArgumentDefBuilder::default()
                     .name("visible")
-                    .data_type(BOOLEAN.clone())
+                    .data_type(*BOOLEAN)
                     .build().unwrap()
               ])
               .impl_block(Some(ImplBlockDefBuilder::default()
@@ -1909,7 +1909,7 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                       .name("name")
-                      .data_type(STRING.clone())
+                      .data_type(*STRING)
                       .build().unwrap()
                 ])
                 .return_type(Some(DataType::swift_generic(Some("T"),
@@ -1948,7 +1948,7 @@ lazy_static! {
                 .arguments(vec![
                     ArgumentDefBuilder::default()
                         .name("name")
-                        .data_type(STRING.clone())
+                        .data_type(*STRING)
                         .build().unwrap()
                 ])
                 .return_type(Some(DataType::swift_generic(Some("S"),

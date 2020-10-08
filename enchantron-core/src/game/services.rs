@@ -1,5 +1,5 @@
 use super::{
-    EntityData, EntityMessage, EntityRunBundle, EntityService, EntityType,
+    EntityData, EntityMessage, EntityRunBundle, EntityService, EntityType, Gor,
     LocationService, MessageService, PresenterService, SavedGame, Time,
 };
 use crate::application_context::Ao;
@@ -8,8 +8,9 @@ use crate::presenter::*;
 use crate::ui::SpriteSource;
 use crate::view::*;
 use crate::view_types::ViewTypes;
+use std::ops::Drop;
 use std::sync::Arc;
-use tokio::runtime::Handle;
+use tokio::runtime::Runtime;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 const ENTITY_MESSAGE_CHANNEL_SIZE: usize = 8;
@@ -34,6 +35,8 @@ impl TemporaryChannel {
 
 #[derive(Clone, Debug)]
 pub struct Services {
+    runtime: Gor<Runtime>,
+
     time: Time,
     location_service: LocationService,
     entity_service: EntityService,
@@ -43,9 +46,13 @@ pub struct Services {
 
 impl Services {
     pub fn new(
-        runtime_handle: Handle,
+        boxed_runtime: Box<Runtime>,
         saved_game: SavedGame,
-    ) -> (Services, Vec<EntityRunBundle>) {
+    ) -> (
+        Services,
+        Vec<EntityRunBundle>,
+        Vec<Box<dyn FnOnce() + Send>>,
+    ) {
         let SavedGame {
             seed,
             elapsed_millis,
@@ -54,8 +61,11 @@ impl Services {
             player_presenter_states,
         } = saved_game;
 
-        let time = Time::new(runtime_handle);
-        let location_service = LocationService::new_from_data(&locations);
+        let runtime = Gor::new(&boxed_runtime);
+        let runtime_dropper = move || drop(boxed_runtime);
+        let time = Time::new(runtime.clone());
+        let (location_service, location_service_dropper) =
+            LocationService::new_from_data(&locations);
 
         let mut entity_channels = entities.map(|data| {
             let (send, recv) = channel(ENTITY_MESSAGE_CHANNEL_SIZE);
@@ -77,6 +87,7 @@ impl Services {
             PresenterService::new(player_presenter_states.into_iter());
 
         let services = Services {
+            runtime,
             time,
             location_service,
             entity_service,
@@ -89,12 +100,16 @@ impl Services {
             .map(|tmp_channel| tmp_channel.as_run_bundle(&services))
             .collect();
 
-        (services, run_bundles)
+        let droppers: Vec<Box<dyn FnOnce() + Send>> = vec![
+            Box::new(runtime_dropper),
+            Box::new(location_service_dropper),
+        ];
+
+        (services, run_bundles, droppers)
     }
 
     pub async fn run<T: ViewTypes>(
         &self,
-        runtime_handle: Handle,
         entity_sprite_group: Arc<T::SpriteGroup>,
         runtime_resources: Ao<RuntimeResources<T>>,
         run_bundles: impl Iterator<Item = EntityRunBundle>,
@@ -102,6 +117,7 @@ impl Services {
         info!("Initializing Entities");
 
         let presenter_service = self.presenter_service();
+        let runtime = self.runtime();
 
         for run_bundle in run_bundles {
             let entity_sprite_group = entity_sprite_group.clone();
@@ -125,7 +141,7 @@ impl Services {
                         .await
                         .expect("missing player presenter state");
 
-                    runtime_handle.spawn(async move {
+                    runtime.spawn(async move {
                         PlayerPresenter::run(
                             run_bundle,
                             player_presenter_state,
@@ -148,5 +164,9 @@ impl Services {
 
     pub fn presenter_service(&self) -> PresenterService {
         self.presenter_service.clone()
+    }
+
+    pub fn runtime(&self) -> Gor<Runtime> {
+        self.runtime.clone()
     }
 }

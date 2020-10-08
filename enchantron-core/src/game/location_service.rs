@@ -1,11 +1,10 @@
-use super::{Entity, LocationKey};
+use super::{Entity, Gor, LocationKey};
 use crate::model::{IPoint, IRect, ISize};
 use one_way_slot_map::SlotMap;
 use rstar::{PointDistance, RTree, RTreeObject};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::ptr;
-use std::sync::Arc;
 use tokio::sync::RwLock;
 
 #[derive(Debug, Copy, Clone, derive_new::new)]
@@ -158,7 +157,7 @@ impl Clone for WindowedPointer {
 
 #[derive(Clone, Debug)]
 pub struct LocationService {
-    inner: Arc<RwLock<Inner>>,
+    inner: Gor<RwLock<Inner>>,
 }
 
 #[derive(Debug)]
@@ -170,18 +169,20 @@ struct Inner {
 
 #[allow(dead_code)]
 impl LocationService {
-    pub fn new() -> LocationService {
-        LocationService {
-            inner: Arc::new(RwLock::new(Inner::new())),
-        }
+    pub fn new() -> (LocationService, impl FnOnce() + Send) {
+        let boxed_inner = Box::new(RwLock::new(Inner::new()));
+        let inner = Gor::new(&boxed_inner);
+
+        (LocationService { inner }, move || drop(boxed_inner))
     }
 
     pub fn new_from_data(
         data: &SlotMap<LocationKey, Entity, SaveableLocation>,
-    ) -> LocationService {
-        LocationService {
-            inner: Arc::new(RwLock::new(Inner::new_from_data(data))),
-        }
+    ) -> (LocationService, impl FnOnce() + Send) {
+        let boxed_inner = Box::new(RwLock::new(Inner::new_from_data(data)));
+        let inner = Gor::new(&boxed_inner);
+
+        (LocationService { inner }, move || drop(boxed_inner))
     }
 
     async fn with_inner<T>(&self, action: impl FnOnce(&Inner) -> T) -> T {

@@ -1,15 +1,16 @@
-use tokio::runtime::Handle;
-use tokio::time::{delay_for, Duration};
+use super::Gor;
+use tokio::runtime::Runtime;
+use tokio::time::{sleep, Duration};
 
 #[derive(Clone, Debug)]
-pub struct Time(Handle);
+pub struct Time(Gor<Runtime>);
 
 fn u64_millis_to_secs_f64(millis: u64) -> f64 {
     millis as f64 / 1000.
 }
 
 impl Time {
-    pub fn new(runtime_handle: Handle) -> Time {
+    pub fn new(runtime_handle: Gor<Runtime>) -> Time {
         Time(runtime_handle)
     }
 
@@ -18,7 +19,7 @@ impl Time {
     }
 
     pub async fn sleep(&self, secs: f64) {
-        delay_for(Duration::from_secs_f64(secs)).await
+        sleep(Duration::from_secs_f64(secs)).await
     }
 
     pub async fn sleep_until(&self, wake_time: f64) {

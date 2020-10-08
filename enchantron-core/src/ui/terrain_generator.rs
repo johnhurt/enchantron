@@ -4,6 +4,7 @@ use crate::game::constants;
 use crate::model::{IPoint, IRect, ISize, Rect, UPoint, URect};
 use crate::ui::ViewportInfo;
 use crate::view_types::ViewTypes;
+use futures::pin_mut;
 use std::iter;
 use std::sync::Arc;
 
@@ -215,6 +216,8 @@ where
                 .await;
 
             event_bus.spawn(async move {
+                pin_mut!(event_stream);
+
                 while let Some(event) = event_stream.next().await {
                     if let Some(arc_self) = weak_self.upgrade() {
                         arc_self
@@ -229,7 +232,7 @@ where
 
         let weak_self = Arc::downgrade(&arc_result);
 
-        let (listener_registration, mut event_stream) =
+        let (listener_registration, event_stream) =
             event_bus.register_to_watch::<ViewportChange>();
 
         arc_result
@@ -241,6 +244,8 @@ where
         event_bus.spawn(async move {
             let mut current_layer: usize;
             let mut current_zoom = 1usize;
+
+            pin_mut!(event_stream);
 
             while let Some(event) = event_stream.next().await {
                 if let Some(arc_self) = weak_self.upgrade() {

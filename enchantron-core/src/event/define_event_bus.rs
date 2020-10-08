@@ -10,12 +10,12 @@ macro_rules! define_event_bus {
             use crate::application_context::Ao;
             use crate::event::{ ListenerRegistration };
             use std::future::Future;
+            use futures::pin_mut;
             use std::fmt::Debug;
-
             use tokio::stream::{
                 StreamExt
             };
-            use tokio::runtime::Handle;
+            use tokio::runtime::Runtime;
             use tokio::task::JoinHandle;
             use tokio::sync::broadcast::{
                 channel as broadcast_channel,
@@ -23,11 +23,14 @@ macro_rules! define_event_bus {
                 Receiver as BroadcastReceiver
             };
             use tokio::sync::watch::{
-                channel as watch_channel
+                channel as watch_channel,
+                Receiver as WatchReceiver
             };
             use tokio::sync::mpsc::{
                 channel as mpsc_channel
             };
+            use async_stream::stream;
+            use tokio::stream::Stream;
 
             #[derive(Clone)]
             pub struct EventBus {
@@ -35,7 +38,7 @@ macro_rules! define_event_bus {
             }
 
             pub struct Inner {
-                runtime_handle: Handle,
+                runtime_handle: Ao<Runtime>,
                 senders: Senders,
             }
 
@@ -45,10 +48,18 @@ macro_rules! define_event_bus {
                 )*
             }
 
+            fn as_stream<T>(mut r: WatchReceiver<T>) -> impl Stream<Item = T> where T : Clone + Unpin {
+                stream! {
+                    while let Ok(_) = r.changed().await {
+                        let val : T = r.borrow().clone();
+                        yield val;
+                    }
+                }
+            }
 
             impl EventBus {
 
-                pub fn new(runtime_handle: &Handle) -> (EventBus, impl FnOnce()) {
+                pub fn new(runtime_handle: Ao<Runtime>) -> (EventBus, impl FnOnce()) {
                     let inner = Box::new(Inner::new(runtime_handle.clone()));
 
                     let result = EventBus {
@@ -82,7 +93,7 @@ macro_rules! define_event_bus {
 
                     let listener_registration = ListenerRegistration::new(
                         Box::new(move || {
-                            let mut end_sender = end_sender;
+                            let end_sender = end_sender;
                             inner_clone.runtime_handle.spawn(async move {
                                 let _ = end_sender.send(None).await;
                             });
@@ -90,6 +101,7 @@ macro_rules! define_event_bus {
                     );
 
                     let result_stream = main_receiver
+                        .into_stream()
                         .map(Result::ok)
                         .merge(end_receiver)
                         .take_while(Option::is_some)
@@ -105,7 +117,10 @@ macro_rules! define_event_bus {
                     let main_receiver = E::get_main_receiver(self);
 
                     async move {
-                        main_receiver
+                        let stream = main_receiver.into_stream();
+                        pin_mut!(stream);
+
+                        stream
                             .take_while(Result::is_ok)
                             .map(Result::unwrap)
                             .next()
@@ -116,20 +131,21 @@ macro_rules! define_event_bus {
                 pub fn register_to_watch<E>(&self)
                     -> (ListenerRegistration, impl StreamExt<Item = E>)
                 where E: Event {
-                    let (listener_registration, mut main_stream)
+                    let (listener_registration, main_stream)
                         = self.register::<E>();
 
                     let (watch_sender, watch_receiver)
                         = watch_channel::<Option<E>>(None);
 
                     self.spawn(async move {
+                        pin_mut!(main_stream);
+
                         while let Some(e) = main_stream.next().await {
-                            let _ = watch_sender.broadcast(Some(e));
+                            let _ = watch_sender.send(Some(e));
                         }
                     });
 
-                    let result_stream = watch_receiver
-                        .skip(1)
+                    let result_stream = as_stream(watch_receiver)
                         .take_while(Option::is_some)
                         .map(Option::unwrap);
 
@@ -148,7 +164,7 @@ macro_rules! define_event_bus {
 
             impl Inner {
 
-                fn new(runtime_handle: Handle) -> Inner {
+                fn new(runtime_handle: Ao<Runtime>) -> Inner {
                     let senders = Senders {
                         $(
                             $e: broadcast_channel::<super::$e>(1024).0,

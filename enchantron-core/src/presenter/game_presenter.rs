@@ -11,7 +11,8 @@ use crate::ui::{
 };
 use crate::view::BaseView;
 use crate::view_types::ViewTypes;
-use std::sync::{Arc, Weak};
+use futures::pin_mut;
+use std::sync::{Arc, Mutex as StdMutex, Weak};
 use std::time::Duration;
 use tokio::runtime::{Builder, Runtime};
 use tokio::stream::StreamExt;
@@ -20,9 +21,11 @@ use tokio::sync::{Mutex, RwLock};
 macro_rules! handle_event {
     ($event_type:ident => $self_id:ident.$method_name:ident) => {
         let weak_self = $self_id.weak_self().await;
-        let mut event_stream = $self_id.register_event::<$event_type>().await;
+        let event_stream = $self_id.register_event::<$event_type>().await;
 
         $self_id.event_bus.spawn(async move {
+            pin_mut!(event_stream);
+
             while let Some(event) = event_stream.next().await {
                 if let Some(presenter) = weak_self.upgrade() {
                     presenter.$method_name(event).await;
@@ -47,9 +50,9 @@ where
 
     weak_self: RwLock<Option<Box<Weak<GamePresenter<T>>>>>,
 
-    game_runtime: Runtime,
-
     display_state: RwLock<Option<GameDisplayState<T>>>,
+
+    droppers: StdMutex<Vec<Box<dyn FnOnce() + Send>>>,
 }
 
 impl<T> GamePresenter<T>
@@ -296,21 +299,24 @@ where
 
         let saved_game = SavedGame::new(Default::default());
 
-        let runtime = Builder::new()
-            .threaded_scheduler()
-            .core_threads(NUM_CPUS.checked_sub(1).unwrap_or(1)) // one for os
-            .enable_time()
-            .pausable_time(
-                true,
-                Duration::from_millis(saved_game.elapsed_millis),
-            )
-            .build()
-            .unwrap_or_else(|e| {
-                error!("Failed to create tokio runtime, {:?}", e);
-                panic!("Failed to create tokio runtime");
-            });
+        let boxed_runtime = Box::new(
+            Builder::new()
+                .threaded_scheduler()
+                .core_threads(NUM_CPUS.checked_sub(1).unwrap_or(1)) // one for os
+                .enable_time()
+                .pausable_time(
+                    true,
+                    Duration::from_millis(saved_game.elapsed_millis),
+                )
+                .build()
+                .unwrap_or_else(|e| {
+                    error!("Failed to create tokio runtime, {:?}", e);
+                    panic!("Failed to create tokio runtime");
+                }),
+        );
 
-        let runtime_handle = runtime.handle().clone();
+        let (services, run_bundles, droppers) =
+            Services::new(boxed_runtime, saved_game);
 
         let raw_result = GamePresenter {
             view,
@@ -323,7 +329,7 @@ where
             weak_self: RwLock::new(Default::default()),
             display_state: RwLock::new(Default::default()),
 
-            game_runtime: runtime,
+            droppers: StdMutex::new(droppers),
         };
 
         let result: Arc<GamePresenter<T>> = Arc::new(raw_result);
@@ -344,19 +350,17 @@ where
         let entity_sprite_group = Arc::new(result.view.create_group());
         let runtime_resources = result.runtime_resources.clone();
 
-        let (services, run_bundles) =
-            Services::new(runtime_handle.clone(), saved_game);
-
         services
             .run(
-                runtime_handle.clone(),
                 entity_sprite_group,
                 runtime_resources,
                 run_bundles.into_iter(),
             )
             .await;
 
-        event_bus.spawn(async move { runtime_handle.resume() });
+        let runtime = services.runtime();
+
+        event_bus.spawn(async move { runtime.resume() });
 
         result
     }
@@ -367,6 +371,12 @@ where
     T: ViewTypes,
 {
     fn drop(&mut self) {
-        info!("Dropping Game Presenter")
+        info!("Dropping Game Presenter");
+
+        // Run the droppers in the stored order so that the runtime is dropped
+        // first. This is what ensures that the whole Gor system is safe
+        for dropper in self.droppers.lock().unwrap().drain(..) {
+            dropper();
+        }
     }
 }

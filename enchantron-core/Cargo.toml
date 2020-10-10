@@ -55,10 +55,3 @@ mockall = "0.6.0"
 name = "enchantron"
 path = "src/lib.rs"
 crate-type = ["staticlib"]
-
-[profile.release]
-panic = "abort"
-
-
-[profile.dev]
-panic = "abort"

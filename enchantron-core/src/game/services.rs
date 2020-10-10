@@ -33,13 +33,13 @@ impl TemporaryChannel {
 
 #[derive(Clone, Debug)]
 pub struct Services {
-    runtime: Gor<Runtime>,
+    pub(crate) runtime: Gor<Runtime>,
 
-    time: Time,
-    location_service: LocationService,
-    entity_service: EntityService,
-    message_service: MessageService,
-    presenter_service: PresenterService,
+    pub(crate) time: Time,
+    pub(crate) location_service: LocationService,
+    pub(crate) entity_service: EntityService,
+    pub(crate) message_service: MessageService,
+    pub(crate) presenter_service: PresenterService,
 }
 
 impl Services {
@@ -144,12 +144,13 @@ impl Services {
                         .expect("missing player presenter state");
 
                     runtime.spawn(async move {
-                        PlayerPresenter::run(
+                        let presenter = PlayerPresenter::new(
                             run_bundle,
                             player_presenter_state,
                             player_view_provider,
                         )
-                        .await
+                        .await;
+                        presenter.run().await;
                     });
                 }
             }

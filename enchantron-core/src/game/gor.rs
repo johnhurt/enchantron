@@ -1,5 +1,5 @@
 use std::fmt::{Debug, Formatter, Result as FmtResult};
-use std::ops::{Deref};
+use std::ops::Deref;
 
 /// Reference that is owned by the game runtime. This allows common references
 /// to be passed around in the game without atomic operations for each copy

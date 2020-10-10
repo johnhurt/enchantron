@@ -1,9 +1,50 @@
-use crate::game::{Direction, EntityRunBundle, Player, PresenterServiceLease};
+use crate::game::{
+    Direction, EntityMessage, EntityRunBundle, Player, PresenterServiceLease,
+    Services, Time,
+};
 use crate::view::PlayerView;
 use std::marker::PhantomData;
+use tokio::select;
+use tokio::sync::mpsc::Receiver;
+use PlayerPresenterState::*;
 
-pub struct PlayerPresenter<V: PlayerView> {
-    _phantom_view: PhantomData<V>,
+macro_rules! handle_interrupts {
+    ($this:ident, $interruptible:expr) => {
+        let response = select! {
+            _ = $interruptible => None,
+            message = $this.interrupts.recv() => Some(message)
+        };
+
+        match response {
+            Some(Some(val)) => {
+                $this.handle_interrupt(val);
+                continue;
+            }
+            Some(None) => {
+                break;
+            }
+            None => {}
+        }
+    };
+}
+
+macro_rules! interruptible {
+    ($this:ident$(.$prop_or_func:ident)+($($arg:expr),*)) => {
+        handle_interrupts!($this, $this$(.$prop_or_func)+($($arg),*));
+    };
+}
+
+pub struct PlayerPresenter<F, V>
+where
+    F: Fn() -> V + 'static + Send,
+    V: PlayerView,
+{
+    view: Option<V>,
+    player: Player,
+    view_provider: F,
+    services: Services,
+    state: PresenterServiceLease<PlayerPresenterState>,
+    interrupts: Receiver<EntityMessage>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -14,66 +55,103 @@ pub enum PlayerPresenterState {
     WalkingIn(f64),
 }
 
-impl<V: PlayerView> PlayerPresenter<V> {
-    pub async fn run(
+impl<F, V> PlayerPresenter<F, V>
+where
+    F: Fn() -> V + 'static + Send,
+    V: PlayerView,
+{
+    pub async fn new(
         entity_bundle: EntityRunBundle,
-        mut state: PresenterServiceLease<PlayerPresenterState>,
-        view_provider: impl Fn() -> V + 'static + Send,
-    ) {
-        info!("Player presenter spawned");
+        state: PresenterServiceLease<PlayerPresenterState>,
+        view_provider: F,
+    ) -> PlayerPresenter<F, V> {
+        info!("Creating player presenter");
 
         let EntityRunBundle {
             entity: _,
             entity_data,
-            entity_message_source: mut recv,
+            entity_message_source: interrupts,
             services,
         } = entity_bundle;
 
-        let player = Player::from(&entity_data);
-        let location_service = services.location_service();
-        let time = services.time();
+        PlayerPresenter {
+            view: Some(view_provider()),
+            player: Player::from(&entity_data),
+            view_provider,
+            services,
+            state,
+            interrupts,
+        }
+    }
 
-        let view: V = view_provider();
+    fn handle_interrupt(&mut self, interrupt: EntityMessage) {
+        match interrupt {
+            EntityMessage::EnteredViewport => {
+                self.view = Some((self.view_provider)())
+            }
+            EntityMessage::ExitedViewport => {
+                drop(self.view.take());
+            }
+        }
+    }
+
+    pub async fn run(mut self) {
+        info!("Player presenter spawned");
 
         loop {
-            match *state {
-                PlayerPresenterState::Spawning(start) => {
-                    view.rest();
-                    time.sleep_until(start + 0.5).await;
-                    *state = PlayerPresenterState::Idle(time.now());
+            match *self.state {
+                Spawning(start) => {
+                    self.view.as_ref().map(V::rest);
+
+                    interruptible!(self.services.time.sleep_until(start + 0.5));
+
+                    *self.state = Idle(self.services.time.now());
                 }
-                PlayerPresenterState::Idle(start) => {
-                    view.rest();
-                    time.sleep_until(start + 0.5).await;
-                    *state = PlayerPresenterState::WalkingIn(time.now());
+                Idle(start) => {
+                    self.view.as_ref().map(V::rest);
+
+                    interruptible!(self.services.time.sleep_until(start + 0.5));
+
+                    *self.state = WalkingIn(self.services.time.now());
                 }
-                PlayerPresenterState::WalkingIn(start) => {
-                    let tile = location_service
-                        .get_by_key(&player.location_key)
-                        .await
-                        .unwrap()
-                        .top_left;
-                    view.start_walk(Direction::SOUTH, &tile, start, 0.5);
-                    time.sleep_until(start + 1.0).await;
-                    *state = PlayerPresenterState::WalkingOut(time.now());
-                }
-                PlayerPresenterState::WalkingOut(start) => {
-                    let tile = location_service
-                        .get_by_key(&player.location_key)
+                WalkingIn(start) => {
+                    let tile = self
+                        .services
+                        .location_service
+                        .get_by_key(&self.player.location_key)
                         .await
                         .unwrap()
                         .top_left;
 
-                    location_service
+                    self.view.as_ref().map(|view| {
+                        view.start_walk(Direction::SOUTH, &tile, start, 0.5)
+                    });
+
+                    interruptible!(self.services.time.sleep_until(start + 1.));
+                    *self.state = WalkingOut(self.services.time.now());
+                }
+                WalkingOut(start) => {
+                    let tile = self
+                        .services
+                        .location_service
+                        .get_by_key(&self.player.location_key)
+                        .await
+                        .unwrap()
+                        .top_left;
+
+                    self.services
+                        .location_service
                         .move_by_key_delta(
-                            &player.location_key,
+                            &self.player.location_key,
                             Direction::SOUTH.get_point(),
                         )
                         .await;
 
-                    view.finish_walk(Direction::SOUTH, &tile, start, 0.5);
-                    time.sleep_until(start + 1.0).await;
-                    *state = PlayerPresenterState::Idle(time.now());
+                    self.view.as_ref().map(|view| {
+                        view.finish_walk(Direction::SOUTH, &tile, start, 0.5);
+                    });
+                    interruptible!(self.services.time.sleep_until(start + 1.));
+                    *self.state = Idle(self.services.time.now());
                 }
             }
         }

@@ -17,6 +17,7 @@ pub use self::services::Services;
 pub use self::terrain_provider::TerrainProvider;
 pub use self::terrain_type::TerrainType;
 pub use self::time::Time;
+pub use self::view_service::ViewService;
 
 pub mod constants;
 
@@ -39,3 +40,4 @@ mod services;
 mod terrain_provider;
 mod terrain_type;
 mod time;
+mod view_service;

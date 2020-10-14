@@ -1,3 +1,4 @@
+use super::EntityView;
 use crate::application_context::Ao;
 use crate::game::{constants, Direction, Time};
 use crate::model::{IPoint, Point};
@@ -48,7 +49,7 @@ fn get_animation_duration(
     0.5 / speed_in_tiles_per_second - (time.now() - start_time)
 }
 
-pub trait PlayerView: 'static + Send + Sync + Unpin {
+pub trait PlayerView: 'static + Send + Sync + Unpin + EntityView {
     fn rest(&self);
     fn start_walk(
         &self,
@@ -140,3 +141,5 @@ impl<T: ViewTypes> PlayerView for PlayerViewImpl<T> {
             .set_texture(self.runtime_resources.textures().gist.south_rest());
     }
 }
+
+impl<T> EntityView for PlayerViewImpl<T> where T: ViewTypes {}

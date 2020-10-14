@@ -143,15 +143,13 @@ impl Services {
                         .await
                         .expect("missing player presenter state");
 
-                    runtime.spawn(async move {
-                        let presenter = PlayerPresenter::new(
-                            run_bundle,
-                            player_presenter_state,
-                            player_view_provider,
-                        )
-                        .await;
-                        presenter.run().await;
-                    });
+                    let presenter = PlayerPresenter::new(
+                        run_bundle,
+                        player_presenter_state,
+                        player_view_provider,
+                    );
+
+                    runtime.spawn(presenter.run());
                 }
             }
         }

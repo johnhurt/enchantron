@@ -364,7 +364,7 @@ where
 
         let runtime = services.runtime();
 
-        event_bus.spawn(async move { runtime.resume() });
+        event_bus.spawn_blocking(move || runtime.resume());
 
         result
     }

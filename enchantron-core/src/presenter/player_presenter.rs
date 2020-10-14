@@ -1,3 +1,4 @@
+use super::EntityPresenter;
 use crate::game::{
     Direction, EntityMessage, EntityRunBundle, Player, PresenterServiceLease,
     Services, Time,
@@ -60,7 +61,7 @@ where
     F: Fn() -> V + 'static + Send,
     V: PlayerView,
 {
-    pub async fn new(
+    pub fn new(
         entity_bundle: EntityRunBundle,
         state: PresenterServiceLease<PlayerPresenterState>,
         view_provider: F,
@@ -155,5 +156,17 @@ where
                 }
             }
         }
+    }
+}
+
+impl<F, V> EntityPresenter for PlayerPresenter<F, V>
+where
+    F: Fn() -> V + Send + 'static,
+    V: PlayerView,
+{
+    type View = V;
+
+    fn create_view(&self) -> Self::View {
+        (self.view_provider)()
     }
 }

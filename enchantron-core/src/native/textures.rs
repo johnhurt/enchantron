@@ -63,7 +63,7 @@ macro_rules! define_texture_atlas {
 
         $texture_type {
           $(
-            $name: $name,
+            $name,
           )*
         }
       }

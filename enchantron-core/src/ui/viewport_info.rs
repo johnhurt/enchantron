@@ -1,6 +1,6 @@
 use crate::model::{Point, Rect, Size};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub struct ViewportInfo {
     pub viewport_rect: Rect,
     pub screen_size: Size,

@@ -8,7 +8,7 @@ macro_rules! define_event_bus {
             #![allow(non_snake_case)]
 
             use crate::application_context::Ao;
-            use crate::event::{ ListenerRegistration };
+            use crate::event::{ ListenerRegistration, PostOnDrop };
             use std::future::Future;
             use futures::pin_mut;
             use std::fmt::Debug;
@@ -71,6 +71,10 @@ macro_rules! define_event_bus {
 
                 pub fn post<E: Event>(&self, event: E) {
                     event.post(self)
+                }
+
+                pub fn post_on_drop<E: Event>(&self, event: E) -> PostOnDrop<E> {
+                    PostOnDrop::new(event, self.clone())
                 }
 
                 $(
@@ -189,7 +193,7 @@ macro_rules! define_event_bus {
 
             }
 
-            pub trait Event: Unpin + Send + Sync + Debug + Clone + 'static {
+            pub trait Event: Unpin + Send + Sync + Debug + Clone + Copy + 'static {
                 fn post(self, event_bus: &EventBus);
                 fn get_main_receiver(event_bus: &EventBus) -> BroadcastReceiver<Self>;
             }
@@ -211,7 +215,7 @@ macro_rules! define_event_bus {
 
         $(
 
-        #[derive(Debug, Clone, derive_new::new)]
+        #[derive(Debug, Clone, Copy, derive_new::new)]
         pub struct $e $body
 
         )*

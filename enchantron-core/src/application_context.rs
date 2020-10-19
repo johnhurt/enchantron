@@ -150,7 +150,7 @@ impl<T: ViewTypes> ApplicationContext<T> {
     }
 
     pub fn transition_to_game_view(&self, view: T::GameView) {
-        (*self).tokio_runtime.spawn(GamePresenter::<T>::new(
+        (*self).tokio_runtime.spawn(GamePresenter::<T>::run(
             view,
             self.event_bus.clone(),
             self.get_runtime_resources(),

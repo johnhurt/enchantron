@@ -2,7 +2,7 @@ use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
 use super::Size;
 
-#[derive(Default, Debug, Clone, PartialEq)]
+#[derive(Default, Debug, Clone, PartialEq, Copy)]
 pub struct Point {
     pub x: f64,
     pub y: f64,
@@ -45,7 +45,7 @@ impl Mul<f64> for &Point {
     type Output = Point;
 
     fn mul(self, rhs: f64) -> Point {
-        self.clone() * rhs
+        *self * rhs
     }
 }
 

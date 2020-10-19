@@ -1,6 +1,6 @@
 use super::{Point, Size};
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Copy)]
 pub struct Rect {
     pub top_left: Point,
     pub size: Size,

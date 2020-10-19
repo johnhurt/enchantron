@@ -1,6 +1,6 @@
 use std::ops::{Mul, MulAssign};
 
-#[derive(Default, Debug, Clone, PartialEq)]
+#[derive(Default, Debug, Clone, PartialEq, Copy)]
 pub struct Size {
     pub width: f64,
     pub height: f64,
@@ -19,7 +19,7 @@ impl Mul<f64> for &Size {
     type Output = Size;
 
     fn mul(self, rhs: f64) -> Size {
-        self.clone() * rhs
+        *self * rhs
     }
 }
 

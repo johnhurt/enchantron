@@ -12,30 +12,10 @@ use crate::ui::{
 use crate::view::BaseView;
 use crate::view_types::ViewTypes;
 use futures::pin_mut;
-use std::sync::{Arc, Mutex as StdMutex, Weak};
 use std::time::Duration;
-use tokio::runtime::{Builder, Runtime};
+use tokio::runtime::Builder;
+use tokio::select;
 use tokio::stream::StreamExt;
-use tokio::sync::{Mutex, RwLock};
-
-macro_rules! handle_event {
-    ($event_type:ident => $self_id:ident.$method_name:ident) => {
-        let weak_self = $self_id.weak_self().await;
-        let event_stream = $self_id.register_event::<$event_type>().await;
-
-        $self_id.event_bus.spawn(async move {
-            pin_mut!(event_stream);
-
-            while let Some(event) = event_stream.next().await {
-                if let Some(presenter) = weak_self.upgrade() {
-                    presenter.$method_name(event).await;
-                } else {
-                    break;
-                }
-            }
-        });
-    };
-}
 
 pub struct GamePresenter<T>
 where
@@ -43,109 +23,32 @@ where
 {
     view: T::GameView,
     event_bus: EventBus,
-    system_view: Ao<T::SystemView>,
-    runtime_resources: Ao<RuntimeResources<T>>,
-    listener_registrations: Mutex<Vec<ListenerRegistration>>,
-    handler_registrations: Mutex<Vec<Box<dyn HandlerRegistration>>>,
+    _handler_registrations: Vec<Box<dyn HandlerRegistration>>,
 
-    weak_self: RwLock<Option<Box<Weak<GamePresenter<T>>>>>,
+    display_state: GameDisplayState<T>,
 
-    display_state: RwLock<Option<GameDisplayState<T>>>,
-
-    droppers: StdMutex<Vec<Box<dyn FnOnce() + Send>>>,
+    droppers: Vec<Box<dyn FnOnce() + Send>>,
 }
 
 impl<T> GamePresenter<T>
 where
     T: ViewTypes,
 {
-    /// Get a weak arc pointer to this presenter or panic if none has been
-    /// created yet
-    async fn weak_self(&self) -> Weak<GamePresenter<T>> {
-        let weak_self_lock = self.weak_self.read().await;
-
-        weak_self_lock
-            .as_ref()
-            .map(Box::as_ref)
-            .map(Clone::clone)
-            .unwrap_or_else(|| {
-                error!("No weak self pointer created yet");
-                panic!("No weak self pointer created yet");
-            })
-    }
-
-    async fn register_event<E: Event>(&self) -> impl StreamExt<Item = E> {
-        let (listener_registration, event_stream) =
-            self.event_bus.register::<E>();
-
-        self.listener_registrations
-            .lock()
-            .await
-            .push(listener_registration);
-
-        event_stream
-    }
-
-    ///
-    /// Run an action with a read lock on the game display state
-    ///
-    async fn with_display_state<R>(
-        &self,
-        action: impl FnOnce(&GameDisplayState<T>) -> R,
-    ) -> R {
-        if let Some(display_state) = self.display_state.read().await.as_ref() {
-            action(display_state)
-        } else {
-            panic!("Failed to get display state");
-        }
-    }
-
-    ///
-    /// Run an action with a write lock on the game display state
-    ///
-    async fn with_display_state_mut<R>(
-        &self,
-        action: impl FnOnce(&mut GameDisplayState<T>) -> R,
-    ) -> R {
-        let mut display_state_lock = self.display_state.write().await;
-
-        let display_state = display_state_lock.as_mut().unwrap_or_else(|| {
-            error!("No Game State created yet");
-            panic!("No Game State created yet");
-        });
-
-        action(display_state)
-    }
-
-    async fn add_handler_registration(&self, hr: Box<dyn HandlerRegistration>) {
-        self.handler_registrations.lock().await.push(hr);
-    }
-
-    /// Fire a viewport change event to the event bus
-    fn fire_viewport_change_event(&self, viewport_info: &ViewportInfo) {
-        self.event_bus.post(ViewportChange {
-            new_viewport: viewport_info.clone(),
-        });
-    }
-
-    async fn on_layout(&self, event: Layout) {
+    async fn on_layout(&mut self, event: Layout) {
         info!("Game view resized to : {}, {}", event.width, event.height);
 
         let new_size = Size::new(event.width as f64, event.height as f64);
 
-        self.with_display_state_mut(|display_state| {
-            let viewport_info = display_state.layout(new_size);
+        let viewport_info = self.display_state.layout(new_size);
 
-            self.fire_viewport_change_event(viewport_info);
+        self.event_bus.post(ViewportChange::new(*viewport_info));
 
-            self.view
-                .get_viewport()
-                .set_location_point(&viewport_info.viewport_rect.top_left);
-        })
-        .await;
+        self.view
+            .get_viewport()
+            .set_location_point(&viewport_info.viewport_rect.top_left);
     }
 
-    async fn on_magnify(&self, magnify_event: Magnify) {
+    async fn on_magnify(&mut self, magnify_event: Magnify) {
         let Magnify {
             scale_change_additive,
             global_center:
@@ -157,31 +60,27 @@ where
 
         debug!("Scale changing by {}", scale_change_additive);
 
-        self.with_display_state_mut(|display_state| {
-            let magnify_center_screen_point =
-                Point::new(zoom_center_x, zoom_center_y);
+        let magnify_center_screen_point =
+            Point::new(zoom_center_x, zoom_center_y);
 
-            let viewport_info = display_state
-                .change_scale_additive_around_center_point(
-                    scale_change_additive,
-                    magnify_center_screen_point,
-                );
-
-            self.fire_viewport_change_event(viewport_info);
-            self.view.get_viewport().set_scale_and_location_point(
-                viewport_info.viewport_scale,
-                &viewport_info.viewport_rect.top_left,
+        let viewport_info = self
+            .display_state
+            .change_scale_additive_around_center_point(
+                scale_change_additive,
+                magnify_center_screen_point,
             );
-        })
-        .await;
+
+        self.event_bus.post(ViewportChange::new(*viewport_info));
+
+        self.view.get_viewport().set_scale_and_location_point(
+            viewport_info.viewport_scale,
+            &viewport_info.viewport_rect.top_left,
+        );
     }
 
-    async fn on_drag(&self, drag_event: DragEvent) {
-        let drag_tracker_event = self
-            .with_display_state_mut(|display_state| {
-                display_state.drag_tracker.on_drag_event(drag_event)
-            })
-            .await;
+    async fn on_drag(&mut self, drag_event: DragEvent) {
+        let drag_tracker_event =
+            self.display_state.drag_tracker.on_drag_event(drag_event);
 
         match drag_tracker_event {
             Some(Move(drag_move)) => self.on_drag_move(drag_move).await,
@@ -192,109 +91,103 @@ where
         }
     }
 
-    async fn on_drag_move(&self, drag_move: Point) {
-        self.with_display_state_mut(|display_state| {
-            let scale = display_state.get_viewport_scale();
+    async fn on_drag_move(&mut self, drag_move: Point) {
+        let scale = self.display_state.get_viewport_scale();
 
-            let position_shift = drag_move * scale;
+        let position_shift = drag_move * scale;
 
-            let new_viewport_info =
-                display_state.move_viewport_by(position_shift);
+        let new_viewport_info =
+            self.display_state.move_viewport_by(position_shift);
 
-            self.fire_viewport_change_event(new_viewport_info);
+        self.event_bus.post(ViewportChange::new(*new_viewport_info));
 
-            let new_position_ref = &new_viewport_info.viewport_rect.top_left;
+        let new_position_ref = &new_viewport_info.viewport_rect.top_left;
 
-            self.view
-                .get_viewport()
-                .set_location_point(new_position_ref);
-        })
-        .await;
+        self.view
+            .get_viewport()
+            .set_location_point(new_position_ref);
     }
 
-    async fn on_drag_move_and_scale(&self, drag_move: Point, new_scale: f64) {
-        self.with_display_state_mut(|display_state| {
-            let new_viewport_info =
-                display_state.change_scale_and_move(new_scale, drag_move);
+    async fn on_drag_move_and_scale(
+        &mut self,
+        drag_move: Point,
+        new_scale: f64,
+    ) {
+        let new_viewport_info = self
+            .display_state
+            .change_scale_and_move(new_scale, drag_move);
 
-            self.fire_viewport_change_event(new_viewport_info);
+        self.event_bus.post(ViewportChange::new(*new_viewport_info));
 
-            let new_position_ref = &new_viewport_info.viewport_rect.top_left;
+        let new_position_ref = &new_viewport_info.viewport_rect.top_left;
 
-            self.view.get_viewport().set_scale_and_location_point(
-                new_viewport_info.viewport_scale,
-                new_position_ref,
-            );
-        })
-        .await;
+        self.view.get_viewport().set_scale_and_location_point(
+            new_viewport_info.viewport_scale,
+            new_position_ref,
+        );
     }
 
     /// Initialize the display state with the initial game state
-    async fn initialize_game_state(&self) {
-        let display_state: GameDisplayState<T> = GameDisplayState::new(
-            self.event_bus.clone(),
-            &self.view,
-            self.runtime_resources.clone(),
-            self.system_view.clone(),
-        )
-        .await;
-
-        let mut display_state_opt = self.display_state.write().await;
-
-        *display_state_opt = Some(display_state);
+    async fn initialize_game_state(
+        event_bus: EventBus,
+        view: &T::GameView,
+        runtime_resources: Ao<RuntimeResources<T>>,
+        system_view: Ao<T::SystemView>,
+    ) -> GameDisplayState<T> {
+        GameDisplayState::new(event_bus, view, runtime_resources, system_view)
+            .await
     }
 
-    async fn bind(&self) {
-        let copied_event_bus = self.event_bus.clone();
+    fn bind_ui_events(
+        view: &T::GameView,
+        event_bus: EventBus,
+    ) -> Vec<Box<dyn HandlerRegistration>> {
+        let copied_event_bus = event_bus.clone();
 
-        self.add_handler_registration(Box::new(self.view.add_layout_handler(
-            create_layout_handler!(|w, h| {
-                copied_event_bus.post(Layout {
-                    width: w,
-                    height: h,
-                })
+        let mut result: Vec<Box<dyn HandlerRegistration>> = Vec::new();
+
+        result.push(Box::new(view.add_layout_handler(create_layout_handler!(
+            |w, h| {
+                copied_event_bus.post::<UI>(
+                    Layout {
+                        width: w,
+                        height: h,
+                    }
+                    .into(),
+                )
+            }
+        ))));
+
+        let copied_event_bus = event_bus.clone();
+
+        result.push(Box::new(view.add_multi_drag_handler(
+            MultiDragHandler::new(move |drag_event| {
+                copied_event_bus.post::<UI>(drag_event.into())
             }),
-        )))
-        .await;
+        )));
 
-        let copied_event_bus = self.event_bus.clone();
+        let copied_event_bus = event_bus.clone();
 
-        self.add_handler_registration(Box::new(
-            self.view.add_multi_drag_handler(MultiDragHandler::new(
-                move |drag_event| copied_event_bus.post(drag_event),
-            )),
-        ))
-        .await;
-
-        let result_for_magnify = self.weak_self().await;
-
-        self.add_handler_registration(Box::new(self.view.add_magnify_handler(
+        result.push(Box::new(view.add_magnify_handler(
             create_magnify_handler!(
                 on_magnify(scale_change_additive, center_x, center_y) {
-                    if let Some(p) = result_for_magnify.upgrade() {
-                        p.event_bus.post(Magnify {
+                    copied_event_bus.post::<UI>(Magnify {
                             scale_change_additive,
                             global_center: Point { x: center_x, y: center_y }
-                        });
-                    }
+                    }.into());
                 }
             ),
-        )))
-        .await;
+        )));
 
-        handle_event!(Layout => self.on_layout);
-
-        handle_event!(DragEvent => self.on_drag);
-
-        handle_event!(Magnify => self.on_magnify);
+        result
     }
 
-    pub async fn new(
+    pub async fn run(
         view: T::GameView,
         event_bus: EventBus,
         runtime_resources: Ao<RuntimeResources<T>>,
         system_view: Ao<T::SystemView>,
-    ) -> Arc<GamePresenter<T>> {
+    ) {
         view.initialize_pre_bind();
 
         let saved_game = SavedGame::new(Default::default());
@@ -310,8 +203,7 @@ where
                 )
                 .build()
                 .unwrap_or_else(|e| {
-                    error!("Failed to create tokio runtime, {:?}", e);
-                    panic!("Failed to create tokio runtime");
+                    panic!("Failed to create game runtime, {:?}", e);
                 }),
         );
 
@@ -323,36 +215,23 @@ where
 
         droppers.push(Box::new(move || drop(boxed_entity_sprite_group)));
 
-        let raw_result = GamePresenter {
-            view,
-            event_bus: event_bus.clone(),
-            runtime_resources,
-            system_view,
-            listener_registrations: Mutex::new(Vec::new()),
-            handler_registrations: Mutex::new(Vec::new()),
+        let end_stream = event_bus.register_for_one::<ExitGame>();
+        let (_listener_reg, ui_stream) = event_bus.register::<UI>();
 
-            weak_self: RwLock::new(Default::default()),
-            display_state: RwLock::new(Default::default()),
+        let _handler_registrations =
+            Self::bind_ui_events(&view, event_bus.clone());
 
-            droppers: StdMutex::new(droppers),
-        };
+        view.initialize_post_bind(Box::new(
+            event_bus.post_on_drop(ExitGame::new()),
+        ));
 
-        let result: Arc<GamePresenter<T>> = Arc::new(raw_result);
-
-        {
-            let weak_self = Arc::downgrade(&result);
-            let mut weak_self_opt = result.weak_self.write().await;
-
-            *weak_self_opt = Some(Box::new(weak_self));
-        }
-
-        result.initialize_game_state().await;
-
-        GamePresenter::bind(&result).await;
-
-        result.view.initialize_post_bind(Box::new(result.clone()));
-
-        let runtime_resources = result.runtime_resources.clone();
+        let display_state = Self::initialize_game_state(
+            event_bus.clone(),
+            &view,
+            runtime_resources.clone(),
+            system_view.clone(),
+        )
+        .await;
 
         services
             .run(
@@ -362,11 +241,31 @@ where
             )
             .await;
 
-        let runtime = services.runtime();
+        let game_runtime = services.runtime();
 
-        event_bus.spawn_blocking(move || runtime.resume());
+        let mut presenter = GamePresenter {
+            view,
+            event_bus: event_bus.clone(),
+            _handler_registrations,
+            display_state,
+            droppers,
+        };
 
-        result
+        event_bus.spawn_blocking(move || game_runtime.resume());
+
+        pin_mut!(ui_stream);
+        pin_mut!(end_stream);
+
+        while let Some(UI { event: ui_event }) = select! {
+            _ = &mut end_stream => None,
+            ui_event_opt = ui_stream.next() => ui_event_opt
+        } {
+            match ui_event {
+                UIEvent::DragEvent { event } => presenter.on_drag(event).await,
+                UIEvent::Layout { event } => presenter.on_layout(event).await,
+                UIEvent::Magnify { event } => presenter.on_magnify(event).await,
+            }
+        }
     }
 }
 
@@ -379,7 +278,7 @@ where
 
         // Run the droppers in the stored order so that the runtime is dropped
         // first. This is what ensures that the whole Gor system is safe
-        for dropper in self.droppers.lock().unwrap().drain(..) {
+        for dropper in self.droppers.drain(..) {
             dropper();
         }
     }

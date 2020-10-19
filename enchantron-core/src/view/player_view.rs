@@ -113,7 +113,7 @@ impl<T: ViewTypes> PlayerView for PlayerViewImpl<T> {
         );
 
         self.bound_sprite.set_location_point_animated(
-            &(midpoint + &PLAYER_TEXTURE_OFFSET),
+            &(midpoint + PLAYER_TEXTURE_OFFSET),
             duration,
         );
     }
@@ -131,7 +131,7 @@ impl<T: ViewTypes> PlayerView for PlayerViewImpl<T> {
         let duration = get_animation_duration(start_time, speed, &self.time);
 
         self.bound_sprite.set_location_point_animated(
-            &(destination + &PLAYER_TEXTURE_OFFSET),
+            &(destination + PLAYER_TEXTURE_OFFSET),
             duration,
         );
     }

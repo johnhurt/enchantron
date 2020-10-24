@@ -4,8 +4,10 @@ use crate::ui::{DragEventType, DragPoint, ViewportInfo};
 define_event_bus!(
     EventBus,
     LoadResources{},
+    TerrainPresenterStarted{},
     StartGame{ pub new: bool },
-    ExitGame{},
+    StopGameRequested{},
+    GameStopped{},
     UI{ pub event: UIEvent },
     ViewportChange{ pub new_viewport: ViewportInfo }
 );
@@ -56,20 +58,3 @@ define_ui_event!(
         }
     }
 );
-
-// #[derive(Clone, Debug)]
-// pub enum UiEvent {
-//     Layout {
-//         width: i64,
-//         height: i64,
-//     },
-//     DragEvent {
-//         state: DragEventType,
-//         drag_point_1: DragPoint,
-//         drag_point_2_opt: Option<DragPoint>,
-//     },
-//     Magnify {
-//         scale_change_additive: f64,
-//         global_center: Point,
-//     },
-// }

@@ -79,7 +79,7 @@ macro_rules! define_event_bus {
 
                 $(
                     fn $e(&self, event: super::$e) {
-                        debug!("Posting {} event: {:?}", stringify!($e), event);
+                        trace!("Posting {} event: {:?}", stringify!($e), event);
                         let _ = self.inner.senders.$e.send(event);
                     }
                 )*

@@ -1,3 +1,4 @@
+use super::TerrainPresenter;
 use crate::application_context::{Ao, NUM_CPUS};
 use crate::event::*;
 use crate::game::{Gor, SavedGame, Services};
@@ -7,10 +8,11 @@ use crate::ui::{
     DragTrackerEvent::*, GameDisplayState, HandlerRegistration,
     HasLayoutHandlers, HasMagnifyHandlers, HasMultiDragHandlers,
     HasMutableLocation, HasMutableScale, HasViewport, LayoutHandler,
-    MagnifyHandler, MultiDragHandler, SpriteSource, ViewportInfo,
+    MagnifyHandler, MultiDragHandler, SpriteSource,
 };
 use crate::view::BaseView;
 use crate::view_types::ViewTypes;
+use futures::future::join_all;
 use futures::pin_mut;
 use std::time::Duration;
 use tokio::runtime::Builder;
@@ -23,9 +25,11 @@ where
 {
     view: T::GameView,
     event_bus: EventBus,
+    runtime_resources: Ao<RuntimeResources<T>>,
+    system_view: Ao<T::SystemView>,
     _handler_registrations: Vec<Box<dyn HandlerRegistration>>,
 
-    display_state: GameDisplayState<T>,
+    display_state: GameDisplayState,
 
     droppers: Vec<Box<dyn FnOnce() + Send>>,
 }
@@ -128,14 +132,8 @@ where
     }
 
     /// Initialize the display state with the initial game state
-    async fn initialize_game_state(
-        event_bus: EventBus,
-        view: &T::GameView,
-        runtime_resources: Ao<RuntimeResources<T>>,
-        system_view: Ao<T::SystemView>,
-    ) -> GameDisplayState<T> {
-        GameDisplayState::new(event_bus, view, runtime_resources, system_view)
-            .await
+    fn initialize_game_state() -> GameDisplayState {
+        GameDisplayState::new()
     }
 
     fn bind_ui_events(
@@ -182,6 +180,17 @@ where
         result
     }
 
+    fn create_sub_presenters(&mut self) -> (TerrainPresenter<T>) {
+        let terrain_presenter = TerrainPresenter::new(
+            self.event_bus.clone(),
+            &self.view,
+            self.runtime_resources.clone(),
+            self.system_view.clone(),
+        );
+
+        (terrain_presenter)
+    }
+
     pub async fn run(
         view: T::GameView,
         event_bus: EventBus,
@@ -215,28 +224,18 @@ where
 
         droppers.push(Box::new(move || drop(boxed_entity_sprite_group)));
 
-        let end_stream = event_bus.register_for_one::<ExitGame>();
+        let end_event = event_bus.register_for_one::<StopGameRequested>();
         let (_listener_reg, ui_stream) = event_bus.register::<UI>();
 
         let _handler_registrations =
             Self::bind_ui_events(&view, event_bus.clone());
 
-        view.initialize_post_bind(Box::new(
-            event_bus.post_on_drop(ExitGame::new()),
-        ));
-
-        let display_state = Self::initialize_game_state(
-            event_bus.clone(),
-            &view,
-            runtime_resources.clone(),
-            system_view.clone(),
-        )
-        .await;
+        let display_state = Self::initialize_game_state();
 
         services
             .run(
                 entity_sprite_group,
-                runtime_resources,
+                runtime_resources.clone(),
                 run_bundles.into_iter(),
             )
             .await;
@@ -246,18 +245,34 @@ where
         let mut presenter = GamePresenter {
             view,
             event_bus: event_bus.clone(),
+            runtime_resources,
+            system_view,
             _handler_registrations,
             display_state,
             droppers,
         };
 
+        let (terrain_presenter) = presenter.create_sub_presenters();
+
+        let sub_presenters_future =
+            join_all(vec![event_bus.spawn(terrain_presenter.run())]);
+
+        event_bus
+            .register_for_one::<TerrainPresenterStarted>()
+            .await;
+
+        presenter.view.initialize_post_bind(Box::new(
+            event_bus.post_on_drop(StopGameRequested::new()),
+        ));
+
         event_bus.spawn_blocking(move || game_runtime.resume());
 
         pin_mut!(ui_stream);
-        pin_mut!(end_stream);
+        pin_mut!(end_event);
 
+        // Main ui handler loop
         while let Some(UI { event: ui_event }) = select! {
-            _ = &mut end_stream => None,
+            _ = &mut end_event => None,
             ui_event_opt = ui_stream.next() => ui_event_opt
         } {
             match ui_event {
@@ -266,6 +281,10 @@ where
                 UIEvent::Magnify { event } => presenter.on_magnify(event).await,
             }
         }
+
+        sub_presenters_future.await;
+
+        event_bus.post(GameStopped::new());
     }
 }
 

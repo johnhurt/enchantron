@@ -41,7 +41,7 @@ vec2 get_terrain_spec_coords(
     float frac_x = fract(tex_x);
     float frac_y = fract(tex_y);
     
-    float spec_size = 64 / tex_size;
+    float spec_size = 64. / tex_size;
     if (spec_size < 1) {
         spec_size = 1;
     }

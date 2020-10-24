@@ -1,19 +1,17 @@
-use crate::event::{EventBus, ListenerRegistration, ViewportChange};
+use crate::application_context::Ao;
+use crate::event::*;
 use crate::game::constants;
 use crate::model::{IPoint, IRect, ISize, Rect, UPoint, URect};
-use crate::ui::ViewportInfo;
+use crate::native::{ResourceLoader, RuntimeResources, SystemView};
+use crate::ui::{
+    HasMutableLocation, HasMutableSize, HasMutableVisibility, Sprite,
+    SpriteSource, TerrainTextureProvider, TerrainUpdateInfo, ViewportInfo,
+};
 use crate::view_types::ViewTypes;
 use futures::pin_mut;
 use std::iter;
-use std::sync::Arc;
-
-use super::{
-    HasMutableLocation, HasMutableSize, HasMutableVisibility, HasMutableZLevel,
-    Sprite, SpriteSource, TerrainTextureProvider, TerrainUpdateInfo,
-};
-
+use tokio::select;
 use tokio::stream::StreamExt;
-use tokio::sync::{Mutex, RwLock};
 
 const LAYER_COUNT: usize = 2;
 
@@ -32,6 +30,199 @@ const ZOOM_LEVEL_OVERLAP: f64 = 0.25;
 
 const BACKGROUND_Z_LEVEL: f64 = constants::TERRAIN_Z_LEVEL;
 const FOREGROUND_Z_LEVEL: f64 = constants::TERRAIN_Z_LEVEL + 2.;
+
+/// Presenter for the terrain Any part of the screen that isn't covered by
+/// another presenter's content will be covered with this presenter
+pub struct TerrainPresenter<T: ViewTypes> {
+    event_bus: EventBus,
+    terrain_texture_provider: TerrainTextureProvider<T>,
+    listener_registrations: Vec<ListenerRegistration>,
+    layers: [Layer<T::Sprite>; LAYER_COUNT],
+    layer_sprites: [T::SpriteGroup; LAYER_COUNT],
+}
+
+struct Layer<S>
+where
+    S: Sized + HasMutableSize + HasMutableLocation + HasMutableVisibility,
+{
+    layer_index: usize,
+    terrain_sprites_size: ISize,
+    terrain_sprites: Vec<Vec<S>>,
+    sprite_terrain_coverage: IRect,
+    top_left_sprite: UPoint,
+    zoom_level: usize,
+    sprite_width_in_tiles: usize,
+}
+
+impl<T> TerrainPresenter<T>
+where
+    T: ViewTypes,
+{
+    pub fn new<S>(
+        event_bus: EventBus,
+        sprite_source: &S,
+        runtime_resources: Ao<RuntimeResources<T>>,
+        system_view: Ao<T::SystemView>,
+    ) -> TerrainPresenter<T>
+    where
+        S: SpriteSource<T = T::Texture, S = T::Sprite, G = T::SpriteGroup>,
+    {
+        let terrain_texture_provider = TerrainTextureProvider::new(
+            runtime_resources,
+            system_view.get_resource_loader(),
+        );
+        let layer_sprites =
+            array_macro::array![|_| sprite_source.create_group(); LAYER_COUNT];
+        let layers = array_macro::array![|_| Layer::new(); LAYER_COUNT];
+
+        TerrainPresenter {
+            event_bus,
+            terrain_texture_provider,
+            listener_registrations: Vec::new(),
+            layers,
+            layer_sprites,
+        }
+    }
+
+    pub async fn run(mut self) {
+        let end_event = self.event_bus.register_for_one::<StopGameRequested>();
+        let (listener_registration, event_stream) =
+            self.event_bus.register_to_watch::<ViewportChange>();
+
+        self.listener_registrations.push(listener_registration);
+
+        pin_mut!(event_stream);
+        pin_mut!(end_event);
+
+        let mut current_layer = 0usize;
+        let mut current_zoom = 1usize;
+
+        info!("Terrain presenter started");
+        self.event_bus.post(TerrainPresenterStarted::new());
+
+        while let Some(ViewportChange { new_viewport }) = select! {
+            viewport_info_opt = event_stream.next() => viewport_info_opt,
+            _ = &mut end_event => None
+        } {
+            let (min_zoom, max_zoom) = get_min_max_zoom_level(current_zoom);
+            let frac_zoom_level = get_fractional_zoom_level(&new_viewport);
+
+            if frac_zoom_level < min_zoom || frac_zoom_level > max_zoom {
+                let mut new_zoom = frac_zoom_level.floor() as usize;
+
+                if new_zoom == current_zoom {
+                    new_zoom += 1;
+                }
+
+                let old_layer = current_layer;
+                current_zoom = new_zoom;
+                current_layer = current_zoom % LAYER_COUNT;
+
+                if current_layer != old_layer {
+                    let curr_layer =
+                        self.layer_sprites.get(current_layer).unwrap();
+                    let old_layer = self.layer_sprites.get(old_layer).unwrap();
+
+                    //swap layer zoom levels and visibilities
+                }
+            }
+
+            self.on_viewport_change(current_layer, &new_viewport).await;
+        }
+
+        debug!("Terrain Presenter Stopped");
+    }
+
+    /// Called when the viewport changes to adjust the terrain.  This method
+    /// 1. Checks to see if the terrain needs to be updated to contain the
+    ///    given viewport, and if not, the method returns
+    /// 2. checks to see if the size of the terrain sprites is big enough to
+    ///    contain the viewport rect given
+    /// 3. if the terrain sprites needs to be altered, increase the size of the
+    ///    terrain sprites array and updates
+    /// 4. ?
+    async fn on_viewport_change(
+        &mut self,
+        layer_index: usize,
+        viewport_info: &ViewportInfo,
+    ) {
+        info!("Starting");
+
+        let mut layer_opt = self.layers.get_mut(layer_index);
+        let layer = layer_opt.as_mut().unwrap();
+
+        let terrain_update_info_opt =
+            layer.terrain_updates_required(layer_index, viewport_info);
+
+        if terrain_update_info_opt.is_none() {
+            debug!("No terrain updates");
+            return;
+        }
+
+        let terrain_update_info = terrain_update_info_opt.unwrap();
+        let terrain_texture_provider = &mut self.terrain_texture_provider;
+
+        let valid_sprite_rect = {
+            let size_increased = layer.check_sprite_array_size_increased(
+                &terrain_update_info.sprite_array_size,
+            );
+
+            let layer_sprites = &mut self.layer_sprites;
+
+            if size_increased {
+                debug!("Size increased");
+                layer.increase_size_for(terrain_update_info, || {
+                    let result =
+                        layer_sprites.get(layer_index).unwrap().create_sprite();
+                    result.set_shader(
+                        terrain_texture_provider.get_terrain_shader(),
+                    );
+                    result
+                })
+            } else {
+                debug!("Size not increased");
+                let (top_left, new_valid_rect) = layer
+                    .calculate_new_valid_sprites(&terrain_update_info)
+                    .unwrap_or_default();
+
+                layer.update_terrain_sprite_info(terrain_update_info, top_left);
+
+                new_valid_rect
+            }
+        };
+
+        let sprite_width = layer.sprite_width_in_tiles as f64
+            * UNIT_ZOOM_LEVEL_TILE_LENGTH_F64;
+
+        layer.update_terrain_sprites(valid_sprite_rect, |sprite, point| {
+            sprite.set_visible(false);
+
+            let texture_terrain_rect = IRect {
+                top_left: *point,
+                size: ISize::new(
+                    layer.sprite_width_in_tiles,
+                    layer.sprite_width_in_tiles,
+                ),
+            };
+
+            info!("sprite rect: {:?}", texture_terrain_rect);
+
+            sprite.set_texture(
+                &terrain_texture_provider
+                    .get_texture_for_rect(&texture_terrain_rect, &TEXTURE_SIZE),
+            );
+            sprite.set_shader_variable_vec4_f64(
+                "TERRAIN_RECT".to_owned(),
+                point.x as f64,
+                point.y as f64,
+                texture_terrain_rect.size.width as f64,
+                texture_terrain_rect.size.height as f64,
+            );
+            sprite.set_size(sprite_width, sprite_width);
+            sprite.set_visible(true);
+        });
+    }
+}
 
 /// Get the fractional zoom level for the given viewport and terrain rect
 fn get_fractional_zoom_level(viewport_info: &ViewportInfo) -> f64 {
@@ -132,302 +323,6 @@ fn get_min_sprite_covering(
     )
 }
 
-pub struct TerrainGenerator<T>
-where
-    T: ViewTypes,
-{
-    terrain_texture_provider: TerrainTextureProvider<T>,
-    listener_registrations: Mutex<Vec<ListenerRegistration>>,
-    layers: [RwLock<Layer<T::Sprite>>; LAYER_COUNT],
-    layer_sprites: Vec<T::SpriteGroup>,
-}
-
-struct Layer<S>
-where
-    S: Sized + HasMutableSize + HasMutableLocation + HasMutableVisibility,
-{
-    layer_index: usize,
-    terrain_sprites_size: ISize,
-    terrain_sprites: Vec<Vec<S>>,
-    sprite_terrain_coverage: IRect,
-    top_left_sprite: UPoint,
-    zoom_level: usize,
-    sprite_width_in_tiles: usize,
-}
-
-impl<T> TerrainGenerator<T>
-where
-    T: ViewTypes,
-{
-    async fn add_listener_registration(
-        &self,
-        listener_registration: ListenerRegistration,
-    ) {
-        self.listener_registrations
-            .lock()
-            .await
-            .push(listener_registration);
-    }
-
-    pub async fn new(
-        event_bus: EventBus,
-        sprite_source: &impl SpriteSource<
-            T = T::Texture,
-            S = T::Sprite,
-            G = T::SpriteGroup,
-        >,
-        terrain_texture_provider: TerrainTextureProvider<T>,
-    ) -> Arc<TerrainGenerator<T>> {
-        let mut layers: [RwLock<Layer<T::Sprite>>; LAYER_COUNT] =
-            Default::default();
-
-        for (index, layer_lock) in layers.iter_mut().enumerate() {
-            let mut layer = layer_lock.write().await;
-            layer.layer_index = index;
-        }
-
-        let mut layer_sprites =
-            Vec::<T::SpriteGroup>::with_capacity(LAYER_COUNT);
-
-        for _ in 0..LAYER_COUNT {
-            layer_sprites.push(sprite_source.create_group());
-        }
-
-        let result = TerrainGenerator {
-            terrain_texture_provider,
-            listener_registrations: Default::default(),
-            layers,
-            layer_sprites,
-        };
-
-        let arc_result = Arc::new(result);
-
-        // Each layer listens for the viewport to change and responds in its
-        // own async task
-        for layer in 0..LAYER_COUNT {
-            let weak_self = Arc::downgrade(&arc_result);
-
-            let (listener_registration, event_stream) =
-                event_bus.register_to_watch::<ViewportChange>();
-
-            arc_result
-                .add_listener_registration(listener_registration)
-                .await;
-
-            event_bus.spawn(async move {
-                pin_mut!(event_stream);
-
-                while let Some(event) = event_stream.next().await {
-                    if let Some(arc_self) = weak_self.upgrade() {
-                        arc_self
-                            .on_viewport_change(layer, &event.new_viewport)
-                            .await
-                    } else {
-                        break;
-                    }
-                }
-            });
-        }
-
-        let weak_self = Arc::downgrade(&arc_result);
-
-        let (listener_registration, event_stream) =
-            event_bus.register_to_watch::<ViewportChange>();
-
-        arc_result
-            .add_listener_registration(listener_registration)
-            .await;
-
-        // Handling which layer is in the foreground is handled in a separate
-        // async task
-        event_bus.spawn(async move {
-            let mut current_layer: usize;
-            let mut current_zoom = 1usize;
-
-            pin_mut!(event_stream);
-
-            while let Some(event) = event_stream.next().await {
-                if let Some(arc_self) = weak_self.upgrade() {
-                    let (min_zoom, max_zoom) =
-                        get_min_max_zoom_level(current_zoom);
-                    let frac_zoom_level =
-                        get_fractional_zoom_level(&event.new_viewport);
-
-                    if frac_zoom_level < min_zoom || frac_zoom_level > max_zoom
-                    {
-                        let mut new_zoom = frac_zoom_level.floor() as usize;
-
-                        if new_zoom == current_zoom {
-                            new_zoom += 1;
-                        }
-
-                        current_zoom = new_zoom;
-                        current_layer = current_zoom % LAYER_COUNT;
-
-                        arc_self.layer_sprites.iter().enumerate().for_each(
-                            |(index, sprite_group)| {
-                                sprite_group.set_z_level(
-                                    if index == current_layer {
-                                        FOREGROUND_Z_LEVEL
-                                    } else {
-                                        BACKGROUND_Z_LEVEL
-                                    },
-                                );
-                            },
-                        );
-                    }
-                } else {
-                    break;
-                }
-            }
-        });
-
-        arc_result
-    }
-
-    /// Run the given action with a read-only reference to the inner terrain
-    /// generator
-    async fn with_layer<R>(
-        &self,
-        layer_index: usize,
-        action: impl FnOnce(&Layer<T::Sprite>) -> R,
-    ) -> R {
-        action(&(*self.layers[layer_index].read().await))
-    }
-
-    /// Run the given action with a rw reference to the inner terrain
-    /// generator
-    async fn with_layer_mut<R>(
-        &self,
-        layer_index: usize,
-        action: impl FnOnce(&mut Layer<T::Sprite>) -> R,
-    ) -> R {
-        action(&mut (*self.layers[layer_index].write().await))
-    }
-
-    /// Called when the viewport changes to adjust the terrain.  This method
-    /// 1. Checks to see if the terrain needs to be updated to contain the
-    ///    given viewport, and if not, the method returns
-    /// 2. checks to see if the size of the terrain sprites is big enough to
-    ///    contain the viewport rect given
-    /// 3. if the terrain sprites needs to be altered, increase the size of the
-    ///    terrain sprites array and updates
-    /// 4. ?
-    async fn on_viewport_change(
-        &self,
-        layer: usize,
-        viewport_info: &ViewportInfo,
-    ) {
-        info!("Starting");
-
-        let terrain_update_info_opt = self
-            .with_layer(layer, |inner| {
-                inner.terrain_updates_required(layer, viewport_info)
-            })
-            .await;
-
-        if terrain_update_info_opt.is_none() {
-            debug!("No terrain updates");
-            return;
-        }
-
-        let terrain_update_info = terrain_update_info_opt.unwrap();
-
-        let valid_sprite_rect = {
-            let size_increased = self
-                .with_layer(layer, |inner| {
-                    inner.check_sprite_array_size_increased(
-                        &terrain_update_info.sprite_array_size,
-                    )
-                })
-                .await;
-
-            if size_increased {
-                debug!("Size increased");
-                self.with_layer_mut(layer, |inner| {
-                    inner.increase_size_for(terrain_update_info, || {
-                        let result = self
-                            .layer_sprites
-                            .get(layer)
-                            .unwrap()
-                            .create_sprite();
-                        result.set_shader(
-                            self.terrain_texture_provider.get_terrain_shader(),
-                        );
-                        result
-                    })
-                })
-                .await
-            } else {
-                debug!("Size not increased");
-                let (top_left, new_valid_rect) = self
-                    .with_layer(layer, |inner| {
-                        inner.calculate_new_valid_sprites(&terrain_update_info)
-                    })
-                    .await
-                    .unwrap_or_default();
-
-                self.with_layer_mut(layer, |inner| {
-                    inner.update_terrain_sprite_info(
-                        terrain_update_info,
-                        top_left,
-                    );
-                })
-                .await;
-
-                new_valid_rect
-            }
-        };
-
-        self.with_layer(layer, |inner| {
-            let sprite_width = inner.sprite_width_in_tiles as f64
-                * UNIT_ZOOM_LEVEL_TILE_LENGTH_F64;
-
-            inner.update_terrain_sprites(valid_sprite_rect, |sprite, point| {
-                sprite.set_visible(false);
-
-                let texture_terrain_rect = IRect {
-                    top_left: *point,
-                    size: ISize::new(
-                        inner.sprite_width_in_tiles,
-                        inner.sprite_width_in_tiles,
-                    ),
-                };
-
-                info!("sprite rect: {:?}", texture_terrain_rect);
-
-                sprite.set_texture(
-                    &self.terrain_texture_provider.get_texture_for_rect(
-                        &texture_terrain_rect,
-                        &TEXTURE_SIZE,
-                    ),
-                );
-                sprite.set_shader_variable_vec4_f64(
-                    "TERRAIN_RECT".to_owned(),
-                    point.x as f64,
-                    point.y as f64,
-                    texture_terrain_rect.size.width as f64,
-                    texture_terrain_rect.size.height as f64,
-                );
-                sprite.set_size(sprite_width, sprite_width);
-                sprite.set_visible(true);
-            });
-        })
-        .await;
-
-        info!("Ending");
-    }
-}
-
-impl<T> Default for Layer<T>
-where
-    T: Sized + HasMutableLocation + HasMutableSize + HasMutableVisibility,
-{
-    fn default() -> Layer<T> {
-        Layer::new()
-    }
-}
-
 impl<T> Layer<T>
 where
     T: Sized + HasMutableLocation + HasMutableSize + HasMutableVisibility,
@@ -443,7 +338,6 @@ where
             sprite_width_in_tiles: UNIT_ZOOM_LEVEL_SPRITE_WIDTH_IN_TILES,
         }
     }
-
     /// Get the terrain rect required to cover the given viewport rect based on
     /// the current size of the terrain sprites array.
     fn viewport_rect_to_terrain_rect(&self, viewport_rect: &Rect) -> IRect {

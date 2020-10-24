@@ -95,8 +95,6 @@ public class Viewport : SKCameraNode {
     
     func setLocationAnimated(_ left: Float64, _ top: Float64, _ durationSeconds: Float64) {
         
-        print(CGPoint(x: CGFloat(left) + zeroPosition.x / scale, y: CGFloat(top) + zeroPosition.y / scale))
-        
         let move = SKAction.move(
             to: apiPositionToViewportPosition(left: left, top: top),
             duration: durationSeconds)

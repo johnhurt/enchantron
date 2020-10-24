@@ -1,51 +1,17 @@
-use crate::application_context::Ao;
-use crate::event::EventBus;
 use crate::model::{Point, Rect, Size};
-use crate::native::{RuntimeResources, SystemView};
-use crate::ui::{
-    DragTracker, SpriteSource, TerrainGenerator, TerrainTextureProvider,
-    ViewportInfo,
-};
-use crate::view_types::ViewTypes;
-use std::sync::Arc;
+use crate::ui::{DragTracker, ViewportInfo};
 
-pub struct GameDisplayState<T>
-where
-    T: ViewTypes,
-{
+pub struct GameDisplayState {
     pub viewport_info: ViewportInfo,
     pub drag_tracker: DragTracker,
-    pub terrain_generator: Arc<TerrainGenerator<T>>,
 }
 
 #[allow(dead_code)]
-impl<T> GameDisplayState<T>
-where
-    T: ViewTypes,
-{
-    pub async fn new(
-        event_bus: EventBus,
-        sprite_source: &impl SpriteSource<
-            T = T::Texture,
-            S = T::Sprite,
-            G = T::SpriteGroup,
-        >,
-        runtime_resources: Ao<RuntimeResources<T>>,
-        system_view: Ao<T::SystemView>,
-    ) -> GameDisplayState<T> {
+impl GameDisplayState {
+    pub fn new() -> GameDisplayState {
         GameDisplayState {
             viewport_info: Default::default(),
-
             drag_tracker: Default::default(),
-            terrain_generator: TerrainGenerator::new(
-                event_bus,
-                sprite_source,
-                TerrainTextureProvider::new(
-                    runtime_resources,
-                    system_view.get_resource_loader(),
-                ),
-            )
-            .await,
         }
     }
 

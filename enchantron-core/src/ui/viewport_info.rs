@@ -17,7 +17,7 @@ impl ViewportInfo {
     /// Create a new viewport info with the viewport and screen aligned
     pub fn new(screen_size: Size) -> ViewportInfo {
         let mut viewport_rect = Rect::default();
-        viewport_rect.size = screen_size.clone();
+        viewport_rect.size = screen_size;
 
         ViewportInfo {
             viewport_rect,
@@ -47,7 +47,7 @@ impl ViewportInfo {
         self.viewport_rect.size = &self.screen_size * self.viewport_scale;
         self.viewport_rect.top_left = new_position;
 
-        debug!("Viewport info changed to {:?}", self);
+        trace!("Viewport info changed to {:?}", self);
     }
 
     /// change the scale of the area shown by the viewport by the given
@@ -86,7 +86,7 @@ impl ViewportInfo {
         self.viewport_rect.size = new_size;
         self.viewport_rect.top_left = new_position;
 
-        debug!("Viewport changed to {:?}", self);
+        trace!("Viewport changed to {:?}", self);
     }
 
     /// change the scale of the area shown by the viewport by the given
@@ -111,12 +111,12 @@ impl ViewportInfo {
         self.viewport_rect.size = new_size;
         self.viewport_rect.top_left = new_position;
 
-        debug!("Viewport changed to {:?}", self);
+        trace!("Viewport changed to {:?}", self);
     }
 
     /// Move the viewport to the new given top-left point
     pub fn move_viewport(&mut self, new_top_left: Point) {
         self.viewport_rect.top_left = new_top_left;
-        debug!("Viewport changed to {:?}", self);
+        trace!("Viewport changed to {:?}", self);
     }
 }

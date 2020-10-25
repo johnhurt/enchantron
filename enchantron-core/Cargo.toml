@@ -33,6 +33,7 @@ one_way_slot_map = "0.3.1"
 num_cpus = "1.13.0"
 evmap = "10.0.2"
 owning_ref = "0.4.1"
+packed_simd = { version = "0.3.4", package = "packed_simd_2" }
 
 [build-dependencies]
 cbindgen = "0.13.1"

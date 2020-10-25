@@ -78,8 +78,8 @@ void main() {
         tex_size);
     
     
-    float chunked_tex_x = floor(terrain_coord_in_tex_x) / tex_size;
-    float chunked_tex_y = floor(terrain_coord_in_tex_y) / tex_size;
+    float chunked_tex_x = (floor(terrain_coord_in_tex_x) + .5) / tex_size;
+    float chunked_tex_y = (floor(terrain_coord_in_tex_y) + .5 )/ tex_size;
     
     float grid_tolerance = 0.055 / tex_size;
     float tile_tolerance = grid_tolerance * 2;
@@ -93,7 +93,7 @@ void main() {
     
     vec4 result;
     
-    if (d < 0.001) {
+    if (d < 0.0001) {
         result = BROWN;
     }
     else {

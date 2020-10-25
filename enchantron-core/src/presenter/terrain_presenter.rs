@@ -6,6 +6,7 @@ use crate::native::{ResourceLoader, RuntimeResources, SystemView};
 use crate::ui::{
     HasMutableLocation, HasMutableSize, HasMutableVisibility, Sprite,
     SpriteSource, TerrainTextureProvider, TerrainUpdateInfo, ViewportInfo,
+    HasMutableZLevel
 };
 use crate::view_types::ViewTypes;
 use futures::pin_mut;
@@ -123,7 +124,8 @@ where
                         self.layer_sprites.get(current_layer).unwrap();
                     let old_layer = self.layer_sprites.get(old_layer).unwrap();
 
-                    //swap layer zoom levels and visibilities
+                    curr_layer.set_z_level(FOREGROUND_Z_LEVEL);
+                    old_layer.set_z_level(BACKGROUND_Z_LEVEL);
                 }
             }
 

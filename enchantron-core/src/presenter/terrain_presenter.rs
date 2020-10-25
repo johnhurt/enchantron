@@ -4,9 +4,9 @@ use crate::game::constants;
 use crate::model::{IPoint, IRect, ISize, Rect, UPoint, URect};
 use crate::native::{ResourceLoader, RuntimeResources, SystemView};
 use crate::ui::{
-    HasMutableLocation, HasMutableSize, HasMutableVisibility, Sprite,
-    SpriteSource, TerrainTextureProvider, TerrainUpdateInfo, ViewportInfo,
-    HasMutableZLevel
+    HasMutableLocation, HasMutableSize, HasMutableVisibility, HasMutableZLevel,
+    Sprite, SpriteSource, TerrainTextureProvider, TerrainUpdateInfo,
+    ViewportInfo,
 };
 use crate::view_types::ViewTypes;
 use futures::pin_mut;

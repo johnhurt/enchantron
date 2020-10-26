@@ -38,7 +38,6 @@ class LoadingView : BaseView {
       width: width,
       height: height))
     progressIndicator.position = CGPoint(x: size.width, y: -size.height)
-    //progressIndicator.position = CGPoint(x: size.width / 2.0, y: -size.height / 2.0)
   }
   
   func transitionToMainMenuView() {

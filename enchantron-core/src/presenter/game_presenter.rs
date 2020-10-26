@@ -62,7 +62,7 @@ where
                 },
         } = magnify_event;
 
-        debug!("Scale changing by {}", scale_change_additive);
+        trace!("Scale changing by {}", scale_change_additive);
 
         let magnify_center_screen_point =
             Point::new(zoom_center_x, zoom_center_y);

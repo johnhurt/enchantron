@@ -132,7 +132,7 @@ where
             self.on_viewport_change(current_layer, &new_viewport).await;
         }
 
-        debug!("Terrain Presenter Stopped");
+        info!("Terrain Presenter Stopped");
     }
 
     /// Called when the viewport changes to adjust the terrain.  This method
@@ -148,8 +148,6 @@ where
         layer_index: usize,
         viewport_info: &ViewportInfo,
     ) {
-        info!("Starting");
-
         let mut layer_opt = self.layers.get_mut(layer_index);
         let layer = layer_opt.as_mut().unwrap();
 
@@ -157,7 +155,6 @@ where
             layer.terrain_updates_required(layer_index, viewport_info);
 
         if terrain_update_info_opt.is_none() {
-            debug!("No terrain updates");
             return;
         }
 
@@ -206,8 +203,6 @@ where
                     layer.sprite_width_in_tiles,
                 ),
             };
-
-            info!("sprite rect: {:?}", texture_terrain_rect);
 
             sprite.set_texture(
                 &terrain_texture_provider
@@ -375,10 +370,6 @@ where
         let new_fractional_zoom = get_fractional_zoom_level(viewport_info);
 
         if !check_layer_needs_update(layer_index, new_fractional_zoom) {
-            debug!(
-                "Layer {} not updated at zoom {}",
-                layer_index, new_fractional_zoom
-            );
             return None;
         }
 
@@ -530,7 +521,7 @@ where
                     &new_top_left_shift,
                 );
 
-                debug!("valid sprite area = {}", new_valid_rect.area());
+                trace!("valid sprite area = {}", new_valid_rect.area());
 
                 (new_top_left, new_valid_rect)
             })
@@ -569,7 +560,7 @@ where
         new_valid_rect: URect,
         sprite_updater: impl Fn(&T, &IPoint),
     ) {
-        debug!("Updating terrain sprites");
+        trace!("Updating terrain sprites");
 
         // hit all the partial rows to the right of the valid region
 
@@ -632,15 +623,6 @@ where
         sprite_source: impl Fn() -> T,
     ) -> URect {
         let min_sprite_array_size = &terrain_update_info.sprite_array_size;
-
-        if !self.check_sprite_array_size_increased(min_sprite_array_size) {
-            // ^ double checked lock
-            debug!("Double checked lock tripped");
-            return URect {
-                top_left: self.top_left_sprite.clone(),
-                size: self.terrain_sprites_size,
-            };
-        }
 
         debug!(
             "Increasing terrain sprites cache to {:?}",

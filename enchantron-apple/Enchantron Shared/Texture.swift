@@ -56,8 +56,4 @@ class Texture {
   func setCenterRegistration(_ registerCenter: Bool) {
     self.anchorPoint = CGPoint(x: CGFloat(0.5), y: CGFloat(0.5))
   }
-    
-  deinit {
-    print("Dropping Texture")
-  }
 }

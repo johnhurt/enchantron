@@ -281,6 +281,11 @@ lazy_static! {
                       .name("local_y")
                       .data_type(*DOUBLE)
                       .build().unwrap(),
+
+                    ArgumentDefBuilder::default()
+                        .name("click_count")
+                        .data_type(*LONG)
+                        .build().unwrap(),
                 ])
                 .build().unwrap(),
 
@@ -311,6 +316,11 @@ lazy_static! {
                       .name("local_y")
                       .data_type(*DOUBLE)
                       .build().unwrap(),
+
+                    ArgumentDefBuilder::default()
+                        .name("click_count")
+                        .data_type(*LONG)
+                        .build().unwrap(),
                 ])
                 .build().unwrap(),
 
@@ -340,6 +350,11 @@ lazy_static! {
                   ArgumentDefBuilder::default()
                       .name("local_y")
                       .data_type(*DOUBLE)
+                      .build().unwrap(),
+
+                  ArgumentDefBuilder::default()
+                      .name("click_count")
+                      .data_type(*LONG)
                       .build().unwrap(),
                 ])
                 .build().unwrap(),
@@ -372,6 +387,11 @@ lazy_static! {
                           .data_type(*DOUBLE)
                           .build().unwrap(),
 
+                          ArgumentDefBuilder::default()
+                              .name("click_count_1")
+                              .data_type(*LONG)
+                              .build().unwrap(),
+
                     ArgumentDefBuilder::default()
                         .name("drag_id_2")
                         .data_type(*LONG)
@@ -396,6 +416,11 @@ lazy_static! {
                         .name("local_y_2")
                         .data_type(*DOUBLE)
                         .build().unwrap(),
+
+                        ArgumentDefBuilder::default()
+                            .name("click_count_2")
+                            .data_type(*LONG)
+                            .build().unwrap(),
                     ])
                     .build().unwrap(),
 
@@ -427,6 +452,11 @@ lazy_static! {
                       .data_type(*DOUBLE)
                       .build().unwrap(),
 
+                      ArgumentDefBuilder::default()
+                          .name("click_count_1")
+                          .data_type(*LONG)
+                          .build().unwrap(),
+
                 ArgumentDefBuilder::default()
                     .name("drag_id_2")
                     .data_type(*LONG)
@@ -451,6 +481,11 @@ lazy_static! {
                     .name("local_y_2")
                     .data_type(*DOUBLE)
                     .build().unwrap(),
+
+                    ArgumentDefBuilder::default()
+                        .name("click_count_2")
+                        .data_type(*LONG)
+                        .build().unwrap(),
                 ])
                 .build().unwrap(),
 
@@ -482,6 +517,11 @@ lazy_static! {
                           .data_type(*DOUBLE)
                           .build().unwrap(),
 
+                          ArgumentDefBuilder::default()
+                              .name("click_count_1")
+                              .data_type(*LONG)
+                              .build().unwrap(),
+
                     ArgumentDefBuilder::default()
                         .name("drag_id_2")
                         .data_type(*LONG)
@@ -506,6 +546,11 @@ lazy_static! {
                         .name("local_y_2")
                         .data_type(*DOUBLE)
                         .build().unwrap(),
+
+                        ArgumentDefBuilder::default()
+                            .name("click_count_2")
+                            .data_type(*LONG)
+                            .build().unwrap(),
                     ])
                     .build().unwrap(),
         ])

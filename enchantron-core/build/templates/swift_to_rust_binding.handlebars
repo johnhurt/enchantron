@@ -142,7 +142,6 @@ private func byteBufferToCGData(_ byteBuffer: ByteBuffer) -> CGDataProvider {
 
         { (pointer, _, _) in
         let _ =  Unmanaged<ByteBuffer>.fromOpaque(UnsafeRawPointer(pointer!)).takeRetainedValue()
-            print("Dropped")
         })!
 }
 

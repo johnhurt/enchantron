@@ -158,41 +158,44 @@ class BaseView: SKNode {
         }
     }
     
-    func oneDragStarted(id: Int64, globalPoint: CGPoint, localPoint: CGPoint) {
+    func oneDragStarted(id: Int64, globalPoint: CGPoint, localPoint: CGPoint, clickCount: Int64) {
         for dragHandler in self.dragHandlers {
             dragHandler.onOneDragStart(
                 dragId: id,
                 globalX: Float64(globalPoint.x),
                 globalY: Float64(globalPoint.y),
                 localX: Float64(localPoint.x),
-                localY: -Float64(localPoint.y))
+                localY: -Float64(localPoint.y),
+                clickCount: clickCount)
         }
     }
     
-    func oneDragMoved(id: Int64, globalPoint: CGPoint, localPoint: CGPoint) {
+    func oneDragMoved(id: Int64, globalPoint: CGPoint, localPoint: CGPoint, clickCount: Int64) {
         for dragHandler in self.dragHandlers {
             dragHandler.onOneDragMove(
                 dragId: id,
                 globalX: Float64(globalPoint.x),
                 globalY: Float64(globalPoint.y),
                 localX: Float64(localPoint.x),
-                localY: -Float64(localPoint.y))
+                localY: -Float64(localPoint.y),
+                clickCount: clickCount)
         }
     }
     
-    func oneDragEnded(id: Int64, globalPoint: CGPoint, localPoint: CGPoint) {
+    func oneDragEnded(id: Int64, globalPoint: CGPoint, localPoint: CGPoint, clickCount: Int64) {
         for dragHandler in self.dragHandlers {
             dragHandler.onOneDragEnd(
                 dragId: id,
                 globalX: Float64(globalPoint.x),
                 globalY: Float64(globalPoint.y),
                 localX: Float64(localPoint.x),
-                localY: -Float64(localPoint.y))
+                localY: -Float64(localPoint.y),
+                clickCount: clickCount)
         }
     }
     
-    func twoDragsStarted(id1: Int64, globalPoint1: CGPoint, localPoint1: CGPoint,
-                        id2: Int64, globalPoint2: CGPoint, localPoint2: CGPoint) {
+    func twoDragsStarted(id1: Int64, globalPoint1: CGPoint, localPoint1: CGPoint, clickCount1: Int64,
+                        id2: Int64, globalPoint2: CGPoint, localPoint2: CGPoint, clickCount2: Int64) {
         for dragHandler in self.dragHandlers {
             dragHandler.onTwoDragsStart(
                 dragId1: id1,
@@ -200,16 +203,18 @@ class BaseView: SKNode {
                 globalY1: Float64(globalPoint1.y),
                 localX1: Float64(localPoint1.x),
                 localY1: -Float64(localPoint1.y),
+                clickCount1: clickCount1,
                 dragId2: id2,
                 globalX2: Float64(globalPoint2.x),
                 globalY2: Float64(globalPoint2.y),
                 localX2: Float64(localPoint2.x),
-                localY2: -Float64(localPoint2.y))
+                localY2: -Float64(localPoint2.y),
+                clickCount2: clickCount2)
         }
     }
     
-    func twoDragsMoved(id1: Int64, globalPoint1: CGPoint, localPoint1: CGPoint,
-                      id2: Int64, globalPoint2: CGPoint, localPoint2: CGPoint) {
+    func twoDragsMoved(id1: Int64, globalPoint1: CGPoint, localPoint1: CGPoint, clickCount1: Int64,
+                      id2: Int64, globalPoint2: CGPoint, localPoint2: CGPoint, clickCount2: Int64) {
         for dragHandler in self.dragHandlers {
             dragHandler.onTwoDragsMove(
                 dragId1: id1,
@@ -217,16 +222,18 @@ class BaseView: SKNode {
                 globalY1: Float64(globalPoint1.y),
                 localX1: Float64(localPoint1.x),
                 localY1: -Float64(localPoint1.y),
+                clickCount1: clickCount1,
                 dragId2: id2,
                 globalX2: Float64(globalPoint2.x),
                 globalY2: Float64(globalPoint2.y),
                 localX2: Float64(localPoint2.x),
-                localY2: -Float64(localPoint2.y))
+                localY2: -Float64(localPoint2.y),
+                clickCount2: clickCount2)
         }
     }
     
-    func twoDragsEnded(id1: Int64, globalPoint1: CGPoint, localPoint1: CGPoint,
-                      id2: Int64, globalPoint2: CGPoint, localPoint2: CGPoint) {
+    func twoDragsEnded(id1: Int64, globalPoint1: CGPoint, localPoint1: CGPoint, clickCount1: Int64,
+                      id2: Int64, globalPoint2: CGPoint, localPoint2: CGPoint, clickCount2: Int64) {
         for dragHandler in self.dragHandlers {
             dragHandler.onTwoDragsEnd(
                 dragId1: id1,
@@ -234,11 +241,13 @@ class BaseView: SKNode {
                 globalY1: Float64(globalPoint1.y),
                 localX1: Float64(localPoint1.x),
                 localY1: -Float64(localPoint1.y),
+                clickCount1: clickCount1,
                 dragId2: id2,
                 globalX2: Float64(globalPoint2.x),
                 globalY2: Float64(globalPoint2.y),
                 localX2: Float64(localPoint2.x),
-                localY2: -Float64(localPoint2.y))
+                localY2: -Float64(localPoint2.y),
+                clickCount2: clickCount2)
         }
     }
     
@@ -269,7 +278,7 @@ class BaseView: SKNode {
             let (id, touch) = touches[0]
             let globalPoint = touch.location(in: nil)
             let localPoint = touch.location(in: self)
-            oneDragStarted(id: id, globalPoint: globalPoint, localPoint: localPoint)
+            oneDragStarted(id: id, globalPoint: globalPoint, localPoint: localPoint, clickCount: Int64(touch.tapCount))
         
         case 2:
             let (id1, touch1) = touches[0]
@@ -284,9 +293,11 @@ class BaseView: SKNode {
                 id1: id1,
                 globalPoint1: globalPoint1,
                 localPoint1: localPoint1,
+                clickCount1: Int64(touch1.tapCount),
                 id2: id2,
                 globalPoint2: globalPoint2,
-                localPoint2: localPoint2)
+                localPoint2: localPoint2,
+                clickCount2: Int64(touch2.tapCount))
         default: do {}
         }
     }
@@ -297,7 +308,7 @@ class BaseView: SKNode {
             let (id, touch) = touches[0]
             let globalPoint = touch.location(in: nil)
             let localPoint = touch.location(in: self)
-            oneDragMoved(id: id, globalPoint: globalPoint, localPoint: localPoint)
+            oneDragMoved(id: id, globalPoint: globalPoint, localPoint: localPoint, clickCount: Int64(touch.tapCount))
         
         case 2:
             let (id1, touch1) = touches[0]
@@ -312,9 +323,11 @@ class BaseView: SKNode {
                 id1: id1,
                 globalPoint1: globalPoint1,
                 localPoint1: localPoint1,
+                clickCount1: Int64(touch1.tapCount),
                 id2: id2,
                 globalPoint2: globalPoint2,
-                localPoint2: localPoint2)
+                localPoint2: localPoint2,
+                clickCount2: Int64(touch2.tapCount))
         default: do {}
         }
     }
@@ -325,7 +338,7 @@ class BaseView: SKNode {
             let (id, touch) = touches[0]
             let globalPoint = touch.location(in: nil)
             let localPoint = touch.location(in: self)
-            oneDragEnded(id: id, globalPoint: globalPoint, localPoint: localPoint)
+            oneDragEnded(id: id, globalPoint: globalPoint, localPoint: localPoint, clickCount: Int64(touch.tapCount))
         
         case 2:
             let (id1, touch1) = touches[0]
@@ -340,9 +353,11 @@ class BaseView: SKNode {
                 id1: id1,
                 globalPoint1: globalPoint1,
                 localPoint1: localPoint1,
+                clickCount1: Int64(touch1.tapCount),
                 id2: id2,
                 globalPoint2: globalPoint2,
-                localPoint2: localPoint2)
+                localPoint2: localPoint2,
+                clickCount2: Int64(touch2.tapCount))
         default: do {}
         }
     }
@@ -362,7 +377,8 @@ class BaseView: SKNode {
                     globalY: Float64((event.window?.contentView?.bounds.size.height)!
                         - event.locationInWindow.y),
                     localX: Float64(localPoint.x),
-                    localY: -Float64(localPoint.y))
+                    localY: -Float64(localPoint.y),
+                    clickCount: Int64(event.clickCount))
             }
         }
     }
@@ -377,7 +393,8 @@ class BaseView: SKNode {
                     globalY: Float64((event.window?.contentView?.bounds.size.height)!
                         - event.locationInWindow.y),
                     localX: Float64(localPoint.x),
-                    localY: -Float64(localPoint.y))
+                    localY: -Float64(localPoint.y),
+                    clickCount: Int64(event.clickCount))
             }
         }
     }
@@ -392,7 +409,8 @@ class BaseView: SKNode {
                     globalY: Float64((event.window?.contentView?.bounds.size.height)!
                         - event.locationInWindow.y),
                     localX: Float64(localPoint.x),
-                    localY: -Float64(localPoint.y))
+                    localY: -Float64(localPoint.y),
+                    clickCount: Int64(event.clickCount))
             }
         }
     }

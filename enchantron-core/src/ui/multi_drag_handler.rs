@@ -23,10 +23,18 @@ impl MultiDragHandler {
         global_y: f64,
         local_x: f64,
         local_y: f64,
+        click_count: i64,
     ) {
         (self.multi_drag_fn)(DragEvent::new(
             DragEventType::Start,
-            DragPoint::new(drag_id, global_x, global_y, local_x, local_y),
+            DragPoint::new(
+                drag_id,
+                global_x,
+                global_y,
+                local_x,
+                local_y,
+                click_count,
+            ),
             None,
         ));
     }
@@ -38,10 +46,18 @@ impl MultiDragHandler {
         global_y: f64,
         local_x: f64,
         local_y: f64,
+        click_count: i64,
     ) {
         (self.multi_drag_fn)(DragEvent::new(
             DragEventType::Move,
-            DragPoint::new(drag_id, global_x, global_y, local_x, local_y),
+            DragPoint::new(
+                drag_id,
+                global_x,
+                global_y,
+                local_x,
+                local_y,
+                click_count,
+            ),
             None,
         ));
     }
@@ -53,10 +69,18 @@ impl MultiDragHandler {
         global_y: f64,
         local_x: f64,
         local_y: f64,
+        click_count: i64,
     ) {
         (self.multi_drag_fn)(DragEvent::new(
             DragEventType::End,
-            DragPoint::new(drag_id, global_x, global_y, local_x, local_y),
+            DragPoint::new(
+                drag_id,
+                global_x,
+                global_y,
+                local_x,
+                local_y,
+                click_count,
+            ),
             None,
         ));
     }
@@ -69,19 +93,31 @@ impl MultiDragHandler {
         global_y_1: f64,
         local_x_1: f64,
         local_y_1: f64,
+        click_count_1: i64,
         drag_id_2: i64,
         global_x_2: f64,
         global_y_2: f64,
         local_x_2: f64,
         local_y_2: f64,
+        click_count_2: i64,
     ) {
         (self.multi_drag_fn)(DragEvent::new(
             DragEventType::Start,
             DragPoint::new(
-                drag_id_1, global_x_1, global_y_1, local_x_1, local_y_1,
+                drag_id_1,
+                global_x_1,
+                global_y_1,
+                local_x_1,
+                local_y_1,
+                click_count_1,
             ),
             Some(DragPoint::new(
-                drag_id_2, global_x_2, global_y_2, local_x_2, local_y_2,
+                drag_id_2,
+                global_x_2,
+                global_y_2,
+                local_x_2,
+                local_y_2,
+                click_count_2,
             )),
         ));
     }
@@ -94,19 +130,31 @@ impl MultiDragHandler {
         global_y_1: f64,
         local_x_1: f64,
         local_y_1: f64,
+        click_count_1: i64,
         drag_id_2: i64,
         global_x_2: f64,
         global_y_2: f64,
         local_x_2: f64,
         local_y_2: f64,
+        click_count_2: i64,
     ) {
         (self.multi_drag_fn)(DragEvent::new(
             DragEventType::Move,
             DragPoint::new(
-                drag_id_1, global_x_1, global_y_1, local_x_1, local_y_1,
+                drag_id_1,
+                global_x_1,
+                global_y_1,
+                local_x_1,
+                local_y_1,
+                click_count_1,
             ),
             Some(DragPoint::new(
-                drag_id_2, global_x_2, global_y_2, local_x_2, local_y_2,
+                drag_id_2,
+                global_x_2,
+                global_y_2,
+                local_x_2,
+                local_y_2,
+                click_count_2,
             )),
         ));
     }
@@ -119,19 +167,31 @@ impl MultiDragHandler {
         global_y_1: f64,
         local_x_1: f64,
         local_y_1: f64,
+        click_count_1: i64,
         drag_id_2: i64,
         global_x_2: f64,
         global_y_2: f64,
         local_x_2: f64,
         local_y_2: f64,
+        click_count_2: i64,
     ) {
         (self.multi_drag_fn)(DragEvent::new(
             DragEventType::End,
             DragPoint::new(
-                drag_id_1, global_x_1, global_y_1, local_x_1, local_y_1,
+                drag_id_1,
+                global_x_1,
+                global_y_1,
+                local_x_1,
+                local_y_1,
+                click_count_1,
             ),
             Some(DragPoint::new(
-                drag_id_2, global_x_2, global_y_2, local_x_2, local_y_2,
+                drag_id_2,
+                global_x_2,
+                global_y_2,
+                local_x_2,
+                local_y_2,
+                click_count_2,
             )),
         ));
     }

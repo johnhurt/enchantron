@@ -5,6 +5,7 @@ pub struct DragPoint {
     pub drag_id: i64,
     pub global_point: Point,
     pub local_point: Point,
+    pub click_count: i64,
 }
 
 impl DragPoint {
@@ -14,6 +15,7 @@ impl DragPoint {
         global_y: f64,
         local_x: f64,
         local_y: f64,
+        click_count: i64,
     ) -> DragPoint {
         DragPoint {
             drag_id,
@@ -25,6 +27,7 @@ impl DragPoint {
                 x: local_x,
                 y: local_y,
             },
+            click_count,
         }
     }
 }

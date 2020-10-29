@@ -2,7 +2,7 @@ use crate::application_context::Ao;
 use crate::event::*;
 use crate::game::constants;
 use crate::model::{IPoint, IRect, ISize, Rect, UPoint, URect};
-use crate::native::{ResourceLoader, RuntimeResources, SystemView};
+use crate::native::{RuntimeResources, SystemView};
 use crate::ui::{
     HasMutableLocation, HasMutableSize, HasMutableVisibility, HasMutableZLevel,
     Sprite, SpriteSource, TerrainTextureProvider, TerrainUpdateInfo,
@@ -46,7 +46,6 @@ struct Layer<S>
 where
     S: Sized + HasMutableSize + HasMutableLocation + HasMutableVisibility,
 {
-    layer_index: usize,
     terrain_sprites_size: ISize,
     terrain_sprites: Vec<Vec<S>>,
     sprite_terrain_coverage: IRect,
@@ -326,7 +325,6 @@ where
 {
     pub fn new() -> Layer<T> {
         Layer {
-            layer_index: Default::default(),
             terrain_sprites: Default::default(),
             terrain_sprites_size: Default::default(),
             sprite_terrain_coverage: Default::default(),

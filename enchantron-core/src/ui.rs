@@ -32,8 +32,6 @@ pub use self::terrain_update_info::TerrainUpdateInfo;
 pub use self::viewport::Viewport;
 pub use self::viewport_info::ViewportInfo;
 
-pub use self::game_display_state::GameDisplayState;
-
 mod button;
 mod drag_event_type;
 mod drag_point;
@@ -63,8 +61,6 @@ mod terrain_texture_provider;
 mod terrain_update_info;
 mod viewport;
 mod viewport_info;
-
-mod game_display_state;
 
 #[macro_use]
 mod click_handler;

@@ -11,7 +11,7 @@ import SpriteKit
 
 class BaseView: SKNode {
     
-    private var dragHandlers: [MultiDragHandler] = []
+    private var dragHandlers: [MultiTouchHandler] = []
     private var layoutHandlers: [LayoutHandler] = []
     private var magnifyHandlers: [MagnifyHandler] = []
     
@@ -77,7 +77,7 @@ class BaseView: SKNode {
         layout(size: size)
     }
     
-    func getDragHandlers() -> [MultiDragHandler] {
+    func getDragHandlers() -> [MultiTouchHandler] {
         return self.dragHandlers
     }
     
@@ -111,7 +111,7 @@ class BaseView: SKNode {
         }
     }
     
-    func addMultiDragHandler(_ handler: MultiDragHandler) -> HandlerRegistration {
+    func addMultiTouchHandler(_ handler: MultiTouchHandler) -> HandlerRegistration {
         DispatchQueue.main.sync {
             self.isUserInteractionEnabled = true
             self.dragHandlers.append(handler)
@@ -121,7 +121,7 @@ class BaseView: SKNode {
         })
     }
     
-    func removeHandler(_ handler: MultiDragHandler) {
+    func removeHandler(_ handler: MultiTouchHandler) {
         DispatchQueue.main.sync {
             if let index = self.dragHandlers.firstIndex(of: handler) {
                 self.dragHandlers.remove(at: index)

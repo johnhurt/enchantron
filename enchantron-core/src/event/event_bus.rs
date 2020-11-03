@@ -1,5 +1,5 @@
 use crate::model::Point;
-use crate::ui::{DragEventType, DragPoint, ViewportInfo};
+use crate::ui::{RawTouch, TouchEventType, ViewportInfo};
 
 define_event_bus!(
     EventBus,
@@ -47,10 +47,10 @@ define_ui_event!(
             width: i64,
             height: i64
         },
-        DragEvent {
-            state: DragEventType,
-            drag_point_1: DragPoint,
-            drag_point_2_opt: Option<DragPoint>
+        RawTouchEvent {
+            state: TouchEventType,
+            touch: RawTouch,
+            other_touch_opt: Option<RawTouch>
         },
         Magnify {
             scale_change_additive: f64,
@@ -58,3 +58,29 @@ define_ui_event!(
         }
     }
 );
+
+impl RawTouchEvent {
+    pub fn start_1(touch: RawTouch) -> Self {
+        RawTouchEvent::new(TouchEventType::Start, touch, None)
+    }
+
+    pub fn start_2(touch_1: RawTouch, touch_2: RawTouch) -> Self {
+        RawTouchEvent::new(TouchEventType::Start, touch_1, Some(touch_2))
+    }
+
+    pub fn move_1(touch: RawTouch) -> Self {
+        RawTouchEvent::new(TouchEventType::Move, touch, None)
+    }
+
+    pub fn move_2(touch_1: RawTouch, touch_2: RawTouch) -> Self {
+        RawTouchEvent::new(TouchEventType::Move, touch_1, Some(touch_2))
+    }
+
+    pub fn end_1(touch: RawTouch) -> Self {
+        RawTouchEvent::new(TouchEventType::End, touch, None)
+    }
+
+    pub fn end_2(touch_1: RawTouch, touch_2: RawTouch) -> Self {
+        RawTouchEvent::new(TouchEventType::End, touch_1, Some(touch_2))
+    }
+}

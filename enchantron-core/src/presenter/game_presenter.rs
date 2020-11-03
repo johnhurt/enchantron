@@ -6,8 +6,8 @@ use crate::model::{Point, Size};
 use crate::native::RuntimeResources;
 use crate::ui::{
     HandlerRegistration, HasLayoutHandlers, HasMagnifyHandlers,
-    HasMultiDragHandlers, HasViewport, LayoutHandler, MagnifyHandler,
-    MultiDragHandler, SpriteSource,
+    HasMultiTouchHandlers, HasViewport, LayoutHandler, MagnifyHandler,
+    MultiTouchHandler, SpriteSource, TouchEvent, TouchTracker,
 };
 use crate::view::BaseView;
 use crate::view_types::ViewTypes;
@@ -27,6 +27,7 @@ where
     runtime_resources: Ao<RuntimeResources<T>>,
     system_view: Ao<T::SystemView>,
 
+    touch_tracker: TouchTracker,
     viewport_presenter: ViewportPresenter<T>,
 
     droppers: Vec<Box<dyn FnOnce() + Send>>,
@@ -46,8 +47,9 @@ where
         self.viewport_presenter.on_magnify(&magnify_event);
     }
 
-    fn on_drag(&mut self, drag_event: DragEvent) {
-        self.viewport_presenter.on_drag_event(&drag_event);
+    fn on_touch(&mut self, raw_touch_event: RawTouchEvent) {
+        let touch_event = self.touch_tracker.to_touch_event(raw_touch_event);
+        self.viewport_presenter.on_touch_event(&touch_event);
     }
 
     fn bind_ui_events(
@@ -72,9 +74,9 @@ where
 
         let copied_event_bus = event_bus.clone();
 
-        result.push(Box::new(view.add_multi_drag_handler(
-            MultiDragHandler::new(move |drag_event| {
-                copied_event_bus.post::<UI>(drag_event.into())
+        result.push(Box::new(view.add_multi_touch_handler(
+            MultiTouchHandler::new(move |touch_event| {
+                copied_event_bus.post::<UI>(touch_event.into())
             }),
         )));
 
@@ -162,6 +164,7 @@ where
             event_bus: event_bus.clone(),
             runtime_resources,
             system_view,
+            touch_tracker: Default::default(),
             viewport_presenter,
             droppers,
         };
@@ -190,7 +193,7 @@ where
             ui_event_opt = ui_stream.next() => ui_event_opt
         } {
             match ui_event {
-                UIEvent::DragEvent { event } => presenter.on_drag(event),
+                UIEvent::RawTouchEvent { event } => presenter.on_touch(event),
                 UIEvent::Layout { event } => presenter.on_layout(event),
                 UIEvent::Magnify { event } => presenter.on_magnify(event),
             }

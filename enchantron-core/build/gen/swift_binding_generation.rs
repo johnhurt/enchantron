@@ -250,8 +250,8 @@ lazy_static! {
         .build().unwrap(),
 
         TypeDefBuilder::default()
-        .name("MultiDragHandler")
-        .rust_import(Some("crate::ui::MultiDragHandler"))
+        .name("MultiTouchHandler")
+        .rust_import(Some("crate::ui::MultiTouchHandler"))
         .rust_owned(true)
         .methods(vec![
             MethodDefBuilder::default()
@@ -1623,8 +1623,8 @@ lazy_static! {
                 ])
                 .build().unwrap(),
             ImplDefBuilder::default()
-                .trait_name("HasMultiDragHandlers")
-                .trait_import(Some("crate::ui::HasMultiDragHandlers"))
+                .trait_name("HasMultiTouchHandlers")
+                .trait_import(Some("crate::ui::HasMultiTouchHandlers"))
                 .generics(vec![
                     GenericDefBuilder::default()
                         .symbol(Some("R"))
@@ -1652,16 +1652,16 @@ lazy_static! {
         ])
         .methods(vec![
             MethodDefBuilder::default()
-                .name("add_multi_drag_handler")
+                .name("add_multi_touch_handler")
                 .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("HasMultiDragHandlers")
+                    .trait_name("HasMultiTouchHandlers")
                     .build().unwrap()))
                 .arguments(vec![
                     ArgumentDefBuilder::default()
-                        .name("multi_drag_handler")
+                        .name("multi_touch_handler")
                         .data_type(DataType::rust_struct(
-                            "MultiDragHandler",
-                            Some("crate::ui::MultiDragHandler")))
+                            "MultiTouchHandler",
+                            Some("crate::ui::MultiTouchHandler")))
                         .build().unwrap()
                 ])
                 .return_type(Some(DataType::swift_generic(Some("R"),

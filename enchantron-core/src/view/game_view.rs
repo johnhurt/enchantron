@@ -1,5 +1,5 @@
 use crate::ui::{
-    HasLayoutHandlers, HasMagnifyHandlers, HasMultiDragHandlers, HasViewport,
+    HasLayoutHandlers, HasMagnifyHandlers, HasMultiTouchHandlers, HasViewport,
     SpriteSource,
 };
 
@@ -9,7 +9,7 @@ pub trait GameView:
     BaseView
     + SpriteSource
     + HasLayoutHandlers
-    + HasMultiDragHandlers
+    + HasMultiTouchHandlers
     + HasViewport
     + HasMagnifyHandlers
     + Sync

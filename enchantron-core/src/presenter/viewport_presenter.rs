@@ -1,8 +1,8 @@
 use crate::event::*;
 use crate::model::{Point, Rect, Size};
 use crate::ui::{
-    DragTracker, DragTrackerEvent, HasMutableLocation, HasMutableScale,
-    ViewportInfo,
+    HasMutableLocation, HasMutableScale, PanZoomEvent, PanZoomTracker,
+    TouchEvent, ViewportInfo,
 };
 use crate::view_types::ViewTypes;
 
@@ -10,7 +10,7 @@ pub struct ViewportPresenter<T: ViewTypes> {
     pub viewport: T::Viewport,
     pub event_bus: EventBus,
     pub viewport_info: ViewportInfo,
-    pub drag_tracker: DragTracker,
+    pub touch_tracker: PanZoomTracker,
 }
 
 impl<T> ViewportPresenter<T>
@@ -25,7 +25,7 @@ where
             viewport,
             event_bus,
             viewport_info: ViewportInfo::default(),
-            drag_tracker: DragTracker::default(),
+            touch_tracker: PanZoomTracker::default(),
         }
     }
 
@@ -69,14 +69,12 @@ where
         );
     }
 
-    pub fn on_drag_event(&mut self, drag_event: &DragEvent) {
-        let drag_tracker_event = self.drag_tracker.on_drag_event(*drag_event);
+    pub fn on_touch_event(&mut self, touch_event: &TouchEvent) {
+        let pan_zoom_event = self.touch_tracker.to_pan_zoom_event(*touch_event);
 
-        match drag_tracker_event {
-            Some(DragTrackerEvent::Move(drag_move)) => {
-                self.on_drag_move(drag_move)
-            }
-            Some(DragTrackerEvent::MoveAndScale(drag_move, scale)) => {
+        match pan_zoom_event {
+            Some(PanZoomEvent::Move(drag_move)) => self.on_drag_move(drag_move),
+            Some(PanZoomEvent::MoveAndScale(drag_move, scale)) => {
                 self.on_drag_move_and_scale(drag_move, scale)
             }
             _ => (),

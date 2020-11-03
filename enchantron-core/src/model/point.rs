@@ -20,10 +20,14 @@ impl Point {
     }
 
     pub fn distance_to(&self, point: &Point) -> f64 {
+        self.distance_squared_to(point).sqrt()
+    }
+
+    pub fn distance_squared_to(&self, point: &Point) -> f64 {
         let dx = self.x - point.x;
         let dy = self.y - point.y;
 
-        (dx * dx + dy * dy).sqrt()
+        dx * dx + dy * dy
     }
 
     /// Perform a dot product operation between this point and the other

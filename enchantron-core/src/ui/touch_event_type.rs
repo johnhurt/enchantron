@@ -1,5 +1,5 @@
 #[derive(Clone, Debug, Copy)]
-pub enum DragEventType {
+pub enum TouchEventType {
     Start,
     Move,
     End,

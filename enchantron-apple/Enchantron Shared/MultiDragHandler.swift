@@ -8,9 +8,9 @@
 
 import Foundation
 
-extension MultiDragHandler : Equatable {
+extension MultiTouchHandler : Equatable {
   
-  static func ==(lhs: MultiDragHandler, rhs: MultiDragHandler) -> Bool {
+  static func ==(lhs: MultiTouchHandler, rhs: MultiTouchHandler) -> Bool {
     return lhs === rhs
   }
 }

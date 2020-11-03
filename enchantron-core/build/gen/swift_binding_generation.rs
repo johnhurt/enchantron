@@ -167,88 +167,6 @@ lazy_static! {
         ])
         .build().unwrap(),
 
-    TypeDefBuilder::default()
-        .name("DragHandler")
-        .rust_import(Some("crate::ui::DragHandler"))
-        .rust_owned(true)
-        .methods(vec![
-            MethodDefBuilder::default()
-                .name("on_drag_start")
-                .arguments(vec![
-                  ArgumentDefBuilder::default()
-                      .name("global_x")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-
-                  ArgumentDefBuilder::default()
-                      .name("global_y")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-
-                  ArgumentDefBuilder::default()
-                      .name("local_x")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-
-                  ArgumentDefBuilder::default()
-                      .name("local_y")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-                ])
-                .build().unwrap(),
-
-            MethodDefBuilder::default()
-                .name("on_drag_move")
-                .arguments(vec![
-                  ArgumentDefBuilder::default()
-                      .name("global_x")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-
-                  ArgumentDefBuilder::default()
-                      .name("global_y")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-
-                  ArgumentDefBuilder::default()
-                      .name("local_x")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-
-                  ArgumentDefBuilder::default()
-                      .name("local_y")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-                ])
-                .build().unwrap(),
-
-            MethodDefBuilder::default()
-                .name("on_drag_end")
-                .arguments(vec![
-                  ArgumentDefBuilder::default()
-                      .name("global_x")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-
-                  ArgumentDefBuilder::default()
-                      .name("global_y")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-
-                  ArgumentDefBuilder::default()
-                      .name("local_x")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-
-                  ArgumentDefBuilder::default()
-                      .name("local_y")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-                ])
-                .build().unwrap()
-        ])
-        .build().unwrap(),
-
         TypeDefBuilder::default()
         .name("MultiTouchHandler")
         .rust_import(Some("crate::ui::MultiTouchHandler"))
@@ -1076,17 +994,6 @@ lazy_static! {
                 .build().unwrap(),
 
             ImplDefBuilder::default()
-                .trait_name("HasDragHandlers")
-                .trait_import(Some("crate::ui::HasDragHandlers"))
-                .generics(vec![
-                  GenericDefBuilder::default()
-                      .symbol(Some("R"))
-                      .bound_type("HandlerRegistration")
-                      .build().unwrap()
-                ])
-                .build().unwrap(),
-
-            ImplDefBuilder::default()
                 .trait_name("HasMutableSize")
                 .trait_import(Some("crate::ui::HasMutableSize"))
                 .build().unwrap(),
@@ -1107,23 +1014,6 @@ lazy_static! {
                 .build().unwrap()
         ])
         .methods(vec![
-
-            MethodDefBuilder::default()
-                .name("add_drag_handler")
-                .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("HasDragHandlers")
-                    .build().unwrap()))
-                .arguments(vec![
-                    ArgumentDefBuilder::default()
-                        .name("drag_handler")
-                        .data_type(DataType::rust_struct(
-                            "DragHandler",
-                            Some("crate::ui::DragHandler")))
-                        .build().unwrap()
-                ])
-                .return_type(Some(DataType::swift_generic(Some("R"),
-                    DataType::swift_struct("HandlerRegistration", None))))
-                .build().unwrap(),
 
           MethodDefBuilder::default()
               .name("set_texture")

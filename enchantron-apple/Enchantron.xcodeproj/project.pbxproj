@@ -29,8 +29,6 @@
 		634589FF212645B400D81EAD /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634589FD212645B400D81EAD /* LoadingView.swift */; };
 		6346A2622138921200481721 /* RookAndPawn White.png in Resources */ = {isa = PBXBuildFile; fileRef = 6346A2612138921200481721 /* RookAndPawn White.png */; };
 		6346A2632138921200481721 /* RookAndPawn White.png in Resources */ = {isa = PBXBuildFile; fileRef = 6346A2612138921200481721 /* RookAndPawn White.png */; };
-		6346A2652139D1E900481721 /* DragHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6346A2642139D1E900481721 /* DragHandler.swift */; };
-		6346A2662139D1E900481721 /* DragHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6346A2642139D1E900481721 /* DragHandler.swift */; };
 		63531FC32278BD850060D9AD /* libenchantron.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63531FC22278BD850060D9AD /* libenchantron.a */; };
 		63531FC52278BD9E0060D9AD /* libenchantron.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63531FC42278BD9E0060D9AD /* libenchantron.a */; };
 		6364099023181E3C00B46512 /* SpriteSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6364098F23181E3C00B46512 /* SpriteSource.swift */; };
@@ -112,7 +110,6 @@
 		634109A1211CC7C000D40139 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		634589FD212645B400D81EAD /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		6346A2612138921200481721 /* RookAndPawn White.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "RookAndPawn White.png"; sourceTree = "<group>"; };
-		6346A2642139D1E900481721 /* DragHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragHandler.swift; sourceTree = "<group>"; };
 		63531FC22278BD850060D9AD /* libenchantron.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libenchantron.a; path = "../enchantron-core/target/universal/debug/libenchantron.a"; sourceTree = "<group>"; };
 		63531FC42278BD9E0060D9AD /* libenchantron.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libenchantron.a; path = "../enchantron-core/target/debug/libenchantron.a"; sourceTree = "<group>"; };
 		6364098F23181E3C00B46512 /* SpriteSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteSource.swift; sourceTree = "<group>"; };
@@ -196,7 +193,6 @@
 				63F97AFF211CCB0300784701 /* Button.swift */,
 				639EBFB123DE46D200A40E2C /* ByteBufferExt.swift */,
 				63F97AFD211CCB0300784701 /* ClickHandler.swift */,
-				6346A2642139D1E900481721 /* DragHandler.swift */,
 				63410980211CC7BE00D40139 /* GameScene.swift */,
 				63C34FEC212CEB0400076E55 /* GameView.swift */,
 				63F97B01211CCB0400784701 /* HandlerRegistration.swift */,
@@ -464,7 +460,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				63F97B0E211CCB0400784701 /* MainMenuView.swift in Sources */,
-				6346A2652139D1E900481721 /* DragHandler.swift in Sources */,
 				63F97B08211CCB0400784701 /* Button.swift in Sources */,
 				634109A6211CC7C000D40139 /* GameScene.swift in Sources */,
 				63F97B06211CCB0400784701 /* TextArea.swift in Sources */,
@@ -502,7 +497,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				63F97B0F211CCB0400784701 /* MainMenuView.swift in Sources */,
-				6346A2662139D1E900481721 /* DragHandler.swift in Sources */,
 				63F97B09211CCB0400784701 /* Button.swift in Sources */,
 				634109A7211CC7C000D40139 /* GameScene.swift in Sources */,
 				63F97B07211CCB0400784701 /* TextArea.swift in Sources */,

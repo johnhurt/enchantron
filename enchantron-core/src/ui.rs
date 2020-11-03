@@ -1,11 +1,9 @@
 pub use self::button::Button;
 pub use self::click_handler::ClickHandler;
-pub use self::drag_handler::DragHandler;
 pub use self::drag_point::DragPoint;
 pub use self::finger::Finger;
 pub use self::handler_registration::HandlerRegistration;
 pub use self::has_click_handlers::HasClickHandlers;
-pub use self::has_drag_handlers::HasDragHandlers;
 pub use self::has_int_value::HasIntValue;
 pub use self::has_layout_handlers::HasLayoutHandlers;
 pub use self::has_location::HasLocation;
@@ -42,7 +40,6 @@ mod drag_point;
 mod finger;
 mod handler_registration;
 mod has_click_handlers;
-mod has_drag_handlers;
 mod has_int_value;
 mod has_layout_handlers;
 mod has_location;
@@ -77,9 +74,6 @@ mod click_handler;
 
 #[macro_use]
 mod layout_handler;
-
-#[macro_use]
-mod drag_handler;
 
 #[macro_use]
 mod magnify_handler;

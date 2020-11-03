@@ -1,15 +1,13 @@
 use crate::native::{Animation, Shader, Texture};
 
 use super::{
-    HasDragHandlers, HasMutableLocation, HasMutableSize, HasMutableVisibility,
-    HasMutableZLevel,
+    HasMutableLocation, HasMutableSize, HasMutableVisibility, HasMutableZLevel,
 };
 
 pub trait Sprite:
     HasMutableSize
     + HasMutableLocation
     + HasMutableVisibility
-    + HasDragHandlers
     + HasMutableZLevel
     + Send
     + Sync

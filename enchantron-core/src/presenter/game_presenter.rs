@@ -1,4 +1,4 @@
-use super::{TerrainPresenter, ViewportPresenter};
+use super::{TerrainPresenter, ViewportPresenter, FocusedEntityPresenter};
 use crate::application_context::{Ao, NUM_CPUS};
 use crate::event::*;
 use crate::game::{Gor, SavedGame, Services};
@@ -29,6 +29,7 @@ where
 
     touch_tracker: TouchTracker,
     viewport_presenter: ViewportPresenter<T>,
+    focused_entity_presenter: FocusedEntityPresenter,
 
     droppers: Vec<Box<dyn FnOnce() + Send>>,
 }
@@ -159,6 +160,8 @@ where
         let viewport_presenter =
             ViewportPresenter::new(view.get_viewport(), event_bus.clone());
 
+        let focused_entity_presenter = FocusedEntityPresenter::new();:
+
         let mut presenter = GamePresenter {
             view,
             event_bus: event_bus.clone(),
@@ -166,6 +169,7 @@ where
             system_view,
             touch_tracker: Default::default(),
             viewport_presenter,
+            focused_entity_presenter,
             droppers,
         };
 

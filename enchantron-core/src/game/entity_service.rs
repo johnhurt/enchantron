@@ -1,4 +1,4 @@
-use super::{Entity, EntityData, EntityType, Gor};
+use super::{Entity, EntityData, EntityType, Gor, Player};
 use crate::util::ConcurrentSlotmap;
 use one_way_slot_map::SlotMap;
 
@@ -22,35 +22,10 @@ impl EntityService {
         (EntityService { inner }, dropper)
     }
 
-    // pub async fn initialize<F>(&self) -> impl Iter<Item = EntityRunBundle> {
-    //     let mut pre_init_data = self
-    //         .inner
-    //         .pre_init_data
-    //         .lock()
-    //         .await
-    //         .take()
-    //         .expect("Only init once, Bro");
+    pub fn get_player(&self) -> Player {
+        self.inner.entities.get(&Entity::Player(EntityType::Player)).as_ref().unwrap().into()
+    }
 
-    //     let this = self.clone();
-    //     let this_provider = || this.clone();
-
-    //     let reader = BoxRef::new(Box::new(self.inner.entities.reader()));
-
-    //     reader.map(|reader_ref| {
-    //         &reader_ref
-    //             .iter(|e| e.entity_type)
-    //             .zip(pre_init_data.values_mut())
-    //             .map(move |((k, e), channel_opt)| {
-    //                 let this = this_provider();
-    //                 let time = this.inner.time.clone();
-
-    //                 let (_, receiver) = channel_opt
-    //                     .take()
-    //                     .expect("Channel was just added and can't be removed");
-    //                 EntityRunBundle::new(k, *e, receiver, this, time)
-    //             })
-    //     })
-    // }
 }
 
 #[derive(derive_new::new, Debug)]

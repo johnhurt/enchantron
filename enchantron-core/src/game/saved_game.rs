@@ -1,14 +1,17 @@
-use super::{Entity, EntityData, EntityType, LocationKey, SaveableLocation};
+use super::{
+    Entity, EntityData, EntityType, LocationKey, Player, SaveableLocation,
+};
 use crate::model::IRect;
 use crate::presenter::PlayerPresenterState;
 use one_way_slot_map::SlotMap;
 
 pub struct SavedGame {
-    pub seed: u64,
-    pub elapsed_millis: u64,
-    pub entities: SlotMap<Entity, EntityType, EntityData>,
-    pub locations: SlotMap<LocationKey, Entity, SaveableLocation>,
-    pub player_presenter_states: Vec<(Entity, PlayerPresenterState)>,
+    pub(crate) seed: u64,
+    pub(crate) elapsed_millis: u64,
+    pub(crate) player: Player,
+    pub(crate) entities: SlotMap<Entity, EntityType, EntityData>,
+    pub(crate) locations: SlotMap<LocationKey, Entity, SaveableLocation>,
+    pub(crate) player_presenter_states: Vec<(Entity, PlayerPresenterState)>,
 }
 
 impl SavedGame {
@@ -19,6 +22,8 @@ impl SavedGame {
             EntityData::default_for_type(EntityType::Player);
         let player_entity: Entity =
             entities.insert(EntityType::Player, player_entity_data);
+
+        let player = (&player_entity_data).into();
 
         let starting_location = IRect::new(0, 0, 1, 1);
         let stored_location =
@@ -40,6 +45,7 @@ impl SavedGame {
         SavedGame {
             seed,
             elapsed_millis: Default::default(),
+            player,
             entities,
             locations,
             player_presenter_states,

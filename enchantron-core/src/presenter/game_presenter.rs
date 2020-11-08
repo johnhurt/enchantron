@@ -1,4 +1,4 @@
-use super::{TerrainPresenter, ViewportPresenter, FocusedEntityPresenter};
+use super::{FocusedEntityPresenter, TerrainPresenter, ViewportPresenter};
 use crate::application_context::{Ao, NUM_CPUS};
 use crate::event::*;
 use crate::game::{Gor, SavedGame, Services};
@@ -160,7 +160,7 @@ where
         let viewport_presenter =
             ViewportPresenter::new(view.get_viewport(), event_bus.clone());
 
-        let focused_entity_presenter = FocusedEntityPresenter::new();:
+        let focused_entity_presenter = FocusedEntityPresenter::new(services);
 
         let mut presenter = GamePresenter {
             view,

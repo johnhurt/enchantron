@@ -1,7 +1,7 @@
 use super::EntityPresenter;
 use crate::game::{
-    Direction, EntityMessage, EntityRunBundle, Player, PresenterServiceLease,
-    Services, Time,
+    Direction, EntityMessage, EntityRunBundle, LocationService, Player,
+    PresenterServiceLease, Services, Time,
 };
 use crate::view::PlayerView;
 use tokio::select;
@@ -42,7 +42,8 @@ where
     view: Option<V>,
     player: Player,
     view_provider: F,
-    services: Services,
+    time: Time,
+    location_service: LocationService,
     state: PresenterServiceLease<PlayerPresenterState>,
     interrupts: Receiver<EntityMessage>,
 }
@@ -78,7 +79,8 @@ where
             view: Some(view_provider()),
             player: Player::from(&entity_data),
             view_provider,
-            services,
+            time: services.time(),
+            location_service: services.location_service(),
             state,
             interrupts,
         }
@@ -92,6 +94,7 @@ where
             EntityMessage::ExitedViewport => {
                 drop(self.view.take());
             }
+            EntityMessage::GoalSet(target_tile) => {}
         }
     }
 
@@ -103,20 +106,19 @@ where
                 Spawning(start) => {
                     self.view.as_ref().map(V::rest);
 
-                    interruptible!(self.services.time.sleep_until(start + 0.5));
+                    interruptible!(self.time.sleep_until(start + 0.5));
 
-                    *self.state = Idle(self.services.time.now());
+                    *self.state = Idle(self.time.now());
                 }
                 Idle(start) => {
                     self.view.as_ref().map(V::rest);
 
-                    interruptible!(self.services.time.sleep_until(start + 0.5));
+                    interruptible!(self.time.sleep_until(start + 0.5));
 
-                    *self.state = WalkingIn(self.services.time.now());
+                    *self.state = WalkingIn(self.time.now());
                 }
                 WalkingIn(start) => {
                     let tile = self
-                        .services
                         .location_service
                         .get_by_key(&self.player.location_key)
                         .await
@@ -127,20 +129,18 @@ where
                         view.start_walk(Direction::SOUTH, &tile, start, 0.5)
                     });
 
-                    interruptible!(self.services.time.sleep_until(start + 1.));
-                    *self.state = WalkingOut(self.services.time.now());
+                    interruptible!(self.time.sleep_until(start + 1.));
+                    *self.state = WalkingOut(self.time.now());
                 }
                 WalkingOut(start) => {
                     let tile = self
-                        .services
                         .location_service
                         .get_by_key(&self.player.location_key)
                         .await
                         .unwrap()
                         .top_left;
 
-                    self.services
-                        .location_service
+                    self.location_service
                         .move_by_key_delta(
                             &self.player.location_key,
                             Direction::SOUTH.get_point(),
@@ -150,8 +150,8 @@ where
                     self.view.as_ref().map(|view| {
                         view.finish_walk(Direction::SOUTH, &tile, start, 0.5);
                     });
-                    interruptible!(self.services.time.sleep_until(start + 1.));
-                    *self.state = Idle(self.services.time.now());
+                    interruptible!(self.time.sleep_until(start + 1.));
+                    *self.state = Idle(self.time.now());
                 }
             }
         }

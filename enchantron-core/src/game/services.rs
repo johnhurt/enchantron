@@ -33,13 +33,13 @@ impl TemporaryChannel {
 
 #[derive(Clone, Debug)]
 pub struct Services {
-    pub(crate) runtime: Gor<Runtime>,
+    runtime: Gor<Runtime>,
 
-    pub(crate) time: Time,
-    pub(crate) location_service: LocationService,
-    pub(crate) entity_service: EntityService,
-    pub(crate) message_service: MessageService,
-    pub(crate) presenter_service: PresenterService,
+    time: Time,
+    location_service: LocationService,
+    entity_service: EntityService,
+    message_service: MessageService,
+    presenter_service: PresenterService,
 }
 
 impl Services {
@@ -57,6 +57,7 @@ impl Services {
             entities,
             locations,
             player_presenter_states,
+            player,
         } = saved_game;
 
         let runtime = Gor::new(&boxed_runtime);
@@ -75,7 +76,7 @@ impl Services {
         });
 
         let (entity_service, entity_service_dropper) =
-            EntityService::new_with_data(entities);
+            EntityService::new_with_data(player, entities);
 
         let (message_service, message_service_dropper) = MessageService::new(
             entity_channels
@@ -169,5 +170,9 @@ impl Services {
 
     pub fn runtime(&self) -> Gor<Runtime> {
         self.runtime.clone()
+    }
+
+    pub fn entity_service(&self) -> EntityService {
+        self.entity_service.clone()
     }
 }

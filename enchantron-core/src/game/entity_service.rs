@@ -11,11 +11,12 @@ pub struct EntityService {
 
 impl EntityService {
     pub fn new_with_data(
+        player: Player,
         entities_data: SlotMap<Entity, EntityType, EntityData>,
     ) -> (EntityService, impl FnOnce()) {
         let entities = ConcurrentSlotmap::new_with_data(entities_data);
 
-        let boxed_inner = Box::new(Inner::new(entities));
+        let boxed_inner = Box::new(Inner::new(player, entities));
         let inner = Gor::new(&boxed_inner);
         let dropper = move || drop(boxed_inner);
 
@@ -23,12 +24,12 @@ impl EntityService {
     }
 
     pub fn get_player(&self) -> Player {
-        self.inner.entities.get(&Entity::Player(EntityType::Player)).as_ref().unwrap().into()
+        self.inner.player
     }
-
 }
 
 #[derive(derive_new::new, Debug)]
 struct Inner {
+    player: Player,
     entities: ConcurrentSlotmap<Entity, EntityType, EntityData>,
 }

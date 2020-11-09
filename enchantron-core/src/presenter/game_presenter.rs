@@ -49,8 +49,17 @@ where
     }
 
     fn on_touch(&mut self, raw_touch_event: RawTouchEvent) {
-        let touch_event = self.touch_tracker.to_touch_event(raw_touch_event);
-        self.viewport_presenter.on_touch_event(&touch_event);
+        let touch_event = self.touch_tracker.to_touch_event(
+            &raw_touch_event,
+            &self.viewport_presenter.viewport_info,
+        );
+
+        let touch_event_opt =
+            self.focused_entity_presenter.on_touch_event(touch_event);
+
+        if let Some(touch_event) = touch_event_opt {
+            self.viewport_presenter.on_touch_event(&touch_event);
+        }
     }
 
     fn bind_ui_events(

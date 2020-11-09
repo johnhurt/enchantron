@@ -1,7 +1,7 @@
-use super::DragPoint;
+use super::TouchPoint;
 
 #[derive(Debug, Clone, Copy, derive_new::new)]
 pub struct Tap {
     pub tap_count: u8,
-    pub point: DragPoint,
+    pub point: TouchPoint,
 }

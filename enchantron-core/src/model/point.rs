@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
-use super::Size;
+use super::{IPoint, Size};
 
 #[derive(Default, Debug, Clone, PartialEq, Copy)]
 pub struct Point {
@@ -33,6 +33,13 @@ impl Point {
     /// Perform a dot product operation between this point and the other
     pub fn dot(&self, other: &Point) -> f64 {
         self.x * other.x + self.y * other.y
+    }
+
+    pub fn floor(&self) -> IPoint {
+        IPoint {
+            x: self.x.floor() as i64,
+            y: self.y.floor() as i64,
+        }
     }
 }
 

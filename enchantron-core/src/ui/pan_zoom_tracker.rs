@@ -1,29 +1,29 @@
 use super::{
-    DragPoint, Finger, Finger::*, Touch, TouchEvent, TouchEventType::*,
+    Finger, Finger::*, Touch, TouchEvent, TouchEventType::*, TouchPoint,
 };
 use crate::model::Point;
 use enum_map::EnumMap;
 
-fn calculate_shift(curr_drag: &DragPoint, prev_drag: &DragPoint) -> Point {
-    &prev_drag.global_point - &curr_drag.global_point
+fn calculate_shift(curr_drag: &TouchPoint, prev_drag: &TouchPoint) -> Point {
+    &prev_drag.screen_point - &curr_drag.screen_point
 }
 
 #[allow(clippy::many_single_char_names)]
 fn calculate_shift_and_scale(
-    prev_drag_1: &DragPoint,
-    prev_drag_2: &DragPoint,
-    curr_drag_1: &DragPoint,
-    curr_drag_2: &DragPoint,
+    prev_drag_1: &TouchPoint,
+    prev_drag_2: &TouchPoint,
+    curr_drag_1: &TouchPoint,
+    curr_drag_2: &TouchPoint,
 ) -> (Point, f64) {
     let n = 2.0;
-    let a1 = curr_drag_1.global_point.x;
-    let a2 = curr_drag_2.global_point.x;
-    let b1 = curr_drag_1.global_point.y;
-    let b2 = curr_drag_2.global_point.y;
-    let c1 = prev_drag_1.global_point.x;
-    let c2 = prev_drag_2.global_point.x;
-    let d1 = prev_drag_1.global_point.y;
-    let d2 = prev_drag_2.global_point.y;
+    let a1 = curr_drag_1.screen_point.x;
+    let a2 = curr_drag_2.screen_point.x;
+    let b1 = curr_drag_1.screen_point.y;
+    let b2 = curr_drag_2.screen_point.y;
+    let c1 = prev_drag_1.screen_point.x;
+    let c2 = prev_drag_2.screen_point.x;
+    let d1 = prev_drag_1.screen_point.y;
+    let d2 = prev_drag_2.screen_point.y;
 
     let u = a1 * a1 + a2 * a2 + b1 * b1 + b2 * b2;
     let v = a1 + a2;
@@ -69,8 +69,8 @@ impl PanZoomTracker {
             TouchEvent {
                 state: Start,
                 touch,
-                other_touch_opt: Some(drag_point_2),
-            } => self.on_two_drags_start(touch, drag_point_2),
+                other_touch_opt: Some(raw_touch_point_2),
+            } => self.on_two_drags_start(touch, raw_touch_point_2),
             TouchEvent {
                 state: Move,
                 touch,
@@ -89,8 +89,8 @@ impl PanZoomTracker {
             TouchEvent {
                 state: End,
                 touch,
-                other_touch_opt: Some(drag_point_2),
-            } => self.on_two_drags_end(touch, drag_point_2),
+                other_touch_opt: Some(raw_touch_point_2),
+            } => self.on_two_drags_end(touch, raw_touch_point_2),
         }
     }
 

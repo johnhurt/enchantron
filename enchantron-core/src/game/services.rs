@@ -175,4 +175,8 @@ impl Services {
     pub fn entity_service(&self) -> EntityService {
         self.entity_service.clone()
     }
+
+    pub fn message_service(&self) -> MessageService {
+        self.message_service.clone()
+    }
 }

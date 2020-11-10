@@ -1,5 +1,7 @@
-use crate::game::{Entity, EntityService, Player, Services};
-use crate::ui::{TapEvent, TouchEvent};
+use crate::game::{
+    Entity, EntityMessage, EntityService, MessageService, Player, Services,
+};
+use crate::ui::{Tap, TapEvent, TouchEvent};
 
 /// Presenter for the entity the game ui is currently focused on
 pub struct FocusedEntityPresenter {
@@ -8,6 +10,7 @@ pub struct FocusedEntityPresenter {
     pub focused_entity: Option<Entity>,
 
     pub entity_service: EntityService,
+    pub message_service: MessageService,
 }
 
 impl FocusedEntityPresenter {
@@ -18,17 +21,45 @@ impl FocusedEntityPresenter {
             player: entity_service.get_player(),
             focused_entity: None,
             entity_service,
+            message_service: services.message_service(),
         }
     }
 
-    pub fn on_touch_event(
+    pub async fn on_touch_event(
         &mut self,
         touch_event: TouchEvent,
     ) -> Option<TouchEvent> {
         if let Some(tap_event) = TapEvent::from_touch_event(touch_event) {
+            self.on_tap(tap_event).await;
             None
         } else {
             Some(touch_event)
+        }
+    }
+
+    async fn on_tap(&mut self, tap_event: TapEvent) {
+        let TapEvent {
+            tap: Tap { point, .. },
+            other_tap_opt,
+        } = tap_event;
+
+        self.message_service
+            .send_message(
+                &self.player.entity,
+                EntityMessage::GoalSet(point.viewport_point),
+            )
+            .await;
+
+        if let Some(Tap {
+            point: other_point, ..
+        }) = other_tap_opt
+        {
+            self.message_service
+                .send_message(
+                    &self.player.entity,
+                    EntityMessage::GoalSet(other_point.viewport_point),
+                )
+                .await;
         }
     }
 }

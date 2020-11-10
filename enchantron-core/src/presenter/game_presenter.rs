@@ -48,14 +48,16 @@ where
         self.viewport_presenter.on_magnify(&magnify_event);
     }
 
-    fn on_touch(&mut self, raw_touch_event: RawTouchEvent) {
+    async fn on_touch(&mut self, raw_touch_event: RawTouchEvent) {
         let touch_event = self.touch_tracker.to_touch_event(
             &raw_touch_event,
             &self.viewport_presenter.viewport_info,
         );
 
-        let touch_event_opt =
-            self.focused_entity_presenter.on_touch_event(touch_event);
+        let touch_event_opt = self
+            .focused_entity_presenter
+            .on_touch_event(touch_event)
+            .await;
 
         if let Some(touch_event) = touch_event_opt {
             self.viewport_presenter.on_touch_event(&touch_event);
@@ -206,7 +208,9 @@ where
             ui_event_opt = ui_stream.next() => ui_event_opt
         } {
             match ui_event {
-                UIEvent::RawTouchEvent { event } => presenter.on_touch(event),
+                UIEvent::RawTouchEvent { event } => {
+                    presenter.on_touch(event).await
+                }
                 UIEvent::Layout { event } => presenter.on_layout(event),
                 UIEvent::Magnify { event } => presenter.on_magnify(event),
             }

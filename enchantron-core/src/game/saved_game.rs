@@ -40,7 +40,7 @@ impl SavedGame {
         };
 
         let player_presenter_states =
-            vec![(player_entity, PlayerPresenterState::Spawning(0.))];
+            vec![(player_entity, PlayerPresenterState::default())];
 
         SavedGame {
             seed,

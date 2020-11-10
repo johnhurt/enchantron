@@ -3,10 +3,10 @@ use crate::game::{
     Direction, EntityMessage, EntityRunBundle, LocationService, Player,
     PresenterServiceLease, Services, Time,
 };
+use crate::model::IPoint;
 use crate::view::PlayerView;
 use tokio::select;
 use tokio::sync::mpsc::Receiver;
-use PlayerPresenterState::*;
 
 macro_rules! handle_interrupts {
     ($this:ident, $interruptible:expr) => {
@@ -49,11 +49,27 @@ where
 }
 
 #[derive(Debug, Clone, Copy)]
-pub enum PlayerPresenterState {
+pub struct PlayerPresenterState {
+    coarse_state: CoarseState,
+    move_target: Option<IPoint>,
+}
+
+#[derive(Debug, Clone, Copy)]
+enum CoarseState {
     Spawning(f64),
     Idle(f64),
     WalkingOut(f64),
     WalkingIn(f64),
+}
+
+impl Default for PlayerPresenterState {
+
+    fn default() -> Self {
+        PlayerPresenterState {
+            coarse_state: CoarseState::Spawning(0.),
+            move_target: None
+        }
+    }
 }
 
 impl<F, V> PlayerPresenter<F, V>
@@ -102,20 +118,22 @@ where
         info!("Player presenter spawned");
 
         loop {
-            match *self.state {
+            use CoarseState::*;
+
+            match self.state.coarse_state {
                 Spawning(start) => {
                     self.view.as_ref().map(V::rest);
 
                     interruptible!(self.time.sleep_until(start + 0.5));
 
-                    *self.state = Idle(self.time.now());
+                    self.state.coarse_state = Idle(self.time.now());
                 }
                 Idle(start) => {
                     self.view.as_ref().map(V::rest);
 
                     interruptible!(self.time.sleep_until(start + 0.5));
 
-                    *self.state = WalkingIn(self.time.now());
+                    self.state.coarse_state = WalkingIn(self.time.now());
                 }
                 WalkingIn(start) => {
                     let tile = self
@@ -130,7 +148,7 @@ where
                     });
 
                     interruptible!(self.time.sleep_until(start + 1.));
-                    *self.state = WalkingOut(self.time.now());
+                    self.state.coarse_state = WalkingOut(self.time.now());
                 }
                 WalkingOut(start) => {
                     let tile = self
@@ -151,7 +169,7 @@ where
                         view.finish_walk(Direction::SOUTH, &tile, start, 0.5);
                     });
                     interruptible!(self.time.sleep_until(start + 1.));
-                    *self.state = Idle(self.time.now());
+                    self.state.coarse_state = Idle(self.time.now());
                 }
             }
         }

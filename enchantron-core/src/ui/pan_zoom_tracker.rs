@@ -69,8 +69,8 @@ impl PanZoomTracker {
             TouchEvent {
                 state: Start,
                 touch,
-                other_touch_opt: Some(drag_point_2),
-            } => self.on_two_drags_start(touch, drag_point_2),
+                other_touch_opt: Some(other_touch),
+            } => self.on_two_drags_start(touch, other_touch),
             TouchEvent {
                 state: Move,
                 touch,
@@ -89,8 +89,8 @@ impl PanZoomTracker {
             TouchEvent {
                 state: End,
                 touch,
-                other_touch_opt: Some(drag_point_2),
-            } => self.on_two_drags_end(touch, drag_point_2),
+                other_touch_opt: Some(other_touch),
+            } => self.on_two_drags_end(touch, other_touch),
         }
     }
 

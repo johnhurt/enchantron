@@ -141,6 +141,6 @@ impl TouchTracker {
         self.touches[Finger1] = None;
         self.touches[Finger2] = None;
 
-        TouchEvent::move_2(touch_1, touch_2)
+        TouchEvent::end_2(touch_1, touch_2)
     }
 }

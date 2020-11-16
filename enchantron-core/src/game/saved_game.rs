@@ -23,8 +23,6 @@ impl SavedGame {
         let player_entity: Entity =
             entities.insert(EntityType::Player, player_entity_data);
 
-        let player = (&player_entity_data).into();
-
         let starting_location = IRect::new(0, 0, 1, 1);
         let stored_location =
             SaveableLocation::new(starting_location, player_entity);
@@ -32,15 +30,17 @@ impl SavedGame {
         let location_key: LocationKey =
             locations.insert(player_entity, stored_location);
 
-        {
+        let player = {
             let to_update = entities.get_mut(&player_entity).unwrap();
 
             (*to_update).entity = Some(player_entity);
             (*to_update).location_key = Some(location_key);
-        }
+
+            (to_update as &EntityData).into()
+        };
 
         let player_presenter_states =
-            vec![(player_entity, PlayerPresenterState::Spawning(0.))];
+            vec![(player_entity, PlayerPresenterState::default())];
 
         SavedGame {
             seed,

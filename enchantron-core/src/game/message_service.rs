@@ -27,4 +27,11 @@ impl MessageService {
 
         (MessageService { inner }, move || drop(boxed_inner))
     }
+
+    pub async fn send_message(&self, entity: &Entity, message: EntityMessage) {
+        if let Some(sender) = self.inner.entity_messagers.get(entity) {
+            let ok = sender.send(message).await.is_ok();
+            debug_assert!(ok);
+        }
+    }
 }

@@ -1,29 +1,29 @@
 use super::{
-    DragPoint, Finger, Finger::*, Touch, TouchEvent, TouchEventType::*,
+    Finger, Finger::*, Touch, TouchEvent, TouchEventType::*, TouchPoint,
 };
 use crate::model::Point;
 use enum_map::EnumMap;
 
-fn calculate_shift(curr_drag: &DragPoint, prev_drag: &DragPoint) -> Point {
-    &prev_drag.global_point - &curr_drag.global_point
+fn calculate_shift(curr_touch: &TouchPoint, prev_touch: &TouchPoint) -> Point {
+    &prev_touch.screen_point - &curr_touch.screen_point
 }
 
 #[allow(clippy::many_single_char_names)]
 fn calculate_shift_and_scale(
-    prev_drag_1: &DragPoint,
-    prev_drag_2: &DragPoint,
-    curr_drag_1: &DragPoint,
-    curr_drag_2: &DragPoint,
+    prev_touch_1: &TouchPoint,
+    prev_touch_2: &TouchPoint,
+    curr_touch_1: &TouchPoint,
+    curr_touch_2: &TouchPoint,
 ) -> (Point, f64) {
     let n = 2.0;
-    let a1 = curr_drag_1.global_point.x;
-    let a2 = curr_drag_2.global_point.x;
-    let b1 = curr_drag_1.global_point.y;
-    let b2 = curr_drag_2.global_point.y;
-    let c1 = prev_drag_1.global_point.x;
-    let c2 = prev_drag_2.global_point.x;
-    let d1 = prev_drag_1.global_point.y;
-    let d2 = prev_drag_2.global_point.y;
+    let a1 = curr_touch_1.screen_point.x;
+    let a2 = curr_touch_2.screen_point.x;
+    let b1 = curr_touch_1.screen_point.y;
+    let b2 = curr_touch_2.screen_point.y;
+    let c1 = prev_touch_1.screen_point.x;
+    let c2 = prev_touch_2.screen_point.x;
+    let d1 = prev_touch_1.screen_point.y;
+    let d2 = prev_touch_2.screen_point.y;
 
     let u = a1 * a1 + a2 * a2 + b1 * b1 + b2 * b2;
     let v = a1 + a2;
@@ -65,42 +65,42 @@ impl PanZoomTracker {
                 state: Start,
                 touch,
                 other_touch_opt: None,
-            } => self.on_one_drag_start(touch),
+            } => self.on_one_touch_start(touch),
             TouchEvent {
                 state: Start,
                 touch,
                 other_touch_opt: Some(other_touch),
-            } => self.on_two_drags_start(touch, other_touch),
+            } => self.on_two_touch_start(touch, other_touch),
             TouchEvent {
                 state: Move,
                 touch,
                 other_touch_opt: None,
-            } => self.on_one_drag_move(touch),
+            } => self.on_one_touch_move(touch),
             TouchEvent {
                 state: Move,
                 touch,
                 other_touch_opt: Some(other_touch),
-            } => self.on_two_drags_move(touch, other_touch),
+            } => self.on_two_touch_move(touch, other_touch),
             TouchEvent {
                 state: End,
                 touch,
                 other_touch_opt: None,
-            } => self.on_one_drag_end(touch),
+            } => self.on_one_touch_end(touch),
             TouchEvent {
                 state: End,
                 touch,
                 other_touch_opt: Some(other_touch),
-            } => self.on_two_drags_end(touch, other_touch),
+            } => self.on_two_touch_end(touch, other_touch),
         }
     }
 
-    fn on_one_drag_start(&mut self, touch: Touch) -> Option<PanZoomEvent> {
+    fn on_one_touch_start(&mut self, touch: Touch) -> Option<PanZoomEvent> {
         self.touches[touch.finger] = Some(touch);
         self.touch_count += 1;
         None
     }
 
-    fn on_two_drags_start(
+    fn on_two_touch_start(
         &mut self,
         touch_1: Touch,
         touch_2: Touch,
@@ -111,7 +111,10 @@ impl PanZoomTracker {
         None
     }
 
-    fn on_one_drag_move(&mut self, moved_touch: Touch) -> Option<PanZoomEvent> {
+    fn on_one_touch_move(
+        &mut self,
+        moved_touch: Touch,
+    ) -> Option<PanZoomEvent> {
         if self.touch_count == 1 {
             let prev_touch = self.touches[moved_touch.finger].as_mut().unwrap();
             let shift = calculate_shift(&moved_touch.point, &prev_touch.point);
@@ -140,7 +143,7 @@ impl PanZoomTracker {
         }
     }
 
-    fn on_two_drags_move(
+    fn on_two_touch_move(
         &mut self,
         moved_touch_1: Touch,
         moved_touch_2: Touch,
@@ -167,13 +170,13 @@ impl PanZoomTracker {
         Some(PanZoomEvent::MoveAndScale(shift, scale))
     }
 
-    fn on_one_drag_end(&mut self, touch: Touch) -> Option<PanZoomEvent> {
+    fn on_one_touch_end(&mut self, touch: Touch) -> Option<PanZoomEvent> {
         self.touches[touch.finger] = None;
         self.touch_count -= 1;
         None
     }
 
-    fn on_two_drags_end(&mut self, _: Touch, _: Touch) -> Option<PanZoomEvent> {
+    fn on_two_touch_end(&mut self, _: Touch, _: Touch) -> Option<PanZoomEvent> {
         self.touches[Finger1] = None;
         self.touches[Finger2] = None;
         self.touch_count -= 2;

@@ -1,4 +1,4 @@
-use crate::model::{Point, Rect, Size};
+use crate::model::{IPoint, Point, Rect, Size};
 
 #[derive(Clone, Debug, Copy)]
 pub struct ViewportInfo {
@@ -118,5 +118,11 @@ impl ViewportInfo {
     pub fn move_viewport(&mut self, new_top_left: Point) {
         self.viewport_rect.top_left = new_top_left;
         trace!("Viewport changed to {:?}", self);
+    }
+
+    /// Get the terrain tile point for the given screen point
+    pub fn get_terrain_tile_for(&self, screen_point: &Point) -> IPoint {
+        ((screen_point * self.viewport_scale) + self.viewport_rect.top_left)
+            .floor()
     }
 }

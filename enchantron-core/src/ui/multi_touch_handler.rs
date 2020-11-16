@@ -1,4 +1,4 @@
-use super::{DragPoint, RawTouch, TouchEventType};
+use super::{RawTouch, RawTouchPoint, TouchEventType};
 use crate::event::RawTouchEvent;
 
 pub type TouchFn = dyn Fn(RawTouchEvent) + 'static + Send;
@@ -29,7 +29,7 @@ impl MultiTouchHandler {
             TouchEventType::Start,
             RawTouch {
                 touch_id: drag_id,
-                point: DragPoint::new(global_x, global_y, local_x, local_y),
+                point: RawTouchPoint::new(global_x, global_y, local_x, local_y),
                 click_count: click_count as u8,
             },
             None,
@@ -49,7 +49,7 @@ impl MultiTouchHandler {
             TouchEventType::Move,
             RawTouch {
                 touch_id: drag_id,
-                point: DragPoint::new(global_x, global_y, local_x, local_y),
+                point: RawTouchPoint::new(global_x, global_y, local_x, local_y),
                 click_count: click_count as u8,
             },
             None,
@@ -69,7 +69,7 @@ impl MultiTouchHandler {
             TouchEventType::End,
             RawTouch {
                 touch_id: drag_id,
-                point: DragPoint::new(global_x, global_y, local_x, local_y),
+                point: RawTouchPoint::new(global_x, global_y, local_x, local_y),
                 click_count: click_count as u8,
             },
             None,
@@ -96,14 +96,14 @@ impl MultiTouchHandler {
             TouchEventType::Start,
             RawTouch {
                 touch_id: drag_id_1,
-                point: DragPoint::new(
+                point: RawTouchPoint::new(
                     global_x_1, global_y_1, local_x_1, local_y_1,
                 ),
                 click_count: click_count_1 as u8,
             },
             Some(RawTouch {
                 touch_id: drag_id_2,
-                point: DragPoint::new(
+                point: RawTouchPoint::new(
                     global_x_2, global_y_2, local_x_2, local_y_2,
                 ),
                 click_count: click_count_2 as u8,
@@ -131,14 +131,14 @@ impl MultiTouchHandler {
             TouchEventType::Move,
             RawTouch {
                 touch_id: drag_id_1,
-                point: DragPoint::new(
+                point: RawTouchPoint::new(
                     global_x_1, global_y_1, local_x_1, local_y_1,
                 ),
                 click_count: click_count_1 as u8,
             },
             Some(RawTouch {
                 touch_id: drag_id_2,
-                point: DragPoint::new(
+                point: RawTouchPoint::new(
                     global_x_2, global_y_2, local_x_2, local_y_2,
                 ),
                 click_count: click_count_2 as u8,
@@ -166,14 +166,14 @@ impl MultiTouchHandler {
             TouchEventType::End,
             RawTouch {
                 touch_id: drag_id_1,
-                point: DragPoint::new(
+                point: RawTouchPoint::new(
                     global_x_1, global_y_1, local_x_1, local_y_1,
                 ),
                 click_count: click_count_1 as u8,
             },
             Some(RawTouch {
                 touch_id: drag_id_2,
-                point: DragPoint::new(
+                point: RawTouchPoint::new(
                     global_x_2, global_y_2, local_x_2, local_y_2,
                 ),
                 click_count: click_count_2 as u8,

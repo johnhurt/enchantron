@@ -63,11 +63,10 @@ enum CoarseState {
 }
 
 impl Default for PlayerPresenterState {
-
     fn default() -> Self {
         PlayerPresenterState {
             coarse_state: CoarseState::Spawning(0.),
-            move_target: None
+            move_target: None,
         }
     }
 }
@@ -144,7 +143,7 @@ where
                         .top_left;
 
                     self.view.as_ref().map(|view| {
-                        view.start_walk(Direction::SOUTH, &tile, start, 0.5)
+                        view.start_walk(Direction::S, &tile, start, 0.5)
                     });
 
                     interruptible!(self.time.sleep_until(start + 1.));
@@ -161,12 +160,12 @@ where
                     self.location_service
                         .move_by_key_delta(
                             &self.player.location_key,
-                            Direction::SOUTH.get_point(),
+                            Direction::S.get_point(),
                         )
                         .await;
 
                     self.view.as_ref().map(|view| {
-                        view.finish_walk(Direction::SOUTH, &tile, start, 0.5);
+                        view.finish_walk(Direction::S, &tile, start, 0.5);
                     });
                     interruptible!(self.time.sleep_until(start + 1.));
                     self.state.coarse_state = Idle(self.time.now());

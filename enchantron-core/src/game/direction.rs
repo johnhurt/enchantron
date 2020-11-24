@@ -1,27 +1,50 @@
 use crate::model::IPoint;
+use std::ops::Deref;
 
-const NORTH_POINT: IPoint = IPoint { x: 0, y: -1 };
-const EAST_POINT: IPoint = IPoint { x: 1, y: 0 };
-const SOUTH_POINT: IPoint = IPoint { x: 0, y: 1 };
-const WEST_POINT: IPoint = IPoint { x: -1, y: 0 };
-
-#[allow(dead_code)]
-pub enum Direction {
-    NORTH,
-    EAST,
-    SOUTH,
-    WEST,
-}
-
-impl Direction {
-    pub fn get_point(&self) -> &'static IPoint {
-        use Direction::*;
-
-        match self {
-            NORTH => &NORTH_POINT,
-            EAST => &EAST_POINT,
-            SOUTH => &SOUTH_POINT,
-            WEST => &WEST_POINT,
+macro_rules! define_directions {
+    ($type_name:ident { $( $dir_name:ident : ($x_coord:expr, $y_coord:expr) ),+ } ) => {
+        mod hidden {
+            use super::*;
+            $(
+                pub(super) const $dir_name: IPoint = IPoint { x: $x_coord, y: $y_coord };
+            )*
         }
-    }
+
+        pub enum $type_name {
+            $(
+                $dir_name
+            ),*
+        }
+
+        impl Deref for $type_name {
+            type Target = IPoint;
+
+            fn deref(&self) -> &IPoint {
+                match self {
+                    $(
+                        $dir_name => &hidden::$dir_name
+                    ),*
+                }
+            }
+        }
+
+        impl $type_name {
+
+            pub fn get_point(&self) -> &IPoint {
+                self.deref()
+            }
+
+        }
+    };
 }
+
+define_directions!(Direction {
+    N: (0, -1),
+    NE: (1, -1),
+    E: (1, 0),
+    SE: (1, 1),
+    S: (0, 1),
+    SW: (-1, 1),
+    W: (-1, 0),
+    NW: (-1, -1)
+});

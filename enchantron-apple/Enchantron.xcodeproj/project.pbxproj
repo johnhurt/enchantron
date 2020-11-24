@@ -450,7 +450,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\n# The $PATH used by XCode likely won't contain Cargo, fix that.\n# This assumes a default `rustup` setup.\nexport PATH=\"$HOME/.cargo/bin:$PATH\"\n\ncargo build --manifest-path ../enchantron-core/Cargo.toml\n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\n# The $PATH used by XCode likely won't contain Cargo, fix that.\n# This assumes a default `rustup` setup.\nexport PATH=\"$HOME/.cargo/bin:$PATH\"\n\ncargo build --release --manifest-path ../enchantron-core/Cargo.toml\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

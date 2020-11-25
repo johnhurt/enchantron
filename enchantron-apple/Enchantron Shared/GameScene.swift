@@ -80,7 +80,7 @@ class GameScene: SKScene {
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
-        
+        usleep(7400)
     }
     
     func magnify(scaleChangeAdditive: CGFloat, centerPoint: CGPoint) {

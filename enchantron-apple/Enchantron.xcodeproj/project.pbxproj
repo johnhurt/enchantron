@@ -33,6 +33,8 @@
 		63531FC52278BD9E0060D9AD /* libenchantron.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63531FC42278BD9E0060D9AD /* libenchantron.a */; };
 		6364099023181E3C00B46512 /* SpriteSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6364098F23181E3C00B46512 /* SpriteSource.swift */; };
 		63640991231824DC00B46512 /* SpriteSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6364098F23181E3C00B46512 /* SpriteSource.swift */; };
+		637D8E81256D952D006185D9 /* TerrainShader.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 637D8E80256D952D006185D9 /* TerrainShader.fsh */; };
+		637D8E82256D952D006185D9 /* TerrainShader.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 637D8E80256D952D006185D9 /* TerrainShader.fsh */; };
 		638DC4E32373612000DD724F /* character.png in Resources */ = {isa = PBXBuildFile; fileRef = 638DC4E22373612000DD724F /* character.png */; };
 		638DC4E42373612000DD724F /* character.png in Resources */ = {isa = PBXBuildFile; fileRef = 638DC4E22373612000DD724F /* character.png */; };
 		6395650821264645006F2A71 /* ProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6395650721264645006F2A71 /* ProgressBar.swift */; };
@@ -51,8 +53,8 @@
 		639CC0DB247098A700A40E2C /* Animation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639CC0D9247098A700A40E2C /* Animation.swift */; };
 		639CC0DD2476F94C00A40E2C /* Shader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639CC0DC2476F94C00A40E2C /* Shader.swift */; };
 		639CC0DE2476F94C00A40E2C /* Shader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639CC0DC2476F94C00A40E2C /* Shader.swift */; };
-		639CC0E1247828D700A40E2C /* TerrainShader.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 639CC0E0247828D700A40E2C /* TerrainShader.fsh */; };
-		639CC0E2247828D700A40E2C /* TerrainShader.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 639CC0E0247828D700A40E2C /* TerrainShader.fsh */; };
+		639CC0E1247828D700A40E2C /* TerrainShader2.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 639CC0E0247828D700A40E2C /* TerrainShader2.fsh */; };
+		639CC0E2247828D700A40E2C /* TerrainShader2.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 639CC0E0247828D700A40E2C /* TerrainShader2.fsh */; };
 		639EBFB223DE46D200A40E2C /* ByteBufferExt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639EBFB123DE46D200A40E2C /* ByteBufferExt.swift */; };
 		639EBFB323DE46D200A40E2C /* ByteBufferExt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639EBFB123DE46D200A40E2C /* ByteBufferExt.swift */; };
 		63B04A96227F06DC00A40E2C /* overworld.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B04A95227F06DC00A40E2C /* overworld.png */; };
@@ -113,6 +115,7 @@
 		63531FC22278BD850060D9AD /* libenchantron.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libenchantron.a; path = "../enchantron-core/target/universal/debug/libenchantron.a"; sourceTree = "<group>"; };
 		63531FC42278BD9E0060D9AD /* libenchantron.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libenchantron.a; path = "../enchantron-core/target/debug/libenchantron.a"; sourceTree = "<group>"; };
 		6364098F23181E3C00B46512 /* SpriteSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteSource.swift; sourceTree = "<group>"; };
+		637D8E80256D952D006185D9 /* TerrainShader.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = TerrainShader.fsh; path = ../../resources/shaders/apple/TerrainShader.fsh; sourceTree = "<group>"; };
 		638DC4E22373612000DD724F /* character.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = character.png; path = ../../resources/textures/character.png; sourceTree = "<group>"; };
 		6395650721264645006F2A71 /* ProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBar.swift; sourceTree = "<group>"; };
 		6395650A2126469C006F2A71 /* Texture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Texture.swift; sourceTree = "<group>"; };
@@ -122,7 +125,7 @@
 		639AD25322AC8E6900A35225 /* Viewport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Viewport.swift; sourceTree = "<group>"; };
 		639CC0D9247098A700A40E2C /* Animation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animation.swift; sourceTree = "<group>"; };
 		639CC0DC2476F94C00A40E2C /* Shader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shader.swift; sourceTree = "<group>"; };
-		639CC0E0247828D700A40E2C /* TerrainShader.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = TerrainShader.fsh; path = ../../resources/shaders/apple/TerrainShader.fsh; sourceTree = "<group>"; };
+		639CC0E0247828D700A40E2C /* TerrainShader2.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = TerrainShader2.fsh; path = ../../resources/shaders/apple/TerrainShader2.fsh; sourceTree = "<group>"; };
 		639EBFB123DE46D200A40E2C /* ByteBufferExt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ByteBufferExt.swift; sourceTree = "<group>"; };
 		63B04A95227F06DC00A40E2C /* overworld.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = overworld.png; path = ../../resources/textures/overworld.png; sourceTree = "<group>"; };
 		63B7F4A524AB501900A40E2C /* gist.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = gist.png; path = ../../resources/textures/gist.png; sourceTree = "<group>"; };
@@ -277,7 +280,8 @@
 		639CC0DF2476FA8B00A40E2C /* Shader */ = {
 			isa = PBXGroup;
 			children = (
-				639CC0E0247828D700A40E2C /* TerrainShader.fsh */,
+				637D8E80256D952D006185D9 /* TerrainShader.fsh */,
+				639CC0E0247828D700A40E2C /* TerrainShader2.fsh */,
 			);
 			name = Shader;
 			sourceTree = "<group>";
@@ -391,11 +395,12 @@
 				6341098F211CC7C000D40139 /* Main.storyboard in Resources */,
 				63B04A96227F06DC00A40E2C /* overworld.png in Resources */,
 				63410992211CC7C000D40139 /* LaunchScreen.storyboard in Resources */,
-				639CC0E1247828D700A40E2C /* TerrainShader.fsh in Resources */,
+				639CC0E1247828D700A40E2C /* TerrainShader2.fsh in Resources */,
 				63B7F4A624AB501A00A40E2C /* gist.png in Resources */,
 				638DC4E32373612000DD724F /* character.png in Resources */,
 				6346A2622138921200481721 /* RookAndPawn White.png in Resources */,
 				634109A8211CC7C000D40139 /* Assets.xcassets in Resources */,
+				637D8E81256D952D006185D9 /* TerrainShader.fsh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -403,12 +408,13 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				637D8E82256D952D006185D9 /* TerrainShader.fsh in Resources */,
 				63B04A97227F06DC00A40E2C /* overworld.png in Resources */,
 				634109A0211CC7C000D40139 /* Main.storyboard in Resources */,
 				63B7F4A724AB51A700A40E2C /* gist.png in Resources */,
 				634109A5211CC7C000D40139 /* Empty.sks in Resources */,
 				63E983842129C9B90056E91C /* Indira_K.ttf in Resources */,
-				639CC0E2247828D700A40E2C /* TerrainShader.fsh in Resources */,
+				639CC0E2247828D700A40E2C /* TerrainShader2.fsh in Resources */,
 				638DC4E42373612000DD724F /* character.png in Resources */,
 				634109A9211CC7C000D40139 /* Assets.xcassets in Resources */,
 				6346A2632138921200481721 /* RookAndPawn White.png in Resources */,
@@ -450,7 +456,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\n# The $PATH used by XCode likely won't contain Cargo, fix that.\n# This assumes a default `rustup` setup.\nexport PATH=\"$HOME/.cargo/bin:$PATH\"\n\ncargo build --manifest-path ../enchantron-core/Cargo.toml\n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\n# The $PATH used by XCode likely won't contain Cargo, fix that.\n# This assumes a default `rustup` setup.\nexport PATH=\"$HOME/.cargo/bin:$PATH\"\n\n# cargo build --manifest-path ../enchantron-core/Cargo.toml\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

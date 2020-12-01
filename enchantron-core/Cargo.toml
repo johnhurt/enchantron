@@ -18,7 +18,7 @@ getset = "0.1.1"
 derive_builder = "0.9.0"
 atomic-counter = "1.0.1"
 twox-hash = "1.6.0"
-tokio = { git = "https://github.com/RookAndPawn/pausable-tokio.git" , features = [ "time", "sync", "rt-threaded", "rt-core", "stream", "macros", "blocking" ] }
+tokio = { git = "https://github.com/RookAndPawn/pausable-tokio.git" , features = [ "time", "sync", "rt-multi-thread", "rt", "stream", "macros" ] }
 async-stream = "0.3.0"
 futures = "0.3.5"
 png = "0.16.2"

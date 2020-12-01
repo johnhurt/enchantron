@@ -72,9 +72,9 @@ impl<T: ViewTypes> ApplicationContext<T> {
         }
 
         let boxed_runtime = Box::new(
-            Builder::new()
-                .threaded_scheduler()
-                .core_threads(*NUM_CPUS)
+            Builder::new_multi_thread()
+                .worker_threads(*NUM_CPUS)
+                .thread_name("ApplicationThread")
                 .enable_time()
                 .build()
                 .unwrap_or_else(|e| {

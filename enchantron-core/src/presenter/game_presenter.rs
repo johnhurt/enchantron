@@ -130,9 +130,9 @@ where
         let saved_game = SavedGame::new(Default::default());
 
         let boxed_runtime = Box::new(
-            Builder::new()
-                .threaded_scheduler()
-                .core_threads(NUM_CPUS.checked_sub(1).unwrap_or(1)) // one for os
+            Builder::new_multi_thread()
+                .thread_name("GameThread")
+                .worker_threads(NUM_CPUS.checked_sub(1).unwrap_or(1)) // one for os
                 .enable_time()
                 .pausable_time(
                     true,

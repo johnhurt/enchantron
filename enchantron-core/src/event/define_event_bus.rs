@@ -169,7 +169,8 @@ macro_rules! define_event_bus {
                 /// Convenient passthrough to the tokio blocking spawner
                 pub fn spawn_blocking<F,T>(&self, to_run: F) -> JoinHandle<T>
                 where
-                    F: FnOnce() -> T + Send + 'static
+                    F: FnOnce() -> T + Send + 'static,
+                    T: Send + 'static
                 {
                     self.inner.runtime_handle.spawn_blocking(to_run)
                 }

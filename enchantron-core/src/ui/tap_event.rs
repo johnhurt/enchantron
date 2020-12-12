@@ -1,4 +1,4 @@
-use super::{RawTouchPoint, Tap, Touch, TouchEvent, TouchEventType};
+use super::{Tap, Touch, TouchEvent, TouchEventType};
 
 const MAX_TAP_DIST_SQR_SUM: f64 = 10.;
 

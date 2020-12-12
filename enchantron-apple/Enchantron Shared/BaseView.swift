@@ -6,10 +6,11 @@
 //  Copyright © 2018 Rook And Pawn Industries, Inc. All rights reserved.
 //
 
+import Metal
+import MetalKit
+import simd
 
-import SpriteKit
-
-class BaseView: SKNode {
+class BaseView {
     
     private var dragHandlers: [MultiTouchHandler] = []
     private var layoutHandlers: [LayoutHandler] = []
@@ -18,20 +19,15 @@ class BaseView: SKNode {
     private var presenter : BoxedAny?
     private var ctx : ApplicationContext?
     private var transitionService : TransitionService?
-    private var viewport : Viewport?
     
-    #if os(iOS) || os(tvOS)
-    private var touchTracker = TouchLookup()
-    #endif
+    let viewport : Viewport
+    let device: MTLDevice
+    let rootGroup : SpriteGroup
     
-    var size: CGSize?
-    
-    override init() {
-        super.init()
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    init(viewport: Viewport, device: MTLDevice) {
+        self.viewport = viewport
+        self.device = device
+        self.rootGroup = SpriteGroup(device: device, parent: nil)
     }
     
     func getContext() -> ApplicationContext {
@@ -60,21 +56,8 @@ class BaseView: SKNode {
         
     }
     
-    func setViewport(viewport: Viewport) {
-        self.viewport = viewport
-    }
-    
-    func getViewport() -> Viewport {
-        return self.viewport!
-    }
-    
     func unsetPresenter() {
         self.presenter = nil
-    }
-    
-    final func setSize(size: CGSize) {
-        self.size = size
-        layout(size: size)
     }
     
     func getDragHandlers() -> [MultiTouchHandler] {
@@ -113,7 +96,6 @@ class BaseView: SKNode {
     
     func addMultiTouchHandler(_ handler: MultiTouchHandler) -> HandlerRegistration {
         DispatchQueue.main.sync {
-            self.isUserInteractionEnabled = true
             self.dragHandlers.append(handler)
         }
         return HandlerRegistration(deregister_callback: {
@@ -149,270 +131,109 @@ class BaseView: SKNode {
         
     }
     
-    func magnify(scaleChangeAdditive: CGFloat, centerPoint: CGPoint) {
+    func getViewport() -> Viewport {
+        return viewport
+    }
+    
+    func magnify(scaleChangeAdditive: Float64, centerPoint: SIMD2<Float64>) {
         magnifyHandlers.forEach { (handler) in
             handler.onMagnify(
                 scaleChangeAdditive: Float64(scaleChangeAdditive),
-                zoomCenterX: Float64(centerPoint.x),
-                zoomCenterY: Float64(self.size!.height - centerPoint.y))
+                zoomCenterX: centerPoint.x,
+                zoomCenterY:centerPoint.y)
         }
     }
     
-    func oneDragStarted(id: Int64, globalPoint: CGPoint, localPoint: CGPoint, clickCount: Int64) {
+    func oneDragStarted(id: Int64, globalPoint: SIMD2<Float64>, clickCount: Int64) {
         for dragHandler in self.dragHandlers {
             dragHandler.onOneDragStart(
                 dragId: id,
-                globalX: Float64(globalPoint.x),
-                globalY: Float64(globalPoint.y),
-                localX: Float64(localPoint.x),
-                localY: -Float64(localPoint.y),
+                globalX: globalPoint.x,
+                globalY: globalPoint.y,
                 clickCount: clickCount)
         }
     }
     
-    func oneDragMoved(id: Int64, globalPoint: CGPoint, localPoint: CGPoint, clickCount: Int64) {
+    func oneDragMoved(id: Int64, globalPoint: SIMD2<Float64>, clickCount: Int64) {
         for dragHandler in self.dragHandlers {
             dragHandler.onOneDragMove(
                 dragId: id,
-                globalX: Float64(globalPoint.x),
-                globalY: Float64(globalPoint.y),
-                localX: Float64(localPoint.x),
-                localY: -Float64(localPoint.y),
+                globalX: globalPoint.x,
+                globalY: globalPoint.y,
                 clickCount: clickCount)
         }
     }
     
-    func oneDragEnded(id: Int64, globalPoint: CGPoint, localPoint: CGPoint, clickCount: Int64) {
+    func oneDragEnded(id: Int64, globalPoint: SIMD2<Float64>, clickCount: Int64) {
         for dragHandler in self.dragHandlers {
             dragHandler.onOneDragEnd(
                 dragId: id,
-                globalX: Float64(globalPoint.x),
-                globalY: Float64(globalPoint.y),
-                localX: Float64(localPoint.x),
-                localY: -Float64(localPoint.y),
+                globalX: globalPoint.x,
+                globalY: globalPoint.y,
                 clickCount: clickCount)
         }
     }
     
-    func twoDragsStarted(id1: Int64, globalPoint1: CGPoint, localPoint1: CGPoint, clickCount1: Int64,
-                        id2: Int64, globalPoint2: CGPoint, localPoint2: CGPoint, clickCount2: Int64) {
+    func twoDragsStarted(
+        id1: Int64,
+        globalPoint1: SIMD2<Float64>,
+        clickCount1: Int64,
+        id2: Int64,
+        globalPoint2: SIMD2<Float64>,
+        clickCount2: Int64)
+    {
         for dragHandler in self.dragHandlers {
             dragHandler.onTwoDragsStart(
                 dragId1: id1,
-                globalX1: Float64(globalPoint1.x),
-                globalY1: Float64(globalPoint1.y),
-                localX1: Float64(localPoint1.x),
-                localY1: -Float64(localPoint1.y),
+                globalX1: globalPoint1.x,
+                globalY1: globalPoint1.y,
                 clickCount1: clickCount1,
                 dragId2: id2,
-                globalX2: Float64(globalPoint2.x),
-                globalY2: Float64(globalPoint2.y),
-                localX2: Float64(localPoint2.x),
-                localY2: -Float64(localPoint2.y),
+                globalX2: globalPoint2.x,
+                globalY2: globalPoint2.y,
                 clickCount2: clickCount2)
         }
     }
     
-    func twoDragsMoved(id1: Int64, globalPoint1: CGPoint, localPoint1: CGPoint, clickCount1: Int64,
-                      id2: Int64, globalPoint2: CGPoint, localPoint2: CGPoint, clickCount2: Int64) {
+    func twoDragsMoved(
+        id1: Int64,
+        globalPoint1: SIMD2<Float64>,
+        clickCount1: Int64,
+        id2: Int64,
+        globalPoint2: SIMD2<Float64>,
+        clickCount2: Int64)
+    {
         for dragHandler in self.dragHandlers {
             dragHandler.onTwoDragsMove(
                 dragId1: id1,
-                globalX1: Float64(globalPoint1.x),
-                globalY1: Float64(globalPoint1.y),
-                localX1: Float64(localPoint1.x),
-                localY1: -Float64(localPoint1.y),
+                globalX1: globalPoint1.x,
+                globalY1: globalPoint1.y,
                 clickCount1: clickCount1,
                 dragId2: id2,
-                globalX2: Float64(globalPoint2.x),
-                globalY2: Float64(globalPoint2.y),
-                localX2: Float64(localPoint2.x),
-                localY2: -Float64(localPoint2.y),
+                globalX2: globalPoint2.x,
+                globalY2: globalPoint2.y,
                 clickCount2: clickCount2)
         }
     }
     
-    func twoDragsEnded(id1: Int64, globalPoint1: CGPoint, localPoint1: CGPoint, clickCount1: Int64,
-                      id2: Int64, globalPoint2: CGPoint, localPoint2: CGPoint, clickCount2: Int64) {
+    func twoDragsEnded(
+        id1: Int64,
+        globalPoint1: SIMD2<Float64>,
+        clickCount1: Int64,
+        id2: Int64,
+        globalPoint2: SIMD2<Float64>,
+        clickCount2: Int64)
+    {
         for dragHandler in self.dragHandlers {
             dragHandler.onTwoDragsEnd(
                 dragId1: id1,
-                globalX1: Float64(globalPoint1.x),
-                globalY1: Float64(globalPoint1.y),
-                localX1: Float64(localPoint1.x),
-                localY1: -Float64(localPoint1.y),
+                globalX1: globalPoint1.x,
+                globalY1: globalPoint1.y,
                 clickCount1: clickCount1,
                 dragId2: id2,
-                globalX2: Float64(globalPoint2.x),
-                globalY2: Float64(globalPoint2.y),
-                localX2: Float64(localPoint2.x),
-                localY2: -Float64(localPoint2.y),
+                globalX2: globalPoint2.x,
+                globalY2: globalPoint2.y,
                 clickCount2: clickCount2)
         }
     }
-    
-    #if os(iOS) || os(tvOS)
-    
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.dragsStart(touches:
-            self.touchTracker.filterForNewActiveTouches(newTouches: touches))
-    }
-    
-    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.dragsMoved(touches:
-            self.touchTracker.filterForMovedActiveTouches(movedTouches: touches))
-    }
-    
-    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.dragsEnded(touches:
-            self.touchTracker.filterForEndedActiveTouches(endedTouches: touches))
-    }
-    
-    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.touchesCancelled(touches, with: event)
-    }
-    
-    func dragsStart(touches: [(Int64, UITouch)]) {
-        switch touches.count {
-        case 1:
-            let (id, touch) = touches[0]
-            let globalPoint = touch.location(in: nil)
-            let localPoint = touch.location(in: self)
-            oneDragStarted(id: id, globalPoint: globalPoint, localPoint: localPoint, clickCount: Int64(touch.tapCount))
-        
-        case 2:
-            let (id1, touch1) = touches[0]
-            let (id2, touch2) = touches[1]
-            
-            let globalPoint1 = touch1.location(in: nil)
-            let localPoint1 = touch1.location(in: self)
-            let globalPoint2 = touch2.location(in: nil)
-            let localPoint2 = touch2.location(in: self)
-            
-            twoDragsStarted(
-                id1: id1,
-                globalPoint1: globalPoint1,
-                localPoint1: localPoint1,
-                clickCount1: Int64(touch1.tapCount),
-                id2: id2,
-                globalPoint2: globalPoint2,
-                localPoint2: localPoint2,
-                clickCount2: Int64(touch2.tapCount))
-        default: do {}
-        }
-    }
-    
-    func dragsMoved(touches: [(Int64, UITouch)]) {
-        switch touches.count {
-        case 1:
-            let (id, touch) = touches[0]
-            let globalPoint = touch.location(in: nil)
-            let localPoint = touch.location(in: self)
-            oneDragMoved(id: id, globalPoint: globalPoint, localPoint: localPoint, clickCount: Int64(touch.tapCount))
-        
-        case 2:
-            let (id1, touch1) = touches[0]
-            let (id2, touch2) = touches[1]
-            
-            let globalPoint1 = touch1.location(in: nil)
-            let localPoint1 = touch1.location(in: self)
-            let globalPoint2 = touch2.location(in: nil)
-            let localPoint2 = touch2.location(in: self)
-            
-            twoDragsMoved(
-                id1: id1,
-                globalPoint1: globalPoint1,
-                localPoint1: localPoint1,
-                clickCount1: Int64(touch1.tapCount),
-                id2: id2,
-                globalPoint2: globalPoint2,
-                localPoint2: localPoint2,
-                clickCount2: Int64(touch2.tapCount))
-        default: do {}
-        }
-    }
-    
-    func dragsEnded(touches: [(Int64, UITouch)]) {
-        switch touches.count {
-        case 1:
-            let (id, touch) = touches[0]
-            let globalPoint = touch.location(in: nil)
-            let localPoint = touch.location(in: self)
-            oneDragEnded(id: id, globalPoint: globalPoint, localPoint: localPoint, clickCount: Int64(touch.tapCount))
-        
-        case 2:
-            let (id1, touch1) = touches[0]
-            let (id2, touch2) = touches[1]
-            
-            let globalPoint1 = touch1.location(in: nil)
-            let localPoint1 = touch1.location(in: self)
-            let globalPoint2 = touch2.location(in: nil)
-            let localPoint2 = touch2.location(in: self)
-            
-            twoDragsEnded(
-                id1: id1,
-                globalPoint1: globalPoint1,
-                localPoint1: localPoint1,
-                clickCount1: Int64(touch1.tapCount),
-                id2: id2,
-                globalPoint2: globalPoint2,
-                localPoint2: localPoint2,
-                clickCount2: Int64(touch2.tapCount))
-        default: do {}
-        }
-    }
-    
-    #endif
-    
-    #if os(OSX)
-    
-    override func mouseDown(with event: NSEvent) {
-        DispatchQueue.main.async {
-            let localPoint = event.location(in: self)
-            
-            self.dragHandlers.forEach { (handler) in
-                handler.onOneDragStart(
-                    dragId: 0,
-                    globalX: Float64(event.locationInWindow.x),
-                    globalY: Float64((event.window?.contentView?.bounds.size.height)!
-                        - event.locationInWindow.y),
-                    localX: Float64(localPoint.x),
-                    localY: -Float64(localPoint.y),
-                    clickCount: Int64(event.clickCount))
-            }
-        }
-    }
-    
-    override func mouseDragged(with event: NSEvent) {
-        DispatchQueue.main.async {
-            let localPoint = event.location(in: self)
-            self.dragHandlers.forEach { (handler) in
-                handler.onOneDragMove(
-                    dragId: 0,
-                    globalX: Float64(event.locationInWindow.x),
-                    globalY: Float64((event.window?.contentView?.bounds.size.height)!
-                        - event.locationInWindow.y),
-                    localX: Float64(localPoint.x),
-                    localY: -Float64(localPoint.y),
-                    clickCount: Int64(event.clickCount))
-            }
-        }
-    }
-    
-    override func mouseUp(with event: NSEvent) {
-        DispatchQueue.main.async {
-            let localPoint = event.location(in: self)
-            self.dragHandlers.forEach { (handler) in
-                handler.onOneDragEnd(
-                    dragId: 0,
-                    globalX: Float64(event.locationInWindow.x),
-                    globalY: Float64((event.window?.contentView?.bounds.size.height)!
-                        - event.locationInWindow.y),
-                    localX: Float64(localPoint.x),
-                    localY: -Float64(localPoint.y),
-                    clickCount: Int64(event.clickCount))
-            }
-        }
-    }
-    #endif
 }

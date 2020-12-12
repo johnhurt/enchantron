@@ -7,53 +7,57 @@
 //
 
 import Foundation
-import SpriteKit
+import Metal
+import MetalKit
+import simd
 
 class Texture {
-
-  let texture : SKTexture
-  let size : CGSize
-  var anchorPoint : CGPoint = CGPoint(x: CGFloat(0), y: CGFloat(1))
-  
-  init(texture: SKTexture) {
-    self.texture = texture
-    self.texture.filteringMode = SKTextureFilteringMode.nearest
-    self.size = texture.size()
     
-    texture.preload {
-      print("Texture loaded size: \(self.texture.size())")
+    let wrapped: MTLTexture
+    let size: CGSize
+    let roi: CGRect
+    let uvTopLeft: SIMD2<Float32>
+    let uvSize: SIMD2<Float32>
+    
+    
+    init(wrapped: MTLTexture, roi: CGRect) {
+        self.size = CGSize(width: wrapped.width, height: wrapped.height)
+        self.wrapped = wrapped
+        self.roi = roi
+        uvTopLeft = [Float32(roi.origin.x / size.width), Float32(roi.origin.y / size.height)]
+        uvSize = [Float32(roi.size.width / size.width), Float32(roi.size.height / size.height)]
     }
-  }
-
-  convenience init(resourceName: String) {
-    let rawTexture = SKTexture(imageNamed: resourceName)
-    self.init(texture: rawTexture)
-  }
-
-  func getSubTexture(_ left: Int64, _ top: Int64, _ width: Int64, _ height: Int64) -> Texture {
     
-    let tWidth = CGFloat(width) / self.size.width * 0.99
-    let tHeight = CGFloat(height) / self.size.height * 0.99
+    convenience init(wrapped: MTLTexture) {
+        self.init(
+            wrapped: wrapped,
+            roi: CGRect(x: 0, y: 0, width: wrapped.width, height: wrapped.height))
+    }
     
-    let tLeft = CGFloat(left) / self.size.width + tWidth * 0.005
-    let tBottom = ( self.size.height - CGFloat(top) - CGFloat(height) ) / self.size.height + tHeight * 0.005
+    func getSubTexture(
+        _ left: Float64,
+        _ top: Float64,
+        _ width: Float64,
+        _ height: Float64) -> Texture {
+        return Texture(
+            wrapped: wrapped,
+            roi: CGRect(
+                x: self.roi.origin.x + CGFloat(left),
+                y: self.roi.origin.y + CGFloat(top),
+                width: CGFloat(width),
+                height: CGFloat(height)))
+    }
     
-    let rect = CGRect(
-        origin: CGPoint(x: tLeft, y: tBottom),
-        size: CGSize(width: tWidth, height: tHeight))
-    let result = Texture(texture: SKTexture(rect: rect, in: self.texture))
-    return result
-  }
-
-  func getWidth() -> Int64 {
-    return Int64(self.size.width)
-  }
-  
-  func getHeight() -> Int64 {
-    return Int64(self.size.height)
-  }
-  
-  func setCenterRegistration(_ registerCenter: Bool) {
-    self.anchorPoint = CGPoint(x: CGFloat(0.5), y: CGFloat(0.5))
-  }
+    func getWidth() -> Float64 {
+        return Float64(self.roi.size.width)
+    }
+    
+    func getHeight() -> Float64 {
+        return Float64(self.roi.size.height)
+    }
+    
+    func fillSpriteUniformUvs(uniforms: UnsafeMutablePointer<SpriteUniform>) {
+        uniforms[0].textureUvTopLeft = uvTopLeft
+        uniforms[0].textureUvSize = uvSize
+    }
 }

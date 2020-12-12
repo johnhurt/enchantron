@@ -1,4 +1,5 @@
-use super::{Finger, RawTouch, RawTouchPoint, TouchPoint, ViewportInfo};
+use super::{Finger, RawTouch, TouchPoint, ViewportInfo};
+use crate::model::Point;
 use std::time::Instant;
 
 #[derive(Debug, Clone, Copy)]
@@ -38,9 +39,7 @@ impl Touch {
     ) -> Touch {
         let RawTouch { point, .. } = new_touch;
 
-        let dist_sqr_inc = point
-            .global_point
-            .distance_squared_to(&self.point.screen_point);
+        let dist_sqr_inc = point.distance_squared_to(&self.point.screen_point);
         self.move_dist_sqr_sum += dist_sqr_inc;
         self.point = TouchPoint::new(&new_touch.point, viewport_info);
 

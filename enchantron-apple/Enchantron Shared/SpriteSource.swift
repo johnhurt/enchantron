@@ -13,12 +13,11 @@ protocol SpriteSource {
     func createGroup() -> SpriteGroup
 }
 
-func createSpriteOn(parent : SKNode) -> Sprite {
-    let sprite = Sprite()
+func createSpriteOn(parent : SpriteGroup) -> Sprite {
+    let sprite = parent.createNewSprite()
     
     let onMain : () -> () = {
-        sprite.zPosition = 0.0
-        parent.addChild(sprite)
+        parent.addSprite(sprite: sprite)
     }
     
     if Thread.isMainThread {
@@ -31,12 +30,11 @@ func createSpriteOn(parent : SKNode) -> Sprite {
     return sprite
 }
 
-func createGroupOn(parent: SKNode) -> SpriteGroup {
-    let group = SpriteGroup()
+func createGroupOn(parent: SpriteGroup) -> SpriteGroup {
+    let group = parent.createNewGroup()
     
     let onMain : () -> () = {
-        group.zPosition = 0.0
-        parent.addChild(group)
+        parent.addGroup(group: group)
     }
     
     if Thread.isMainThread {

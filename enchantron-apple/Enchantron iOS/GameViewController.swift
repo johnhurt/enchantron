@@ -7,68 +7,102 @@
 //
 
 import UIKit
-import SpriteKit
+import Metal
+import MetalKit
+import simd
 import GameplayKit
 
 class GameViewController: UIViewController {
+    
+    var renderer: Renderer!
+    var mtkView: MTKView!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        guard let mtkView = self.view as? MTKView else {
+            print("View of Gameview controller is not an MTKView")
+            return
+        }
 
-  var skView : SKView?
-  var scene : GameScene?
-  
-  var screenScale : CGFloat?
+        // Select the device to render with.  We choose the default device
+        guard let defaultDevice = MTLCreateSystemDefaultDevice() else {
+            print("Metal is not supported")
+            return
+        }
 
-  override func viewDidLoad() {
-    super.viewDidLoad()
-  
+        mtkView.device = defaultDevice
+        mtkView.backgroundColor = UIColor.black
 
-    // Present the scene
-    self.skView = self.view as? SKView
-    
-    self.screenScale = UIScreen.main.nativeScale
-    
-    let nativeSize = (self.skView?.bounds.size)!
-    let scaledSize = scaleSize(nativeSize: nativeSize)
-    
-    self.scene = GameScene.newGameScene(size: scaledSize)
-    
-    self.skView?.presentScene(self.scene)
-    
-    self.skView?.ignoresSiblingOrder = true
-    self.skView?.showsFPS = true
-    self.skView?.showsNodeCount = true
-    
-  }
+        guard let newRenderer = Renderer(metalKitView: mtkView) else {
+            print("Renderer cannot be initialized")
+            return
+        }
+        
+        let nativeSize = (self.skView?.bounds.size)!
+        let scaledSize = scaleSize(nativeSize: nativeSize)
+        
+        renderer = newRenderer
 
-  func scaleSize(nativeSize: CGSize) -> CGSize {
-    return CGSize(
-      width: nativeSize.width,
-      height: nativeSize.height)
-  }
-  
-  override var shouldAutorotate: Bool {
-    return true
-  }
+        renderer.mtkView(mtkView, drawableSizeWillChange: mtkView.drawableSize)
 
-  override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-    if UIDevice.current.userInterfaceIdiom == .phone {
-      return .allButUpsideDown
-    } else {
-      return .all
+        mtkView.delegate = renderer
     }
-  }
-
-  override func didReceiveMemoryWarning() {
-    super.didReceiveMemoryWarning()
-    // Release any cached data, images, etc that aren't in use.
-  }
-
-  override var prefersStatusBarHidden: Bool {
-    return true
-  }
-  
-  override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-    super.viewWillTransition(to: size, with: coordinator)
     
-    self.scene?.setSize(size: scaleSize(nativeSize: size))
-  }
+    override var shouldAutorotate: Bool {
+        return true
+    }
+    
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            return .allButUpsideDown
+        } else {
+            return .all
+        }
+    }
+    
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Release any cached data, images, etc that aren't in use.
+    }
+    
+    override var prefersStatusBarHidden: Bool {
+        return true
+    }
+    
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        
+        self.scene?.setSize(size: scaleSize(nativeSize: size))
+    }
+    
+    override var acceptsFirstResponder:  Bool {
+        return true
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        
+        self.currentView?.touchesBegan(touches, with: event)
+        
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        self.dragsStart(touches:
+            self.touchTracker.filterForNewActiveTouches(newTouches: touches))
+    }
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        self.dragsMoved(touches:
+            self.touchTracker.filterForMovedActiveTouches(movedTouches: touches))
+    }
+    
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        self.dragsEnded(touches:
+            self.touchTracker.filterForEndedActiveTouches(endedTouches: touches))
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        self.touchesCancelled(touches, with: event)
+    }
+    
 }

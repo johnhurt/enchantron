@@ -7,44 +7,27 @@
 //
 
 import Foundation
-import SpriteKit
+import Metal
+import MetalKit
+import simd
 
 class LoadingView : BaseView {
-  private static let MAX_WIDTH_FRAC : CGFloat = 0.5
-  private static let HEIGHT_FRAC : CGFloat = 0.2
-  private static let BUTTON_ASPECT_RATIO : CGFloat = 1.618
-  
-  let progressIndicator : ProgressBar
-  
-  override init() {
-   
-    self.progressIndicator = ProgressBar()
-    super.init()
-    addChild(progressIndicator)
-  }
-  
-  required init?(coder aDecoder: NSCoder) {
-    fatalError("init(coder:) has not been implemented")
-  }
-  
-  override func localLayout(size: CGSize) {
-    let maxHeight = size.height * LoadingView.HEIGHT_FRAC
-    let maxWidth = size.width * LoadingView.MAX_WIDTH_FRAC
+    private static let MAX_WIDTH_FRAC : CGFloat = 0.5
+    private static let HEIGHT_FRAC : CGFloat = 0.2
+    private static let BUTTON_ASPECT_RATIO : CGFloat = 1.618
     
-    let width = min(maxWidth, maxHeight * LoadingView.BUTTON_ASPECT_RATIO)
-    let height = width / LoadingView.BUTTON_ASPECT_RATIO
+    override init(viewport: Viewport, device: MTLDevice) {
+        super.init(viewport: viewport, device: device)
+    }
     
-    progressIndicator.setSize(size: CGSize(
-      width: width,
-      height: height))
-    progressIndicator.position = CGPoint(x: size.width, y: -size.height)
-  }
-  
-  func transitionToMainMenuView() {
-    transitionTo(newView: MainMenuView(), binder: getContext().transitionToMainMenuView)
-  }
-  
-  deinit {
-    print("Dropping Loading view")
-  }
+    
+    func transitionToMainMenuView() {
+        transitionTo(
+            newView: MainMenuView(viewport: viewport, device: device),
+            binder: getContext().transitionToMainMenuView)
+    }
+    
+    deinit {
+        print("Dropping Loading view")
+    }
 }

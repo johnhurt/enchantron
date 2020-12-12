@@ -94,11 +94,6 @@ where
             ),
         )
     }
-
-    /// Get a reference to the terrain shader
-    pub fn get_terrain_shader(&self) -> &T::Shader {
-        &self.runtime_resources.shaders().terrain_shader
-    }
 }
 
 #[allow(dead_code, unused_imports)]

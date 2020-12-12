@@ -15,14 +15,6 @@ impl<T: ViewTypes> MainMenuPresenter<T> {
     async fn bind(self) -> Arc<MainMenuPresenter<T>> {
         let copied_event_bus = self.event_bus.clone();
 
-        self.handler_registrations.lock().await.push(Box::new(
-            self.view.get_start_new_game_button().add_click_handler(
-                create_click_handler!({
-                    copied_event_bus.post(StartGame { new: true })
-                }),
-            ),
-        ));
-
         let result = Arc::new(self);
 
         let start_game_event_future =
@@ -35,11 +27,6 @@ impl<T: ViewTypes> MainMenuPresenter<T> {
                 this.view.transition_to_game_view();
             }
         });
-
-        result
-            .view
-            .get_start_new_game_button()
-            .set_text("New Game".to_owned());
 
         result
     }

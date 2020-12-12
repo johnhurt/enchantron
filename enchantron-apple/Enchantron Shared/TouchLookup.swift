@@ -6,16 +6,15 @@
 //  Copyright © 2020 Rook And Pawn Industries, Inc. All rights reserved.
 //
 
-import UIKit
 
 /// Class for keeping track of active touches.  Rust only supports 2 finger gestures, so this will keep up with which two touches are the ones being sent to rust and what id to assign to them. This class is written to only be used on the main thread, so it is not safe to use from multiple threads at the same time
 class TouchLookup {
     
-    var activeTouches : [UITouch : Int64] = [:]
+    var activeTouches : [TouchType : Int64] = [:]
     var nextId : Int64 = 0
     
-    func filterForNewActiveTouches(newTouches: Set<UITouch>) -> [(Int64, UITouch)] {
-        var result = [(Int64, UITouch)]();
+    func filterForNewActiveTouches(newTouches: Set<TouchType>) -> [(Int64, TouchType)] {
+        var result = [(Int64, TouchType)]();
         
         for touch in newTouches {
             if let _ = self.activeTouches[touch] {
@@ -31,8 +30,8 @@ class TouchLookup {
         return result
     }
     
-    func filterForMovedActiveTouches(movedTouches: Set<UITouch>) -> [(Int64, UITouch)] {
-        var result = [(Int64, UITouch)]();
+    func filterForMovedActiveTouches(movedTouches: Set<TouchType>) -> [(Int64, TouchType)] {
+        var result = [(Int64, TouchType)]();
         
         for touch in movedTouches {
             if let id = self.activeTouches[touch] {
@@ -43,8 +42,8 @@ class TouchLookup {
         return result
     }
     
-    func filterForEndedActiveTouches(endedTouches: Set<UITouch>) -> [(Int64, UITouch)] {
-        var result = [(Int64, UITouch)]();
+    func filterForEndedActiveTouches(endedTouches: Set<TouchType>) -> [(Int64, TouchType)] {
+        var result = [(Int64, TouchType)]();
         
         for touch in endedTouches {
             if let id = self.activeTouches[touch] {

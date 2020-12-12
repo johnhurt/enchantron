@@ -1,4 +1,5 @@
-use super::{HasIntSize, ResourceLoader, Texture};
+use super::{ResourceLoader, Texture};
+use crate::ui::HasSize;
 use crate::view_types::ViewTypes;
 
 const CENTER: usize = 0;
@@ -36,8 +37,8 @@ macro_rules! define_texture_atlas {
         let tex_width = texture_atlas.get_width();
         let tex_height = texture_atlas.get_height();
 
-        let tile_width = tex_width / ($x_tile_count);
-        let tile_height = tex_height / ($y_tile_count);
+        let tile_width = tex_width / ($x_tile_count) as f64;
+        let tile_height = tex_height / ($y_tile_count) as f64;
 
         let sub_tex_count = (count!($($name),*) ) as f64;
 
@@ -47,14 +48,14 @@ macro_rules! define_texture_atlas {
 
         $(
           let $name = texture_atlas.get_sub_texture(
-                ($left) * tile_width,
-                ($top) * tile_height,
-                ($width) * tile_width,
-                ($height) * tile_height);
+                ($left) as f64 * tile_width,
+                ($top) as f64  * tile_height,
+                ($width) as f64  * tile_width,
+                ($height) as f64 * tile_height);
 
           $(
               if $registration == CENTER {
-                $name.set_center_registration(true);
+                // $name.set_center_registration(true);
               }
           )?
           counter += 1.;

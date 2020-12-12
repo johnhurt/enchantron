@@ -7,16 +7,18 @@
 //
 
 import Foundation
-import SpriteKit
+import Metal
+import MetalKit
+import simd
 
 class Animation {
     
-    var frames: [SKTexture] = []
+    var frames: [Texture] = []
     var isLoop = false
     var name = "Un-named animation"
     
     func addTexture(_ texture: Texture) {
-        frames.append(texture.texture)
+        frames.append(texture)
     }
     
     func setIsLoop(_ isLoop: Bool) {

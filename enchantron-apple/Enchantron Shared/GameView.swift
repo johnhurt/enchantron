@@ -7,30 +7,28 @@
 //
 
 import Foundation
-import SpriteKit
+import Metal
+import MetalKit
+import simd
 
 class GameView : BaseView {
-  
-  override init() {
-    super.init()
-  }
-  
-  required init?(coder aDecoder: NSCoder) {
-    fatalError("init(coder:) has not been implemented")
-  }
-  
-  deinit {
-    print("Dropping GameView")
-  }
+    
+    override init(viewport: Viewport, device: MTLDevice) {
+        super.init(viewport: viewport, device: device)
+    }
+    
+    deinit {
+        print("Dropping GameView")
+    }
 }
 
 extension GameView : SpriteSource {
     func createSprite() -> Sprite {
-        return createSpriteOn(parent: self)
+        return createSpriteOn(parent: rootGroup)
     }
     
     func createGroup() -> SpriteGroup {
-        return createGroupOn(parent: self)
+        return createGroupOn(parent: rootGroup)
     }
 }
 

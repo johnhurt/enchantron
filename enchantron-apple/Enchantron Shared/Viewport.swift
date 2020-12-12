@@ -7,72 +7,47 @@
 //
 
 import Foundation
-import SpriteKit
+import Metal
+import MetalKit
+import simd
 
-public class Viewport : SKCameraNode {
+// The 256 byte aligned size of our uniform structure
+fileprivate let alignedUniformsSize = (MemoryLayout<ViewportUniform>.size + 0xFF) & -0x100
+
+public class Viewport {
     
-    let container = SKNode()
-    var size = CGSize(width: 0, height: 0)
-    var zeroPosition = CGPoint(x: 0, y: 0)
-    var scale = CGFloat(1)
+    var screenSize = CGSize()
+    var topLeftMajor = SIMD2<Float32>()
+    var topLeftMinor = SIMD2<Float32>()
+    var scale : Float32 = 1.0
     
-    public override init() {
-        super.init()
-        self.addChild(container)
+    var uniformBufferOffset = 0
+    
+    var uniformBuffer: MTLBuffer
+    var uniforms: UnsafeMutablePointer<ViewportUniform>
+    var viewLockedSprites: SpriteGroup
+    
+    init(device: MTLDevice) {
+        uniformBuffer = device.makeBuffer(
+            length: alignedUniformsSize * maxBuffersInFlight,
+            options: [])!
+        
+        uniforms = UnsafeMutableRawPointer(uniformBuffer.contents())
+            .bindMemory(to:ViewportUniform.self, capacity:1)
+        
+        viewLockedSprites = SpriteGroup(device: device, parent: nil)
     }
     
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    func reset() {
+        self.scale = 1.0
+        self.topLeftMajor = SIMD2<Float32>()
+        self.topLeftMinor = SIMD2<Float32>()
     }
     
-    func reset(size: CGSize) {
-        self.zRotation = 0.0;
-        self.xScale = 1.0;
-        self.yScale = 1.0;
-        self.scale = CGFloat(1)
-        self.container.removeAllActions()
-        self.zeroPosition = CGPoint(x: size.width / 2.0 , y: -size.height / 2.0)
-        self.position = self.zeroPosition
-        resize(size: size)
-    }
-    
-    func resize(size: CGSize) {
-        self.container.position = CGPoint(x: -size.width / 2.0, y : size.height / 2.0)
-        let positionShift = CGPoint(x: (self.size.width - size.width) / 2.0, y: (self.size.height - size.height) / 2.0 )
-        self.zeroPosition = CGPoint(x: self.zeroPosition.x - positionShift.x,
-                                    y: self.zeroPosition.y + positionShift.y)
-        let newPosition = CGPoint(x: self.position.x - positionShift.x,
-                                  y: self.position.y + positionShift.y);
-        self.size = size
-        self.position = newPosition
-    }
-    
-    func setVisible(_ visible: Bool) {
-        let action = visible ? SKAction.unhide() : SKAction.hide() 
-        run(action)
-    }
-    
-    func updateScale(newScale: CGFloat) {
-        self.scale = newScale
-        //self.zeroPosition = CGPoint(x: self.zeroPosition.x * scaleScale, y: self.zeroPosition.y * scaleScale)
-    }
-    
-    /**
-      * Take the given top and left positions from the api and turn them into
-      * a location for the viewport (taking scale, zeroPosition offset and inverted
-      * y direction into account)
-      */
-    func apiPositionToViewportPosition(left: Float64, top: Float64) -> CGPoint {
-        return CGPoint(
-            x: CGFloat(left) + zeroPosition.x * scale,
-            y: -CGFloat(top) + zeroPosition.y * scale)
-    }
     
     func setScale(_ newScale: Float64) {
         DispatchQueue.main.async {
-            self.scale = CGFloat(newScale)
-            self.xScale = self.scale
-            self.yScale = self.scale
+            self.scale = Float32(newScale)
         }
     }
     
@@ -83,37 +58,58 @@ public class Viewport : SKCameraNode {
         _ newTopLeftY: Float64) {
         
         DispatchQueue.main.async {
-            self.scale = CGFloat(newScale)
-            self.xScale = self.scale
-            self.yScale = self.scale
-            self.position = self.apiPositionToViewportPosition(
-                left: newTopLeftX,
-                top: newTopLeftY)
+            self.scale = Float32(newScale)
+            
+            let (topLeftMajor, topLeftMinor) = PointUtil.toMajorMinor(
+                x: newTopLeftX,
+                y: newTopLeftY)
+            
+            self.topLeftMajor = topLeftMajor
+            self.topLeftMinor = topLeftMinor
         }
         
     }
     
     func setLocationAnimated(_ left: Float64, _ top: Float64, _ durationSeconds: Float64) {
         
-        let move = SKAction.move(
-            to: apiPositionToViewportPosition(left: left, top: top),
-            duration: durationSeconds)
+    }
+    
+    func configureViewport(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int) {
+
         
-        if durationSeconds > 0.0 {
-            move.timingMode = .easeInEaseOut
-        }
+        uniformBufferOffset = alignedUniformsSize * uniformBufferIndex
         
-        run(move)
+        uniforms = UnsafeMutableRawPointer(uniformBuffer.contents() + uniformBufferOffset)
+            .bindMemory(to:ViewportUniform.self, capacity:1)
+        
+        self.uniforms[0].screenSize = [Float(screenSize.width), Float(screenSize.height)]
+        self.uniforms[0].topLeftMajor = self.topLeftMajor
+        self.uniforms[0].topLeftMinor = self.topLeftMinor
+        self.uniforms[0].scale = Float(scale)
+        
+        encoder.setViewport(MTLViewport(
+            originX: 0,
+            originY: 0,
+            width: Double(uniforms[0].screenSize.x),
+            height: Double(uniforms[0].screenSize.y),
+            znear: -1,
+            zfar: 1))
+
+        encoder.setVertexBuffer(uniformBuffer, offset: uniformBufferOffset, index: 1)
+    }
+    
+    func setVisible(_ visible: Bool) {
+        self.viewLockedSprites.setVisible(visible)
     }
 }
 
 
 extension Viewport : SpriteSource {
     func createSprite() -> Sprite {
-        return createSpriteOn(parent: self.container)
+        return createSpriteOn(parent: self.viewLockedSprites)
     }
     
     func createGroup() -> SpriteGroup {
-        return createGroupOn(parent: self.container)
+        return createGroupOn(parent: self.viewLockedSprites)
     }
 }

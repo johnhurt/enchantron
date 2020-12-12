@@ -1,21 +1,12 @@
-use crate::native::{Animation, ResourceLoader, Shader, SystemView, Texture};
-use crate::ui::{Button, ProgressBar, Sprite, SpriteGroup, Viewport};
+use crate::native::{Animation, ResourceLoader, SystemView, Texture};
+use crate::ui::{Sprite, SpriteGroup, Viewport};
 use crate::view::{GameView, LoadingView, MainMenuView};
 
 pub trait ViewTypes: 'static + Send + Sync + Unpin {
     type Texture: Texture;
     type Animation: Animation<Texture = Self::Texture>;
-    type Shader: Shader;
-    type ResourceLoader: ResourceLoader<
-        T = Self::Texture,
-        A = Self::Animation,
-        S = Self::Shader,
-    >;
-    type Sprite: Sprite<
-        T = Self::Texture,
-        A = Self::Animation,
-        S = Self::Shader,
-    >;
+    type ResourceLoader: ResourceLoader<T = Self::Texture, A = Self::Animation>;
+    type Sprite: Sprite<T = Self::Texture, A = Self::Animation>;
     type SpriteGroup: SpriteGroup<
         S = Self::Sprite,
         T = Self::Texture,
@@ -32,9 +23,7 @@ pub trait ViewTypes: 'static + Send + Sync + Unpin {
         T = Self::Texture,
         G = Self::SpriteGroup,
     >;
-    type Button: Button;
-    type ProgressBar: ProgressBar;
-    type LoadingView: LoadingView<P = Self::ProgressBar>;
-    type MainMenuView: MainMenuView<B = Self::Button>;
+    type LoadingView: LoadingView;
+    type MainMenuView: MainMenuView;
     type SystemView: SystemView<T = Self::Texture, TL = Self::ResourceLoader>;
 }

@@ -10,5 +10,6 @@
 #define Enchantron_Bridging_Header_h
 
 #import "enchantron.h"
+#import "ShaderTypes.h"
 
 #endif /* Enchantron_Bridging_Header_h */

@@ -1,8 +1,6 @@
 use crate::application_context::Ao;
 use crate::event::{EventBus, LoadResources};
-use crate::native::{
-    Animations, RuntimeResources, Shaders, SystemView, Textures,
-};
+use crate::native::{Animations, RuntimeResources, SystemView, Textures};
 use crate::ui::{HasIntValue, HasText};
 use crate::view::{BaseView, LoadingView};
 use crate::view_types::ViewTypes;
@@ -26,19 +24,11 @@ where
         let resource_loader: &T::ResourceLoader =
             &self.system_view.get_resource_loader();
 
-        let textures = Textures::<T>::new(resource_loader, &|p| {
-            self.view
-                .get_progress_indicator()
-                .set_int_value((p * 100.) as i64);
-        });
+        let textures = Textures::<T>::new(resource_loader, &|p| {});
 
         let animations = Animations::<T>::new(resource_loader, &textures);
 
-        let shaders = Shaders::<T>::new(resource_loader);
-
-        (self.resources_sink)(RuntimeResources::new(
-            textures, animations, shaders,
-        ));
+        (self.resources_sink)(RuntimeResources::new(textures, animations));
 
         self.view.transition_to_main_menu_view();
     }
@@ -56,11 +46,6 @@ where
                 this.load_resources().await
             }
         });
-
-        result
-            .view
-            .get_progress_indicator()
-            .set_text("Loading...".to_owned());
 
         result.event_bus.post(LoadResources {});
 

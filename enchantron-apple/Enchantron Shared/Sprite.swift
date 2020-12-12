@@ -7,19 +7,56 @@
 //
 
 import Foundation
-import SpriteKit
+import Metal
+import MetalKit
+import simd
 
-class Sprite : SKSpriteNode {
+// The 256 byte aligned size of our uniform structure
+fileprivate let alignedUniformsSize = (MemoryLayout<SpriteUniform>.size + 0xFF) & -0x100
+
+class Sprite {
     
-    var currentTexture: Texture?
-    var eventSink: Sprite?
+    static let indexes : [UInt16] = [
+        0, 2, 1,
+        1, 2, 3
+    ]
     
-    init() {
-        super.init(
-            texture: nil,
-            color: SKColor.clear,
-            size: CGSize(width: 0, height: 0))
-        self.isHidden = true
+    static let indexesSize = indexes.count * MemoryLayout<UInt16>.stride
+    
+    static var vertexBuffer: MTLBuffer?
+    static var indexBuffer: MTLBuffer?
+    
+    static func staticInit(device: MTLDevice) {
+        indexBuffer = device.makeBuffer(
+            bytes: indexes,
+            length: indexesSize,
+            options: [])!
+    }
+    
+    
+    static func setUpForSpriteRendering(encoder: MTLRenderCommandEncoder) {
+        encoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
+
+    }
+    
+    var texture: Texture?
+    var size = CGSize()
+    var uniformBuffer: MTLBuffer
+    var uniforms: UnsafeMutablePointer<SpriteUniform>
+    var visible = false
+    var topLeftMajor = SIMD2<Float32>()
+    var topLeftMinor = SIMD2<Float32>()
+    
+    weak var container : SpriteGroup?
+    
+    init(device: MTLDevice, container: SpriteGroup, texture: Texture?) {
+        self.texture = texture
+        uniformBuffer = device.makeBuffer(
+            length: alignedUniformsSize * maxBuffersInFlight,
+            options: [])!
+        uniforms = UnsafeMutableRawPointer(uniformBuffer.contents())
+            .bindMemory(to:SpriteUniform.self, capacity:1)
+        self.container = container
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -28,89 +65,37 @@ class Sprite : SKSpriteNode {
     
     func animate(_ animation: Animation, _ secsPerFrame: Float64) {
         
-        var a = SKAction.animate(with: animation.frames, timePerFrame: secsPerFrame)
-        
-        if animation.isLoop {
-            a = SKAction.repeatForever(a)
-        }
-        
-        self.run(a, withKey: animation.name)
     }
     
     func clearAnimations() {
-        self.removeAllActions()
-    }
-    
-    func setShader(_ shader: Shader) {
-        DispatchQueue.main.async {
-            self.shader = shader.inner
-        }
         
-    }
-    
-    func setShaderVariableF64(_ name: String, _ value: Float64) {
-        DispatchQueue.main.async {
-            self.setValue(SKAttributeValue(float: Float(value)), forAttribute: name)
-        }
-    }
-    
-    
-    func setShaderVariableVec2F64(_ name: String, _ v0: Float64, _ v1: Float64) {
-        DispatchQueue.main.async {
-            self.setValue(SKAttributeValue(vectorFloat2: simd_float2(Float(v0), Float(v1))), forAttribute: name)
-        }
-    }
-    
-    
-    func setShaderVariableVec3F64(_ name: String, _ v0: Float64, _ v1: Float64, _ v2: Float64) {
-        DispatchQueue.main.async {
-            self.setValue(SKAttributeValue(vectorFloat3: simd_float3(Float(v0), Float(v1), Float(v2))), forAttribute: name)
-        }
-    }
-    
-    
-    func setShaderVariableVec4F64(_ name: String, _ v0: Float64, _ v1: Float64, _ v2: Float64, _ v3: Float64) {
-        DispatchQueue.main.async {
-            self.setValue(SKAttributeValue(vectorFloat4: simd_float4(Float(v0), Float(v1), Float(v2), Float(v3))), forAttribute: name)
-        }
-    }
-    
-    func clearShader() {
-        self.shader = nil
     }
     
     func setVisible(_ visible: Bool) {
         DispatchQueue.main.async {
-            self.isHidden = !visible
+            self.visible = visible
         }
     }
     
     func setTexture(_ texture: Texture) {
         DispatchQueue.main.async {
-            self.removeAllActions();
-            self.currentTexture = texture
-            self.texture = texture.texture
-            self.anchorPoint = texture.anchorPoint
+            self.texture = texture
         }
     }
     
     func setZLevel(_ newZLevel: Double) {
-        self.zPosition = CGFloat(newZLevel)
+        
     }
     
     func setSizeAnimated(_ width: Float64, _ height: Float64, _ durationSeconds: Float64) {
         
-        
-        
         if durationSeconds > 0.0 {
-            let resize = SKAction.resize(
-                toWidth: CGFloat(width),
-                height: CGFloat(height),
-                duration: durationSeconds)
-            run(resize)
+            
         }
         else {
-            self.size = CGSize(width: width, height: height)
+            DispatchQueue.main.async {
+                self.size = CGSize(width: width, height: height)
+            }
         }
         
     }
@@ -119,32 +104,62 @@ class Sprite : SKSpriteNode {
         
         if durationSeconds > 0.0 {
             
-            let move = SKAction.move(
-                to: CGPoint(x: CGFloat(left), y: -CGFloat(top)),
-                duration: durationSeconds)
-            
-            
-            run(move)
         }
         else {
-            self.position = CGPoint(x: left, y: -top)
+            DispatchQueue.main.async {
+                
+                let (topLeftMajor, topLeftMinor) = PointUtil.toMajorMinor(
+                    x: left,
+                    y: top)
+                
+                self.topLeftMajor = topLeftMajor
+                self.topLeftMinor = topLeftMinor
+            }
         }
     }
     
-    func propagateEventsTo(_ sprite: Sprite) {
-        DispatchQueue.main.sync {
-            self.isUserInteractionEnabled = true
-            self.eventSink = sprite
+    func removeFromParent() {
+        DispatchQueue.main.async {
+            self.container?.removeChild(sprite: self)
         }
     }
     
-    override func removeFromParent() {
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1, execute: {
-            super.removeFromParent()
-        })
+    private func updateDynamicBufferState(uniformBufferIndex: Int) {
+        
+        let uniformBufferOffset = alignedUniformsSize * uniformBufferIndex
+        
+        uniforms = UnsafeMutableRawPointer(uniformBuffer.contents() + uniformBufferOffset)
+            .bindMemory(to:SpriteUniform.self, capacity:1)
+    }
+    
+    func render(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int) {
+        updateDynamicBufferState(uniformBufferIndex: uniformBufferIndex)
+        
+        uniforms[0].topLeftMajor = topLeftMajor
+        uniforms[0].topLeftMinor = topLeftMinor
+        
+        uniforms[0].size = [Float32(self.size.width), Float32(self.size.height)]
+        texture?.fillSpriteUniformUvs(uniforms: uniforms)
+        let uniformBufferOffset = uniformBufferIndex * alignedUniformsSize
+        
+        encoder.setVertexBuffer(uniformBuffer, offset: uniformBufferOffset, index: 0)
+        encoder.setFragmentTexture(texture!.wrapped, index: 0)
+        encoder.drawIndexedPrimitives(
+            type: .triangle,
+            indexCount: Sprite.indexes.count,
+            indexType: .uint16,
+            indexBuffer: Sprite.indexBuffer!,
+            indexBufferOffset: 0)
     }
     
     deinit {
         print("Dropping Sprite")
+    }
+}
+
+extension Sprite : Equatable {
+    
+    static func ==(lhs: Sprite, rhs: Sprite) -> Bool {
+        return lhs === rhs
     }
 }

@@ -172,9 +172,6 @@ where
                 layer.increase_size_for(terrain_update_info, || {
                     let result =
                         layer_sprites.get(layer_index).unwrap().create_sprite();
-                    result.set_shader(
-                        terrain_texture_provider.get_terrain_shader(),
-                    );
                     result
                 })
             } else {
@@ -207,13 +204,7 @@ where
                 &terrain_texture_provider
                     .get_texture_for_rect(&texture_terrain_rect, &TEXTURE_SIZE),
             );
-            sprite.set_shader_variable_vec4_f64(
-                "TERRAIN_RECT".to_owned(),
-                point.x as f64,
-                point.y as f64,
-                texture_terrain_rect.size.width as f64,
-                texture_terrain_rect.size.height as f64,
-            );
+
             sprite.set_size(sprite_width, sprite_width);
             sprite.set_visible(true);
         });

@@ -7,12 +7,33 @@
 //
 
 import Foundation
-import SpriteKit
+import Metal
+import MetalKit
+import simd
+import CoreImage
 
 class ResourceLoader {
+
+    static let textureLoaderOptions : [ MTKTextureLoader.Option : Any] = [
+        MTKTextureLoader.Option.textureUsage: NSNumber(value: MTLTextureUsage.shaderRead.rawValue),
+        MTKTextureLoader.Option.textureStorageMode: NSNumber(value: MTLStorageMode.`private`.rawValue)
+    ]
+    
+    let loader: MTKTextureLoader
+    
+    init(loader: MTKTextureLoader) {
+        self.loader = loader
+    }
     
     func loadTexture(_ resourceName: String) -> Texture {
-        return Texture(resourceName: resourceName)
+        
+        let url = Bundle.main.url(forResource: resourceName, withExtension: nil)!
+        
+        let result = try! loader.newTexture(
+            URL: url,
+            options: ResourceLoader.textureLoaderOptions)
+        
+        return Texture(wrapped: result);
     }
     
     func loadTextureFromPngData(_ pngData: CGDataProvider) -> Texture {
@@ -20,19 +41,17 @@ class ResourceLoader {
             pngDataProviderSource: pngData,
             decode: nil,
             shouldInterpolate: false,
-            intent: .defaultIntent)
+            intent: .defaultIntent)!
         
-        let result = Texture(
-            texture: SKTexture(
-                cgImage: image!))
-        
-        print("loaded texture")
-        
-        return result
+        return cgImageToTexture(image)
     }
     
-    func loadShader(_ shaderName: String) -> Shader {
-        return Shader(shaderName)
+    private func cgImageToTexture(_ image: CGImage) -> Texture {
+        let rawTexture = try! loader.newTexture(
+            cgImage: image,
+            options: ResourceLoader.textureLoaderOptions)
+        
+        return Texture(wrapped: rawTexture)
     }
     
     func createAnimation() -> Animation {

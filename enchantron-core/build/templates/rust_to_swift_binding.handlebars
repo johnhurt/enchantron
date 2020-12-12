@@ -4,6 +4,7 @@ use std::sync::RwLock;
 use lazy_static::lazy_static;
 
 type ApplicationContext = crate::application_context::ApplicationContext<ViewTypes>;
+type Color = crate::ui::Rgba32Color;
 
 {{#each rust_imports}}
 use {{this}};

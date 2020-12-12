@@ -16,6 +16,17 @@ use super::{
     RenderableType, TypeDef, TypeDefBuilder,
 };
 
+macro_rules! method {
+    ($name:ident() $( -> $return_exp:expr)? ) => {
+        let result = super::MethodDefBuilder::default();
+        result.name(stringify!($name));
+        $(
+            result.return_type(Some($return_exp));
+        )?
+        result.build().unwrap()
+    }
+}
+
 lazy_static! {
 
   #[derive(Serialize)]
@@ -415,6 +426,11 @@ lazy_static! {
                 .trait_import(Some("crate::view_types"))
                 .generics(vec![
                     GenericDefBuilder::default()
+                        .symbol(Some("Color"))
+                        .bound_type("Color")
+                        .build().unwrap(),
+
+                    GenericDefBuilder::default()
                         .symbol(Some("Sprite"))
                         .bound_type("Sprite")
                         .build().unwrap(),
@@ -625,6 +641,10 @@ lazy_static! {
                     GenericDefBuilder::default()
                         .symbol(Some("A"))
                         .bound_type("Animation")
+                        .build().unwrap(),
+                    GenericDefBuilder::default()
+                        .symbol(Some("C"))
+                        .bound_type("Color")
                         .build().unwrap()
                 ])
                 .build().unwrap(),
@@ -632,6 +652,17 @@ lazy_static! {
             ImplDefBuilder::default()
                 .trait_name("HasMutableSize")
                 .trait_import(Some("crate::ui::HasMutableSize"))
+                .build().unwrap(),
+
+            ImplDefBuilder::default()
+                .trait_name("HasMutableColor")
+                .trait_import(Some("crate::ui::HasMutableColor"))
+                .generics(vec![
+                    GenericDefBuilder::default()
+                        .symbol(Some("C"))
+                        .bound_type("Color")
+                        .build().unwrap()
+                ])
                 .build().unwrap(),
 
             ImplDefBuilder::default()
@@ -759,6 +790,19 @@ lazy_static! {
                   .trait_name("HasMutableVisibility")
                   .build().unwrap()))
               .build().unwrap(),
+
+            MethodDefBuilder::default()
+                .name("set_color")
+                .arguments(vec![
+                ArgumentDefBuilder::default()
+                    .name("color")
+                    .data_type(*UINT)
+                    .build().unwrap()
+                ])
+                .impl_block(Some(ImplBlockDefBuilder::default()
+                    .trait_name("HasMutableColor")
+                    .build().unwrap()))
+                .build().unwrap(),
 
           MethodDefBuilder::default()
               .name("set_z_level")

@@ -9,6 +9,14 @@ lazy_static! {
             .build()
             .unwrap()
     );
+    pub static ref UINT: DataType = DataType::Primitive(
+        PrimitiveDataTypeBuilder::default()
+            .name("UInt")
+            .rust_name("u32")
+            .swift_name("UInt32")
+            .build()
+            .unwrap()
+    );
     pub static ref DOUBLE: DataType = DataType::Primitive(
         PrimitiveDataTypeBuilder::default()
             .name("Double")

@@ -1,7 +1,8 @@
 use crate::native::{Animation, Texture};
 
 use super::{
-    HasMutableLocation, HasMutableSize, HasMutableVisibility, HasMutableZLevel,
+    Color, HasMutableColor, HasMutableLocation, HasMutableSize,
+    HasMutableVisibility, HasMutableZLevel,
 };
 
 pub trait Sprite:
@@ -9,6 +10,7 @@ pub trait Sprite:
     + HasMutableLocation
     + HasMutableVisibility
     + HasMutableZLevel
+    + HasMutableColor
     + Send
     + Sync
     + Unpin
@@ -16,6 +18,7 @@ pub trait Sprite:
 {
     type T: Texture;
     type A: Animation;
+    type C: Color;
 
     fn set_texture(&self, texture: &Self::T);
 

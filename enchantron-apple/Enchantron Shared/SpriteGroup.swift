@@ -56,8 +56,7 @@ class SpriteGroup {
     func createNewSprite() -> Sprite {
         return Sprite(
             device: self.device,
-            container: self,
-            texture: nil)
+            container: self)
         
     }
     

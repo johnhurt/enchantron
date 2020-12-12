@@ -46,11 +46,11 @@ class Sprite {
     var visible = false
     var topLeftMajor = SIMD2<Float32>()
     var topLeftMinor = SIMD2<Float32>()
+    var color = UInt32()
     
     weak var container : SpriteGroup?
     
-    init(device: MTLDevice, container: SpriteGroup, texture: Texture?) {
-        self.texture = texture
+    init(device: MTLDevice, container: SpriteGroup) {
         uniformBuffer = device.makeBuffer(
             length: alignedUniformsSize * maxBuffersInFlight,
             options: [])!
@@ -115,6 +115,12 @@ class Sprite {
                 self.topLeftMajor = topLeftMajor
                 self.topLeftMinor = topLeftMinor
             }
+        }
+    }
+    
+    func setColor(_ color: UInt32) {
+        DispatchQueue.main.async {
+            self.color = color
         }
     }
     

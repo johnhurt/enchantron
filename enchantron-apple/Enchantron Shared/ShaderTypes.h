@@ -30,6 +30,7 @@ typedef struct {
     vector_float2 topLeftMajor;
     vector_float2 topLeftMinor;
     vector_float2 size;
+    uint color;
     vector_float2 textureUvTopLeft;
     vector_float2 textureUvSize;
 } SpriteUniform;

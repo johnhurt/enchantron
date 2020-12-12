@@ -57,7 +57,7 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
 {
     constexpr sampler defaultSampler;
 
-    float4 colorSample   = tex.sample(defaultSampler, in.texCoord.xy);
+    float4 colorSample = tex.sample(defaultSampler, in.texCoord.xy);
     
     return float4(colorSample);
 }

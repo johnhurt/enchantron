@@ -16,15 +16,157 @@ use super::{
     RenderableType, TypeDef, TypeDefBuilder,
 };
 
+macro_rules! swift_struct {
+    ($name:ident) => {
+        DataType::swift_struct(stringify!($name), None)
+    };
+}
+
+macro_rules! arg {
+    ($name:ident : $type_exp:expr) => {{
+        let result = ArgumentDefBuilder::default()
+            .name(stringify!($name))
+            .data_type(Clone::clone(&$type_exp))
+            .build()
+            .unwrap();
+
+        result
+    }};
+}
+
+macro_rules! method_builder {
+    ($name:ident($($arg_name:ident : $arg_type_exp:expr),* $(,)? ) $( -> $return_exp:expr)? ) => {
+        {
+            let result = MethodDefBuilder::default()
+                .name(stringify!($name))
+                .arguments(vec![$(
+                    arg!($arg_name : $arg_type_exp)
+                ),*]);
+
+            $(
+                let result = result.return_type(Some(Clone::clone(&$return_exp)));
+            )?
+            result
+        }
+    };
+}
+
 macro_rules! method {
-    ($name:ident() $( -> $return_exp:expr)? ) => {
-        let result = super::MethodDefBuilder::default();
-        result.name(stringify!($name));
-        $(
-            result.return_type(Some($return_exp));
-        )?
+    ($name:ident($($arg_name:ident : $arg_type_exp:expr),* $(,)? ) $( -> $return_exp:expr)? ) => {
+        method_builder!($name($( $arg_name: $arg_type_exp),*) $( -> $return_exp)? ).build().unwrap()
+    };
+}
+
+macro_rules! field {
+    (mut $name:ident : $type_exp:expr) => {
+        FieldDefBuilder::default()
+            .name(stringify!($name))
+            .data_type(Clone::clone(&$type_exp))
+            .setter(true)
+            .build()
+            .unwrap()
+    };
+
+    ($name:ident : $type_exp:expr) => {
+        FieldDefBuilder::default()
+            .name(stringify!($name))
+            .data_type(Clone::clone(&$type_exp))
+            .build()
+            .unwrap()
+    };
+}
+
+macro_rules! impl_def {
+    ($trait_name:ty { }) => {{
+        let result =
+            ImplDefBuilder::default().trait_name(stringify!($trait_name));
+
         result.build().unwrap()
-    }
+    }};
+}
+
+macro_rules! impl_method {
+    ($trait_name:ty {
+        fn $method_name:ident($($arg_name:ident : $arg_type_exp:expr),* $(,)? ) $( -> $return_exp:expr)?
+    }) => {{
+        let result = method_builder!($method_name($($arg_name: $arg_type_exp),*) $( -> $return_exp)?);
+        let result = result.impl_block(Some(ImplBlockDefBuilder::default()
+            .trait_name(stringify!($trait_name))
+            .build().unwrap()));
+        result.build().unwrap()
+    }};
+}
+
+macro_rules! rust_type {
+    ($name:ident $( : $rust_type:ty )? {
+        $(exclude_from_header = $exclude_from_header:expr;)?
+        $(
+            fn $method_name:ident($($arg_name:ident : $arg_type_exp:expr),* $(,)? ) $( -> $return_exp:expr)?;
+        )*
+    }) => {{
+        let result = TypeDefBuilder::default()
+            .name(stringify!($name))
+            .rust_owned(true)
+            .methods(vec![$(
+                method!($method_name($($arg_name:$arg_type_exp),*) $( -> $return_exp)?)
+            ),*]);
+
+        $(
+            let result = result.exclude_from_header($exclude_from_header);
+        )?
+        $(
+            let result = result.rust_import(Some(stringify!($rust_type)));
+        )?
+
+        result.build().unwrap()
+    }}
+}
+
+macro_rules! swift_type {
+    ($name:ident {
+        $(
+            custom_rust_drop_code = $custom_rust_drop_code:expr;
+        )?
+        $(
+            let $($field_lhs_part:ident)+ : $field_type_exp:expr;
+        )*
+        $(
+            fn $method_name:ident($($arg_name:ident : $arg_type_exp:expr),* $(,)? ) $( -> $return_exp:expr)?;
+        )*
+        $(
+            impl $trait_name:ty {
+                $(
+                    fn $impl_method_name:ident($($impl_arg_name:ident : $impl_arg_type_exp:expr),* $(,)? ) $( -> $impl_return_exp:expr)?;
+                )*
+            }
+        )*
+    }) => {{
+        let result = TypeDefBuilder::default()
+            .name(stringify!($name))
+            .fields(vec![$(
+                field!($($field_lhs_part )+ : $field_type_exp)
+            )*])
+            .methods(vec![$(
+                method!($method_name($($arg_name:$arg_type_exp),*) $( -> $return_exp)?)
+            ),*
+            $(
+                $(
+                    impl_method!($trait_name {
+                        fn $impl_method_name($($impl_arg_name : $impl_arg_type_exp),*) $( -> $impl_return_exp)?
+                     })
+                )*
+            )*]);
+
+        $(
+            let result = result.custom_rust_drop_code(Some($custom_rust_drop_code));
+        )?
+
+        let result = result.impls(vec![$(
+            impl_def!($trait_name {})
+        ),*]);
+
+        result.build().unwrap()
+    }};
 }
 
 lazy_static! {
@@ -33,150 +175,48 @@ lazy_static! {
   static ref TYPES : Vec<TypeDef> = vec![
 
     // Low-level Types
+    rust_type!( ByteBuffer : crate::util::ByteBuffer {
+        fn get_length() -> LONG;
+        fn get_content() -> MUTABLE_BYTE_POINTER;
+    } ),
 
-    TypeDefBuilder::default()
-        .name("ByteBuffer")
-        .rust_owned(true)
-        .rust_import(Some("crate::util::ByteBuffer"))
-        .methods(vec![
+    swift_type!( SwiftString {
 
-            MethodDefBuilder::default()
-                .name("get_length")
-                .return_type(Some(*LONG))
-                .build().unwrap(),
+        let length : LONG;
 
-            MethodDefBuilder::default()
-                .name("get_content")
-                .return_type(Some(*MUTABLE_BYTE_POINTER))
-                .build().unwrap()
-        ])
-        .build().unwrap(),
+        fn get_content() -> MUTABLE_BYTE_POINTER;
+    }),
 
-    TypeDefBuilder::default()
-        .name("SwiftString")
-        .rust_owned(false)
-        .fields(vec![
-            FieldDefBuilder::default()
-                .name("length")
-                .data_type(*LONG)
-                .setter(false)
-                .build().unwrap()
-        ])
-        .methods(vec![
-            MethodDefBuilder::default()
-                .name("get_content")
-                .return_type(Some(*MUTABLE_BYTE_POINTER))
-                .build().unwrap()
-        ])
-        .build().unwrap(),
-
-    TypeDefBuilder::default()
-            .name("BoxedAny")
-            .rust_owned(true)
-            .build().unwrap(),
+    rust_type!(BoxedAny : crate::util::BoxedAny {}),
 
     // Application Root Object
 
-    TypeDefBuilder::default()
-        .name("ApplicationContext")
-        .rust_owned(true)
-        .exclude_from_header(true)
-        .methods(vec![
-          MethodDefBuilder::default()
-              .name("transition_to_loading_view")
-              .arguments(vec![
-                ArgumentDefBuilder::default()
-                    .name("view")
-                    .data_type(DataType::swift_struct(
-                        "LoadingView", None))
-                    .build().unwrap()
-              ])
-              .return_type(None)
-              .build().unwrap(),
+    rust_type!( ApplicationContext {
 
-          MethodDefBuilder::default()
-              .name("transition_to_main_menu_view")
-              .arguments(vec![
-                ArgumentDefBuilder::default()
-                    .name("view")
-                    .data_type(DataType::swift_struct(
-                        "MainMenuView", None))
-                    .build().unwrap()
-              ])
-              .build().unwrap(),
+        exclude_from_header = true;
 
-          MethodDefBuilder::default()
-              .name("transition_to_game_view")
-              .arguments(vec![
-                ArgumentDefBuilder::default()
-                    .name("view")
-                    .data_type(DataType::swift_struct(
-                        "GameView", None))
-                    .build().unwrap()
-              ])
-              .build().unwrap(),
-
-        ])
-        .build().unwrap(),
+        fn transition_to_loading_view(view: swift_struct!(LoadingView));
+        fn transition_to_main_menu_view(view: swift_struct!(MainMenuView));
+        fn transition_to_game_view(view: swift_struct!(GameView));
+    }),
 
     // UI Components
 
-    TypeDefBuilder::default()
-        .name("HandlerRegistration")
-        .impls(vec![
-            ImplDefBuilder::default()
-                .trait_name("crate::ui::HandlerRegistration")
-                .trait_import(Some("crate::ui"))
-                .build().unwrap()
-        ])
-        .methods(vec![
-            MethodDefBuilder::default()
-                .name("deregister")
-                .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("crate::ui::HandlerRegistration")
-                    .build().unwrap()))
-                .build().unwrap()
-        ])
-        .rust_owned(false)
-        .custom_rust_drop_code(Some("crate::ui::HandlerRegistration::deregister(self);"))
-        .build().unwrap(),
+    swift_type!( HandlerRegistration {
+        custom_rust_drop_code = "crate::ui::HandlerRegistration::deregister(self);";
 
-    TypeDefBuilder::default()
-        .name("ClickHandler")
-        .rust_import(Some("crate::ui::ClickHandler"))
-        .rust_owned(true)
-        .methods(vec![
-            MethodDefBuilder::default()
-                .name("on_click")
-                .build().unwrap()
-        ])
-        .build().unwrap(),
+        impl crate::ui::HandlerRegistration {
+            fn deregister();
+        }
+    }),
 
+    rust_type!( ClickHandler : crate::ui::ClickHandler {
+        fn on_click();
+    }),
 
-    TypeDefBuilder::default()
-        .name("MagnifyHandler")
-        .rust_import(Some("crate::ui::MagnifyHandler"))
-        .rust_owned(true)
-        .methods(vec![
-            MethodDefBuilder::default()
-                .name("on_magnify")
-                .arguments(vec![
-                    ArgumentDefBuilder::default()
-                        .name("scale_change_additive")
-                        .data_type(*DOUBLE)
-                        .build().unwrap(),
-                    ArgumentDefBuilder::default()
-                        .name("zoom_center_x")
-                        .data_type(*DOUBLE)
-                        .build().unwrap(),
-                    ArgumentDefBuilder::default()
-                        .name("zoom_center_y")
-                        .data_type(*DOUBLE)
-                        .build().unwrap()
-                ])
-                .build().unwrap()
-        ])
-        .build().unwrap(),
+    rust_type!( MagnifyHandler : crate::ui::MagnifyHandler {
+        fn on_magnify(scale_change_additive: DOUBLE, zoom_center_x: DOUBLE, zoom_center_y: DOUBLE);
+    }),
 
         TypeDefBuilder::default()
         .name("MultiTouchHandler")

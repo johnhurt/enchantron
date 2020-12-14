@@ -20,6 +20,18 @@ macro_rules! swift_struct {
     ($name:ident) => {
         DataType::swift_struct(stringify!($name), None)
     };
+    (Self = $struct_name:ident) => {
+        DataType::swift_generic(
+            None,
+            DataType::swift_struct(stringify!($struct_name), None),
+        )
+    };
+    (Self::$generic_symbol:ident = $struct_name:ident) => {
+        DataType::swift_generic(
+            Some(stringify!($generic_symbol)),
+            DataType::swift_struct(stringify!($struct_name), None),
+        )
+    };
 }
 
 macro_rules! arg {
@@ -77,9 +89,20 @@ macro_rules! field {
 }
 
 macro_rules! impl_def {
-    ($trait_name:ty { }) => {{
+    ($trait_name:ty {
+        $(
+            type $associated_type_name:ident = $real_type:ty;
+        )*
+    }) => {{
         let result =
             ImplDefBuilder::default().trait_name(stringify!($trait_name));
+
+        let result = result.generics(vec![ $(
+            GenericDefBuilder::default()
+                .symbol(Some(stringify!($associated_type_name)))
+                .bound_type(stringify!($real_type))
+                .build().unwrap()
+        ),*]);
 
         result.build().unwrap()
     }};
@@ -136,6 +159,9 @@ macro_rules! swift_type {
         $(
             impl $trait_name:ty {
                 $(
+                    type $associated_type_name:ident = $real_type:ty;
+                )*
+                $(
                     fn $impl_method_name:ident($($impl_arg_name:ident : $impl_arg_type_exp:expr),* $(,)? ) $( -> $impl_return_exp:expr)?;
                 )*
             }
@@ -147,13 +173,13 @@ macro_rules! swift_type {
                 field!($($field_lhs_part )+ : $field_type_exp)
             )*])
             .methods(vec![$(
-                method!($method_name($($arg_name:$arg_type_exp),*) $( -> $return_exp)?)
-            ),*
+                method!($method_name($($arg_name:$arg_type_exp),*) $( -> $return_exp)?),
+            )*
             $(
                 $(
                     impl_method!($trait_name {
                         fn $impl_method_name($($impl_arg_name : $impl_arg_type_exp),*) $( -> $impl_return_exp)?
-                     })
+                     }),
                 )*
             )*]);
 
@@ -162,11 +188,32 @@ macro_rules! swift_type {
         )?
 
         let result = result.impls(vec![$(
-            impl_def!($trait_name {})
+            impl_def!($trait_name { $( type $associated_type_name = $real_type; )* })
         ),*]);
 
         result.build().unwrap()
     }};
+}
+
+macro_rules! empty_type {
+    ($name:ident  {
+        $(
+            impl $trait_name:ty {
+                $(
+                    type $associated_type_name:ident = $real_type:ty;
+                )*
+            }
+        )*
+    }) => {{
+        let result = TypeDefBuilder::default()
+            .name(stringify!($name));
+
+        let result = result.impls(vec![$(
+            impl_def!($trait_name { $( type $associated_type_name = $real_type; )* })
+        ),*]);
+
+        result.build().unwrap()
+    }}
 }
 
 lazy_static! {
@@ -218,311 +265,38 @@ lazy_static! {
         fn on_magnify(scale_change_additive: DOUBLE, zoom_center_x: DOUBLE, zoom_center_y: DOUBLE);
     }),
 
-        TypeDefBuilder::default()
-        .name("MultiTouchHandler")
-        .rust_import(Some("crate::ui::MultiTouchHandler"))
-        .rust_owned(true)
-        .methods(vec![
-            MethodDefBuilder::default()
-                .name("on_one_drag_start")
-                .arguments(vec![
-                    ArgumentDefBuilder::default()
-                        .name("drag_id")
-                        .data_type(*LONG)
-                        .build().unwrap(),
+    rust_type!(MultiTouchHandler : crate::ui::MultiTouchHandler {
+        fn on_one_drag_start(drag_id: LONG, global_x: DOUBLE, global_y: DOUBLE, click_count: LONG);
+        fn on_one_drag_move(drag_id: LONG, global_x: DOUBLE, global_y: DOUBLE, click_count: LONG);
+        fn on_one_drag_end(drag_id: LONG, global_x: DOUBLE, global_y: DOUBLE, click_count: LONG);
 
-                  ArgumentDefBuilder::default()
-                      .name("global_x")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
+        fn on_two_drags_start(drag_id_1: LONG, global_x_1: DOUBLE, global_y_1: DOUBLE, click_count_1: LONG,
+                              drag_id_2: LONG, global_x_2: DOUBLE, global_y_2: DOUBLE, click_count_2: LONG);
+        fn on_two_drags_move(drag_id_1: LONG, global_x_1: DOUBLE, global_y_1: DOUBLE, click_count_1: LONG,
+                             drag_id_2: LONG, global_x_2: DOUBLE, global_y_2: DOUBLE, click_count_2: LONG);
+        fn on_two_drags_end(drag_id_1: LONG, global_x_1: DOUBLE, global_y_1: DOUBLE, click_count_1: LONG,
+                            drag_id_2: LONG, global_x_2: DOUBLE, global_y_2: DOUBLE, click_count_2: LONG);
+    }),
 
-                  ArgumentDefBuilder::default()
-                      .name("global_y")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
+    rust_type!(LayoutHandler : crate::ui::LayoutHandler {
+        fn on_layout(width: LONG, height: LONG);
+    }),
 
-                    ArgumentDefBuilder::default()
-                        .name("click_count")
-                        .data_type(*LONG)
-                        .build().unwrap(),
-                ])
-                .build().unwrap(),
-
-            MethodDefBuilder::default()
-                .name("on_one_drag_move")
-                .arguments(vec![
-                    ArgumentDefBuilder::default()
-                        .name("drag_id")
-                        .data_type(*LONG)
-                        .build().unwrap(),
-
-                  ArgumentDefBuilder::default()
-                      .name("global_x")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-
-                  ArgumentDefBuilder::default()
-                      .name("global_y")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-
-                    ArgumentDefBuilder::default()
-                        .name("click_count")
-                        .data_type(*LONG)
-                        .build().unwrap(),
-                ])
-                .build().unwrap(),
-
-            MethodDefBuilder::default()
-                .name("on_one_drag_end")
-                .arguments(vec![
-                    ArgumentDefBuilder::default()
-                        .name("drag_id")
-                        .data_type(*LONG)
-                        .build().unwrap(),
-
-                  ArgumentDefBuilder::default()
-                      .name("global_x")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-
-                  ArgumentDefBuilder::default()
-                      .name("global_y")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-
-                  ArgumentDefBuilder::default()
-                      .name("click_count")
-                      .data_type(*LONG)
-                      .build().unwrap(),
-                ])
-                .build().unwrap(),
-
-                MethodDefBuilder::default()
-                    .name("on_two_drags_start")
-                    .arguments(vec![
-                        ArgumentDefBuilder::default()
-                            .name("drag_id_1")
-                            .data_type(*LONG)
-                            .build().unwrap(),
-
-                      ArgumentDefBuilder::default()
-                          .name("global_x_1")
-                          .data_type(*DOUBLE)
-                          .build().unwrap(),
-
-                      ArgumentDefBuilder::default()
-                          .name("global_y_1")
-                          .data_type(*DOUBLE)
-                          .build().unwrap(),
-
-                          ArgumentDefBuilder::default()
-                              .name("click_count_1")
-                              .data_type(*LONG)
-                              .build().unwrap(),
-
-                    ArgumentDefBuilder::default()
-                        .name("drag_id_2")
-                        .data_type(*LONG)
-                        .build().unwrap(),
-
-                    ArgumentDefBuilder::default()
-                        .name("global_x_2")
-                        .data_type(*DOUBLE)
-                        .build().unwrap(),
-
-                    ArgumentDefBuilder::default()
-                        .name("global_y_2")
-                        .data_type(*DOUBLE)
-                        .build().unwrap(),
-
-                        ArgumentDefBuilder::default()
-                            .name("click_count_2")
-                            .data_type(*LONG)
-                            .build().unwrap(),
-                    ])
-                    .build().unwrap(),
-
-                MethodDefBuilder::default()
-                .name("on_two_drags_move")
-                .arguments(vec![
-                    ArgumentDefBuilder::default()
-                        .name("drag_id_1")
-                        .data_type(*LONG)
-                        .build().unwrap(),
-
-                  ArgumentDefBuilder::default()
-                      .name("global_x_1")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-
-                  ArgumentDefBuilder::default()
-                      .name("global_y_1")
-                      .data_type(*DOUBLE)
-                      .build().unwrap(),
-
-                      ArgumentDefBuilder::default()
-                          .name("click_count_1")
-                          .data_type(*LONG)
-                          .build().unwrap(),
-
-                ArgumentDefBuilder::default()
-                    .name("drag_id_2")
-                    .data_type(*LONG)
-                    .build().unwrap(),
-
-                ArgumentDefBuilder::default()
-                    .name("global_x_2")
-                    .data_type(*DOUBLE)
-                    .build().unwrap(),
-
-                ArgumentDefBuilder::default()
-                    .name("global_y_2")
-                    .data_type(*DOUBLE)
-                    .build().unwrap(),
-
-                    ArgumentDefBuilder::default()
-                        .name("click_count_2")
-                        .data_type(*LONG)
-                        .build().unwrap(),
-                ])
-                .build().unwrap(),
-
-                MethodDefBuilder::default()
-                    .name("on_two_drags_end")
-                    .arguments(vec![
-                        ArgumentDefBuilder::default()
-                            .name("drag_id_1")
-                            .data_type(*LONG)
-                            .build().unwrap(),
-
-                      ArgumentDefBuilder::default()
-                          .name("global_x_1")
-                          .data_type(*DOUBLE)
-                          .build().unwrap(),
-
-                      ArgumentDefBuilder::default()
-                          .name("global_y_1")
-                          .data_type(*DOUBLE)
-                          .build().unwrap(),
-
-                          ArgumentDefBuilder::default()
-                              .name("click_count_1")
-                              .data_type(*LONG)
-                              .build().unwrap(),
-
-                    ArgumentDefBuilder::default()
-                        .name("drag_id_2")
-                        .data_type(*LONG)
-                        .build().unwrap(),
-
-                    ArgumentDefBuilder::default()
-                        .name("global_x_2")
-                        .data_type(*DOUBLE)
-                        .build().unwrap(),
-
-                    ArgumentDefBuilder::default()
-                        .name("global_y_2")
-                        .data_type(*DOUBLE)
-                        .build().unwrap(),
-
-                        ArgumentDefBuilder::default()
-                            .name("click_count_2")
-                            .data_type(*LONG)
-                            .build().unwrap(),
-                    ])
-                    .build().unwrap(),
-        ])
-        .build().unwrap(),
-
-    TypeDefBuilder::default()
-        .name("LayoutHandler")
-        .rust_import(Some("crate::ui::LayoutHandler"))
-        .rust_owned(true)
-        .methods(vec![
-            MethodDefBuilder::default()
-                .name("on_layout")
-                .arguments(vec![
-                  ArgumentDefBuilder::default()
-                      .name("width")
-                      .data_type(*LONG)
-                      .build().unwrap(),
-                  ArgumentDefBuilder::default()
-                      .name("height")
-                      .data_type(*LONG)
-                      .build().unwrap()
-                ])
-                .build().unwrap()
-        ])
-        .build().unwrap(),
-
-    TypeDefBuilder::default()
-        .name("ViewTypes")
-        .rust_owned(false)
-        .empty_struct(true)
-        .impls(vec![
-            ImplDefBuilder::default()
-                .trait_name("view_types::ViewTypes")
-                .trait_import(Some("crate::view_types"))
-                .generics(vec![
-                    GenericDefBuilder::default()
-                        .symbol(Some("Color"))
-                        .bound_type("Color")
-                        .build().unwrap(),
-
-                    GenericDefBuilder::default()
-                        .symbol(Some("Sprite"))
-                        .bound_type("Sprite")
-                        .build().unwrap(),
-
-                    GenericDefBuilder::default()
-                        .symbol(Some("SpriteGroup"))
-                        .bound_type("SpriteGroup")
-                        .build().unwrap(),
-
-                    GenericDefBuilder::default()
-                        .symbol(Some("LoadingView"))
-                        .bound_type("LoadingView")
-                        .build().unwrap(),
-
-                    GenericDefBuilder::default()
-                        .symbol(Some("Texture"))
-                        .bound_type("Texture")
-                        .build().unwrap(),
-
-                    GenericDefBuilder::default()
-                        .symbol(Some("Animation"))
-                        .bound_type("Animation")
-                        .build().unwrap(),
-
-                    GenericDefBuilder::default()
-                        .symbol(Some("ResourceLoader"))
-                        .bound_type("ResourceLoader")
-                        .build().unwrap(),
-
-                    GenericDefBuilder::default()
-                        .symbol(Some("SystemView"))
-                        .bound_type("SystemView")
-                        .build().unwrap(),
-
-                    GenericDefBuilder::default()
-                        .symbol(Some("GameView"))
-                        .bound_type("GameView")
-                        .build().unwrap(),
-
-                    GenericDefBuilder::default()
-                        .symbol(Some("Viewport"))
-                        .bound_type("Viewport")
-                        .build().unwrap(),
-
-                    GenericDefBuilder::default()
-                        .symbol(Some("MainMenuView"))
-                        .bound_type("MainMenuView")
-                        .build().unwrap(),
-                ])
-                .build().unwrap()
-        ])
-        .build().unwrap(),
+    empty_type!(ViewTypes {
+        impl crate::view_types::ViewTypes {
+            type Color = Color;
+            type Sprite = Sprite;
+            type SpriteGroup = SpriteGroup;
+            type LoadingView = LoadingView;
+            type Texture = Texture;
+            type Animation = Animation;
+            type ResourceLoader = ResourceLoader;
+            type SystemView = SystemView;
+            type GameView = GameView;
+            type Viewport = Viewport;
+            type MainMenuView = MainMenuView;
+        }
+    }),
 
     TypeDefBuilder::default()
         .name("TextArea")
@@ -548,123 +322,49 @@ lazy_static! {
         ])
         .build().unwrap(),
 
-    TypeDefBuilder::default()
-        .name("Animation")
-        .rust_owned(false)
-        .impls(vec![
-            ImplDefBuilder::default()
-                .trait_name("native::Animation")
-                .trait_import(Some("crate::native"))
-                .generics(vec![
-                    GenericDefBuilder::default()
-                        .symbol(Some("Texture"))
-                        .bound_type("Texture")
-                        .build().unwrap()
-                ])
-                .build().unwrap()
-        ])
-        .methods(vec![
-            MethodDefBuilder::default()
-                .name("add_texture")
-                .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("native::Animation")
-                    .build().unwrap()))
-                .arguments(vec![
-                    ArgumentDefBuilder::default()
-                        .name("texture")
-                        .data_type(DataType::swift_generic(Some("Texture"),
-                            DataType::swift_struct("Texture", None)))
-                        .build().unwrap()
-                ])
-                .build().unwrap(),
+    swift_type!(Animation {
+        impl crate::native::Animation {
+            type Texture = Texture;
 
-            MethodDefBuilder::default()
-                .name("set_is_loop")
-                .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("native::Animation")
-                    .build().unwrap()))
-                .arguments(vec![
-                    ArgumentDefBuilder::default()
-                        .name("is_loop")
-                        .data_type(*BOOLEAN)
-                        .build().unwrap()
-                ])
-                .build().unwrap(),
+            fn add_texture(texture: swift_struct!( Self::Texture = Texture ));
+            fn set_is_loop(is_loop: BOOLEAN);
+            fn set_name(name: STRING);
+        }
+    }),
 
-            MethodDefBuilder::default()
-                .name("set_name")
-                .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("native::Animation")
-                    .build().unwrap()))
-                .arguments(vec![
-                    ArgumentDefBuilder::default()
-                        .name("name")
-                        .data_type(*STRING)
-                        .build().unwrap()
-                ])
-                .build().unwrap()
-        ])
-        .build().unwrap(),
+    swift_type!(Texture {
+        impl crate::native::Texture {
+            fn get_sub_texture(left: DOUBLE, top: DOUBLE, width: DOUBLE, weight: DOUBLE) -> swift_struct!(Self = Texture);
+        }
+        impl crate::ui::HasSize {
+            fn get_width() -> DOUBLE;
+            fn get_height() -> DOUBLE;
+        }
+    }),
 
-    TypeDefBuilder::default()
-        .name("Texture")
-        .rust_owned(false)
-        .impls(vec![
-            ImplDefBuilder::default()
-                .trait_name("native::Texture")
-                .trait_import(Some("crate::native"))
-                .build().unwrap(),
-            ImplDefBuilder::default()
-                .trait_name("HasSize")
-                .trait_import(Some("crate::ui::HasSize"))
-                .build().unwrap()
-        ])
-        .methods(vec![
-            MethodDefBuilder::default()
-                .name("get_width")
-                .return_type(Some(*DOUBLE))
-                .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("HasSize")
-                    .build().unwrap()))
-                .build().unwrap(),
+    swift_type!(Sprite {
+        impl crate::ui::Sprite {
+            type T = Texture;
+            type A = Animation;
+            type C = Color;
+        }
 
-            MethodDefBuilder::default()
-                .name("get_height")
-                .return_type(Some(*DOUBLE))
-                .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("HasSize")
-                    .build().unwrap()))
-                .build().unwrap(),
+        impl crate::ui::HasMutableSize {
 
-            MethodDefBuilder::default()
-                .name("get_sub_texture")
-                .arguments(vec![
-                    ArgumentDefBuilder::default()
-                        .name("left")
-                        .data_type(*DOUBLE)
-                        .build().unwrap(),
-                    ArgumentDefBuilder::default()
-                        .name("top")
-                        .data_type(*DOUBLE)
-                        .build().unwrap(),
-                    ArgumentDefBuilder::default()
-                        .name("width")
-                        .data_type(*DOUBLE)
-                        .build().unwrap(),
-                    ArgumentDefBuilder::default()
-                        .name("height")
-                        .data_type(*DOUBLE)
-                        .build().unwrap()
-                ])
-                .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("native::Texture")
-                    .build().unwrap()))
-                .return_type(Some(DataType::swift_generic(None,
-                    DataType::swift_struct("Texture", None))))
-                .build().unwrap(),
+        }
 
-        ])
-        .build().unwrap(),
+        impl crate::ui::HasMutableColor {
+
+        }
+
+        impl crate::ui::HasMutableLocation {
+
+        }
+
+        impl crate::ui::HasMutableZLevel {
+
+        }
+    }),
 
     TypeDefBuilder::default()
         .name("Sprite")

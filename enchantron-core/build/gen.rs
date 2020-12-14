@@ -1,6 +1,5 @@
 pub use self::argument_def::*;
 pub use self::data_type::*;
-pub use self::field_def::*;
 pub use self::generic_def::*;
 pub use self::impl_block_def::*;
 pub use self::impl_def::*;
@@ -21,7 +20,6 @@ pub use self::swift_binding_generation::generate as generate_swift_bindings;
 
 mod argument_def;
 mod data_type;
-mod field_def;
 mod generic_def;
 mod impl_block_def;
 mod impl_def;

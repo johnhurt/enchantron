@@ -3,9 +3,8 @@ use std::collections::HashMap;
 use heck::SnakeCase;
 
 use super::{
-    DataType, FieldDef, ImplDef, MethodDef, RenderableArgument,
-    RenderableDataType, RenderableFunctionBuilder, RenderableImplBlock,
-    RenderableImplBlockBuilder,
+    DataType, ImplDef, MethodDef, RenderableArgument, RenderableDataType,
+    RenderableFunctionBuilder, RenderableImplBlock, RenderableImplBlockBuilder,
 };
 
 #[derive(Serialize, Builder, Clone, Default)]
@@ -15,7 +14,6 @@ use super::{
 pub struct TypeDef {
     pub name: &'static str,
     pub impls: Vec<ImplDef>,
-    pub fields: Vec<FieldDef>,
     pub methods: Vec<MethodDef>,
     pub rust_owned: bool,
     pub empty_struct: bool,
@@ -37,40 +35,6 @@ impl TypeDef {
                 RenderableImplBlock::new_from_def(imp),
             );
         });
-
-        for field in &self.fields {
-            let getter_func = field.create_getter(self);
-
-            if let Some(impl_block_def) = &field.getter_impl {
-                result
-                    .get_mut(impl_block_def.trait_name)
-                    .expect(&format!(
-                        "Trait {} is not an impl of struct {}",
-                        impl_block_def.trait_name, self.name
-                    ))
-                    .functions
-                    .push(getter_func);
-            } else {
-                direct_impl.functions.push(getter_func);
-            }
-
-            if field.setter {
-                let setter_func = field.create_setter(self);
-
-                if let Some(impl_block_def) = &field.setter_impl {
-                    result
-                        .get_mut(impl_block_def.trait_name)
-                        .expect(&format!(
-                            "Trait {} is not an impl of struct {}",
-                            impl_block_def.trait_name, self.name
-                        ))
-                        .functions
-                        .push(setter_func);
-                } else {
-                    direct_impl.functions.push(setter_func);
-                }
-            }
-        }
 
         for method_def in &self.methods {
             let method_func = RenderableFunctionBuilder::default()
@@ -203,10 +167,6 @@ impl TypeDef {
                     })
                     .collect(),
             )
-        }
-
-        for field in &self.fields {
-            result.append(&mut field.get_imports());
         }
 
         for method in &self.methods {

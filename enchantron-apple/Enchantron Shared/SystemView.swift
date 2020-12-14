@@ -9,9 +9,13 @@
 import Foundation
 
 class SystemView {
-  let resourceLoader : ResourceLoader
-  
-  init(resourceLoader : ResourceLoader) {
-    self.resourceLoader = resourceLoader
-  }
+    let resourceLoader : ResourceLoader
+    
+    init(resourceLoader : ResourceLoader) {
+        self.resourceLoader = resourceLoader
+    }
+    
+    func getResourceLoader() -> ResourceLoader {
+        return self.resourceLoader
+    }
 }

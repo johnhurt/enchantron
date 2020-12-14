@@ -9,5 +9,13 @@
 import Foundation
 
 class TextArea {
-  var text: String = ""
+    var text: String = ""
+    
+    func setText(_ text: String) {
+        self.text = text
+    }
+    
+    func getText() -> String {
+        return self.text
+    }
 }

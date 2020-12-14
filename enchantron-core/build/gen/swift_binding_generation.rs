@@ -11,9 +11,9 @@ use heck::{MixedCase, SnakeCase};
 
 use super::data_type::*;
 use super::{
-    ArgumentDefBuilder, FieldDefBuilder, GenericDefBuilder,
-    ImplBlockDefBuilder, ImplDefBuilder, MethodDefBuilder, RenderableContext,
-    RenderableType, TypeDef, TypeDefBuilder,
+    ArgumentDefBuilder, GenericDefBuilder, ImplBlockDefBuilder, ImplDefBuilder,
+    MethodDefBuilder, RenderableContext, RenderableType, TypeDef,
+    TypeDefBuilder,
 };
 
 macro_rules! swift_struct {
@@ -66,25 +66,6 @@ macro_rules! method_builder {
 macro_rules! method {
     ($name:ident($($arg_name:ident : $arg_type_exp:expr),* $(,)? ) $( -> $return_exp:expr)? ) => {
         method_builder!($name($( $arg_name: $arg_type_exp),*) $( -> $return_exp)? ).build().unwrap()
-    };
-}
-
-macro_rules! field {
-    (mut $name:ident : $type_exp:expr) => {
-        FieldDefBuilder::default()
-            .name(stringify!($name))
-            .data_type(Clone::clone(&$type_exp))
-            .setter(true)
-            .build()
-            .unwrap()
-    };
-
-    ($name:ident : $type_exp:expr) => {
-        FieldDefBuilder::default()
-            .name(stringify!($name))
-            .data_type(Clone::clone(&$type_exp))
-            .build()
-            .unwrap()
     };
 }
 
@@ -151,9 +132,6 @@ macro_rules! swift_type {
             custom_rust_drop_code = $custom_rust_drop_code:expr;
         )?
         $(
-            let $($field_lhs_part:ident)+ : $field_type_exp:expr;
-        )*
-        $(
             fn $method_name:ident($($arg_name:ident : $arg_type_exp:expr),* $(,)? ) $( -> $return_exp:expr)?;
         )*
         $(
@@ -169,9 +147,6 @@ macro_rules! swift_type {
     }) => {{
         let result = TypeDefBuilder::default()
             .name(stringify!($name))
-            .fields(vec![$(
-                field!($($field_lhs_part )+ : $field_type_exp)
-            )*])
             .methods(vec![$(
                 method!($method_name($($arg_name:$arg_type_exp),*) $( -> $return_exp)?),
             )*
@@ -206,7 +181,8 @@ macro_rules! empty_type {
         )*
     }) => {{
         let result = TypeDefBuilder::default()
-            .name(stringify!($name));
+            .name(stringify!($name))
+            .empty_struct(true);
 
         let result = result.impls(vec![$(
             impl_def!($trait_name { $( type $associated_type_name = $real_type; )* })
@@ -229,7 +205,7 @@ lazy_static! {
 
     swift_type!( SwiftString {
 
-        let length : LONG;
+        fn get_length() -> LONG;
 
         fn get_content() -> MUTABLE_BYTE_POINTER;
     }),
@@ -262,20 +238,56 @@ lazy_static! {
     }),
 
     rust_type!( MagnifyHandler : crate::ui::MagnifyHandler {
-        fn on_magnify(scale_change_additive: DOUBLE, zoom_center_x: DOUBLE, zoom_center_y: DOUBLE);
+        fn on_magnify(
+            scale_change_additive: DOUBLE,
+            zoom_center_x: DOUBLE,
+            zoom_center_y: DOUBLE);
     }),
 
     rust_type!(MultiTouchHandler : crate::ui::MultiTouchHandler {
-        fn on_one_drag_start(drag_id: LONG, global_x: DOUBLE, global_y: DOUBLE, click_count: LONG);
-        fn on_one_drag_move(drag_id: LONG, global_x: DOUBLE, global_y: DOUBLE, click_count: LONG);
-        fn on_one_drag_end(drag_id: LONG, global_x: DOUBLE, global_y: DOUBLE, click_count: LONG);
+        fn on_one_drag_start(
+            drag_id: LONG,
+            global_x: DOUBLE,
+            global_y: DOUBLE,
+            click_count: LONG);
+        fn on_one_drag_move(
+            drag_id: LONG,
+            global_x: DOUBLE,
+            global_y: DOUBLE,
+            click_count: LONG);
+        fn on_one_drag_end(
+            drag_id: LONG,
+            global_x: DOUBLE,
+            global_y: DOUBLE,
+            click_count: LONG);
 
-        fn on_two_drags_start(drag_id_1: LONG, global_x_1: DOUBLE, global_y_1: DOUBLE, click_count_1: LONG,
-                              drag_id_2: LONG, global_x_2: DOUBLE, global_y_2: DOUBLE, click_count_2: LONG);
-        fn on_two_drags_move(drag_id_1: LONG, global_x_1: DOUBLE, global_y_1: DOUBLE, click_count_1: LONG,
-                             drag_id_2: LONG, global_x_2: DOUBLE, global_y_2: DOUBLE, click_count_2: LONG);
-        fn on_two_drags_end(drag_id_1: LONG, global_x_1: DOUBLE, global_y_1: DOUBLE, click_count_1: LONG,
-                            drag_id_2: LONG, global_x_2: DOUBLE, global_y_2: DOUBLE, click_count_2: LONG);
+        fn on_two_drags_start(
+            drag_id_1: LONG,
+            global_x_1: DOUBLE,
+            global_y_1: DOUBLE,
+            click_count_1: LONG,
+            drag_id_2: LONG,
+            global_x_2: DOUBLE,
+            global_y_2: DOUBLE,
+            click_count_2: LONG);
+        fn on_two_drags_move(
+            drag_id_1: LONG,
+            global_x_1: DOUBLE,
+            global_y_1: DOUBLE,
+            click_count_1: LONG,
+            drag_id_2: LONG,
+            global_x_2: DOUBLE,
+            global_y_2: DOUBLE,
+            click_count_2: LONG);
+        fn on_two_drags_end(
+            drag_id_1: LONG,
+            global_x_1: DOUBLE,
+            global_y_1: DOUBLE,
+            click_count_1: LONG,
+            drag_id_2: LONG,
+            global_x_2: DOUBLE,
+            global_y_2: DOUBLE,
+            click_count_2: LONG);
     }),
 
     rust_type!(LayoutHandler : crate::ui::LayoutHandler {
@@ -298,29 +310,12 @@ lazy_static! {
         }
     }),
 
-    TypeDefBuilder::default()
-        .name("TextArea")
-        .rust_owned(false)
-        .impls(vec![
-            ImplDefBuilder::default()
-                .trait_name("HasText")
-                .trait_import(Some("crate::ui::HasText"))
-                .build().unwrap()
-        ])
-        .fields(vec![
-            FieldDefBuilder::default()
-                .name("text")
-                .getter_impl(Some(ImplBlockDefBuilder::default()
-                    .trait_name("HasText")
-                    .build().unwrap()))
-                .setter_impl(Some(ImplBlockDefBuilder::default()
-                    .trait_name("HasText")
-                    .build().unwrap()))
-                .data_type(*STRING)
-                .setter(true)
-                .build().unwrap()
-        ])
-        .build().unwrap(),
+    swift_type!(TextArea {
+        impl crate::ui::HasText {
+            fn get_text() -> STRING;
+            fn set_text(text: STRING);
+        }
+    }),
 
     swift_type!(Animation {
         impl crate::native::Animation {
@@ -334,7 +329,12 @@ lazy_static! {
 
     swift_type!(Texture {
         impl crate::native::Texture {
-            fn get_sub_texture(left: DOUBLE, top: DOUBLE, width: DOUBLE, weight: DOUBLE) -> swift_struct!(Self = Texture);
+            fn get_sub_texture(
+                left: DOUBLE,
+                top: DOUBLE,
+                width: DOUBLE,
+                weight: DOUBLE
+            ) -> swift_struct!(Self = Texture);
         }
         impl crate::ui::HasSize {
             fn get_width() -> DOUBLE;
@@ -343,309 +343,75 @@ lazy_static! {
     }),
 
     swift_type!(Sprite {
+        custom_rust_drop_code = "crate::ui::Sprite::remove_from_parent(self);";
+
         impl crate::ui::Sprite {
             type T = Texture;
             type A = Animation;
             type C = Color;
+
+            fn set_texture(texture: swift_struct!(Self::T = Texture));
+            fn animate(
+                animation: swift_struct!(Self::A = Animation),
+                frame_duration_sec: DOUBLE);
+            fn clear_animations();
+            fn remove_from_parent();
         }
 
         impl crate::ui::HasMutableSize {
-
+            fn set_size_animated(
+                width: DOUBLE,
+                height: DOUBLE,
+                duration_seconds: DOUBLE);
         }
 
         impl crate::ui::HasMutableColor {
+            type C = Color;
 
+            fn set_color(color: UINT);
         }
 
         impl crate::ui::HasMutableLocation {
+            fn set_location_animated(
+                left: DOUBLE,
+                top: DOUBLE,
+                duration_seconds: DOUBLE);
+        }
 
+        impl crate::ui::HasMutableVisibility {
+            fn set_visible(visible: BOOLEAN);
         }
 
         impl crate::ui::HasMutableZLevel {
-
+            fn set_z_level(z_level: DOUBLE);
         }
     }),
 
-    TypeDefBuilder::default()
-        .name("Sprite")
-        .rust_owned(false)
-        .impls(vec![
-            ImplDefBuilder::default()
-                .trait_name("crate::ui::Sprite")
-                .trait_import(Some("crate::ui"))
-                .generics(vec![
-                    GenericDefBuilder::default()
-                        .symbol(Some("T"))
-                        .bound_type("Texture")
-                        .build().unwrap(),
-                    GenericDefBuilder::default()
-                        .symbol(Some("A"))
-                        .bound_type("Animation")
-                        .build().unwrap(),
-                    GenericDefBuilder::default()
-                        .symbol(Some("C"))
-                        .bound_type("Color")
-                        .build().unwrap()
-                ])
-                .build().unwrap(),
+    swift_type!(SpriteGroup {
+        custom_rust_drop_code = "crate::ui::SpriteGroup::remove_from_parent(self);";
 
-            ImplDefBuilder::default()
-                .trait_name("HasMutableSize")
-                .trait_import(Some("crate::ui::HasMutableSize"))
-                .build().unwrap(),
+        impl crate::ui::SpriteGroup {
+            fn remove_from_parent();
+        }
 
-            ImplDefBuilder::default()
-                .trait_name("HasMutableColor")
-                .trait_import(Some("crate::ui::HasMutableColor"))
-                .generics(vec![
-                    GenericDefBuilder::default()
-                        .symbol(Some("C"))
-                        .bound_type("Color")
-                        .build().unwrap()
-                ])
-                .build().unwrap(),
+        impl crate::ui::SpriteSource {
+            type T = Texture;
+            type S = Sprite;
+            type G = SpriteGroup;
 
-            ImplDefBuilder::default()
-                .trait_name("HasMutableLocation")
-                .trait_import(Some("crate::ui::HasMutableLocation"))
-                .build().unwrap(),
+            fn create_sprite() -> swift_struct!(Self::S = Sprite);
+            fn create_group() -> swift_struct!(Self::G = SpriteGroup);
+        }
 
-            ImplDefBuilder::default()
-                .trait_name("HasMutableVisibility")
-                .trait_import(Some("crate::ui::HasMutableVisibility"))
-                .build().unwrap(),
+        impl crate::ui::HasMutableVisibility {
+            fn set_visible(visible: BOOLEAN);
+        }
 
-            ImplDefBuilder::default()
-                .trait_name("HasMutableZLevel")
-                .trait_import(Some("crate::ui::HasMutableZLevel"))
-                .build().unwrap()
-        ])
-        .methods(vec![
+        impl crate::ui::HasMutableZLevel {
+            fn set_z_level(z_level: DOUBLE);
+        }
+    }),
 
-          MethodDefBuilder::default()
-              .name("set_texture")
-              .arguments(vec![
-                ArgumentDefBuilder::default()
-                    .name("texture")
-                    .data_type(DataType::swift_generic(Some("T"),
-                        DataType::swift_struct("Texture", None)))
-                    .build().unwrap()
-              ])
-              .impl_block(Some(ImplBlockDefBuilder::default()
-                  .trait_name("crate::ui::Sprite")
-                  .build().unwrap()))
-              .build().unwrap(),
-
-            MethodDefBuilder::default()
-                .name("animate")
-                .arguments(vec![
-                    ArgumentDefBuilder::default()
-                        .name("animation")
-                        .data_type(DataType::swift_generic(Some("A"),
-                            DataType::swift_struct("Animation", None)))
-                        .build().unwrap(),
-
-                    ArgumentDefBuilder::default()
-                        .name("frame_duration_sec")
-                        .data_type(*DOUBLE)
-                        .build().unwrap()
-                ])
-                .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("crate::ui::Sprite")
-                    .build().unwrap()))
-                .build().unwrap(),
-
-            MethodDefBuilder::default()
-                .name("clear_animations")
-                .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("crate::ui::Sprite")
-                    .build().unwrap()))
-                .build().unwrap(),
-
-
-          MethodDefBuilder::default()
-              .name("remove_from_parent")
-              .impl_block(Some(ImplBlockDefBuilder::default()
-                  .trait_name("crate::ui::Sprite")
-                  .build().unwrap()))
-              .build().unwrap(),
-
-          MethodDefBuilder::default()
-              .name("set_size_animated")
-              .arguments(vec![
-
-                ArgumentDefBuilder::default()
-                    .name("width")
-                    .data_type(*DOUBLE)
-                    .build().unwrap(),
-
-                ArgumentDefBuilder::default()
-                    .name("height")
-                    .data_type(*DOUBLE)
-                    .build().unwrap(),
-
-                ArgumentDefBuilder::default()
-                    .name("duration_seconds")
-                    .data_type(*DOUBLE)
-                    .build().unwrap()
-              ])
-              .impl_block(Some(ImplBlockDefBuilder::default()
-                  .trait_name("HasMutableSize")
-                  .build().unwrap()))
-              .build().unwrap(),
-
-          MethodDefBuilder::default()
-              .name("set_location_animated")
-              .arguments(vec![
-
-                ArgumentDefBuilder::default()
-                    .name("left")
-                    .data_type(*DOUBLE)
-                    .build().unwrap(),
-
-                ArgumentDefBuilder::default()
-                    .name("top")
-                    .data_type(*DOUBLE)
-                    .build().unwrap(),
-
-                ArgumentDefBuilder::default()
-                    .name("duration_seconds")
-                    .data_type(*DOUBLE)
-                    .build().unwrap()
-              ])
-              .impl_block(Some(ImplBlockDefBuilder::default()
-                  .trait_name("HasMutableLocation")
-                  .build().unwrap()))
-              .build().unwrap(),
-
-          MethodDefBuilder::default()
-              .name("set_visible")
-              .arguments(vec![
-                ArgumentDefBuilder::default()
-                    .name("visible")
-                    .data_type(*BOOLEAN)
-                    .build().unwrap()
-              ])
-              .impl_block(Some(ImplBlockDefBuilder::default()
-                  .trait_name("HasMutableVisibility")
-                  .build().unwrap()))
-              .build().unwrap(),
-
-            MethodDefBuilder::default()
-                .name("set_color")
-                .arguments(vec![
-                ArgumentDefBuilder::default()
-                    .name("color")
-                    .data_type(*UINT)
-                    .build().unwrap()
-                ])
-                .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("HasMutableColor")
-                    .build().unwrap()))
-                .build().unwrap(),
-
-          MethodDefBuilder::default()
-              .name("set_z_level")
-              .arguments(vec![
-                ArgumentDefBuilder::default()
-                    .name("z_level")
-                    .data_type(*DOUBLE)
-                    .build().unwrap()
-              ])
-              .impl_block(Some(ImplBlockDefBuilder::default()
-                  .trait_name("HasMutableZLevel")
-                  .build().unwrap()))
-              .build().unwrap()
-        ])
-        .custom_rust_drop_code(Some("crate::ui::Sprite::remove_from_parent(self);"))
-        .build().unwrap(),
-
-        TypeDefBuilder::default()
-            .name("SpriteGroup")
-            .rust_owned(false)
-            .impls(vec![
-                ImplDefBuilder::default()
-                    .trait_name("crate::ui::SpriteGroup")
-                    .trait_import(Some("crate::ui"))
-                    .build().unwrap(),
-                ImplDefBuilder::default()
-                    .trait_name("crate::ui::SpriteSource")
-                    .trait_import(Some("crate::ui"))
-                    .generics(vec![
-                        GenericDefBuilder::default()
-                            .symbol(Some("T"))
-                            .bound_type("Texture")
-                            .build().unwrap(),
-                        GenericDefBuilder::default()
-                            .symbol(Some("S"))
-                            .bound_type("Sprite")
-                            .build().unwrap(),
-                        GenericDefBuilder::default()
-                            .symbol(Some("G"))
-                            .bound_type("SpriteGroup")
-                            .build().unwrap(),
-                    ])
-                    .build().unwrap(),
-                ImplDefBuilder::default()
-                    .trait_name("HasMutableZLevel")
-                    .trait_import(Some("crate::ui::HasMutableZLevel"))
-                    .build().unwrap(),
-                ImplDefBuilder::default()
-                    .trait_name("HasMutableVisibility")
-                    .trait_import(Some("crate::ui::HasMutableVisibility"))
-                    .build().unwrap()
-            ])
-            .methods(vec![
-              MethodDefBuilder::default()
-                  .name("set_z_level")
-                  .arguments(vec![
-                    ArgumentDefBuilder::default()
-                        .name("z_level")
-                        .data_type(*DOUBLE)
-                        .build().unwrap()
-                  ])
-                  .impl_block(Some(ImplBlockDefBuilder::default()
-                      .trait_name("HasMutableZLevel")
-                      .build().unwrap()))
-                  .build().unwrap(),
-                MethodDefBuilder::default()
-                    .name("set_visible")
-                    .arguments(vec![
-                    ArgumentDefBuilder::default()
-                        .name("visible")
-                        .data_type(*BOOLEAN)
-                        .build().unwrap()
-                    ])
-                    .impl_block(Some(ImplBlockDefBuilder::default()
-                        .trait_name("HasMutableVisibility")
-                        .build().unwrap()))
-                    .build().unwrap(),
-            MethodDefBuilder::default()
-                .name("remove_from_parent")
-                .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("crate::ui::SpriteGroup")
-                    .build().unwrap()))
-                .build().unwrap(),
-            MethodDefBuilder::default()
-                .name("create_sprite")
-                .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("crate::ui::SpriteSource")
-                    .build().unwrap()))
-                .return_type(Some(DataType::swift_generic(Some("S"),
-                    DataType::swift_struct("Sprite", None))))
-                .build().unwrap(),
-            MethodDefBuilder::default()
-                .name("create_group")
-                .impl_block(Some(ImplBlockDefBuilder::default()
-                    .trait_name("crate::ui::SpriteSource")
-                    .build().unwrap()))
-                .return_type(Some(DataType::swift_generic(Some("G"),
-                    DataType::swift_struct("SpriteGroup", None))))
-                .build().unwrap(),
-
-            ])
-            .custom_rust_drop_code(Some("crate::ui::SpriteGroup::remove_from_parent(self);"))
-            .build().unwrap(),
 
 
 
@@ -799,8 +565,6 @@ lazy_static! {
                 .trait_import(Some("crate::view"))
                 .build().unwrap()
 
-        ])
-        .fields(vec![
         ])
         .methods(vec![
             MethodDefBuilder::default()
@@ -1040,37 +804,14 @@ lazy_static! {
 
     // Native resources
 
-    TypeDefBuilder::default()
-        .name("SystemView")
-        .rust_owned(false)
-        .impls(vec![
-            ImplDefBuilder::default()
-                .trait_name("native::SystemView")
-                .trait_import(Some("crate::native"))
-                .generics(vec![
-                    GenericDefBuilder::default()
-                        .symbol(Some("T"))
-                        .bound_type("Texture")
-                        .build().unwrap(),
+    swift_type!(SystemView {
+        impl crate::native::SystemView {
+            type T = Texture;
+            type TL = ResourceLoader;
 
-                    GenericDefBuilder::default()
-                        .symbol(Some("TL"))
-                        .bound_type("ResourceLoader")
-                        .build().unwrap()
-                ])
-                .build().unwrap()
-        ])
-        .fields(vec![
-            FieldDefBuilder::default()
-                .name("resource_loader")
-                .getter_impl(Some(ImplBlockDefBuilder::default()
-                    .trait_name("native::SystemView")
-                    .build().unwrap()))
-                .data_type(DataType::swift_generic(Some("TL"),
-                    DataType::swift_struct("ResourceLoader", None)))
-                .build().unwrap()
-        ])
-        .build().unwrap(),
+            fn get_resource_loader() -> swift_struct!(Self::TL = ResourceLoader);
+        }
+    }),
 
     TypeDefBuilder::default()
         .name("ResourceLoader")

@@ -5,15 +5,4 @@ use crate::ui::{
 
 use super::BaseView;
 
-pub trait GameView:
-    BaseView
-    + SpriteSource
-    + HasLayoutHandlers
-    + HasMultiTouchHandlers
-    + HasViewport
-    + HasMagnifyHandlers
-    + Sync
-    + Send
-    + 'static
-{
-}
+pub trait GameView: BaseView + Sync + Send + 'static {}

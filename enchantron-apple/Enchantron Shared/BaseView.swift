@@ -10,7 +10,7 @@ import Metal
 import MetalKit
 import simd
 
-class BaseView {
+class BaseView : SpriteSource {
     
     private var dragHandlers: [MultiTouchHandler] = []
     private var layoutHandlers: [LayoutHandler] = []
@@ -235,5 +235,13 @@ class BaseView {
                 globalY2: globalPoint2.y,
                 clickCount2: clickCount2)
         }
+    }
+    
+    func createSprite() -> Sprite {
+        return createSpriteOn(parent: self.rootGroup)
+    }
+    
+    func createGroup() -> SpriteGroup {
+        return createGroupOn(parent: self.rootGroup)
     }
 }

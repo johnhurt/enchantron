@@ -1,6 +1,17 @@
+use crate::ui::{
+    HasLayoutHandlers, HasMagnifyHandlers, HasMultiTouchHandlers, HasViewport,
+    SpriteSource,
+};
 use crate::util::BoxedAny;
 
-pub trait BaseView: 'static {
+pub trait BaseView:
+    SpriteSource
+    + HasLayoutHandlers
+    + HasMultiTouchHandlers
+    + HasViewport
+    + HasMagnifyHandlers
+    + 'static
+{
     fn initialize_pre_bind(&self);
 
     fn initialize_post_bind(&self, presenter: BoxedAny);

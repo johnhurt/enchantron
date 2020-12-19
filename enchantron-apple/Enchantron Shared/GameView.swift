@@ -22,14 +22,4 @@ class GameView : BaseView {
     }
 }
 
-extension GameView : SpriteSource {
-    func createSprite() -> Sprite {
-        return createSpriteOn(parent: rootGroup)
-    }
-    
-    func createGroup() -> SpriteGroup {
-        return createGroupOn(parent: rootGroup)
-    }
-}
-
 

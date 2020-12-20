@@ -10,6 +10,9 @@ pub trait BaseView:
     + HasMultiTouchHandlers
     + HasViewport
     + HasMagnifyHandlers
+    + Send
+    + Sync
+    + Sized
     + 'static
 {
     fn initialize_pre_bind(&self);

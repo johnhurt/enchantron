@@ -1,5 +1,5 @@
 use crate::native::{Animation, ResourceLoader, SystemView, Texture};
-use crate::ui::{Color, Sprite, SpriteGroup, Viewport};
+use crate::ui::{Color, HandlerRegistration, Sprite, SpriteGroup, Viewport};
 use crate::view::{GameView, LoadingView, MainMenuView};
 
 pub trait ViewTypes: 'static + Send + Sync + Unpin {

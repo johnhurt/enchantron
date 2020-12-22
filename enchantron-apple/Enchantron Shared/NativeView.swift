@@ -10,7 +10,7 @@ import Metal
 import MetalKit
 import simd
 
-class BaseView : SpriteSource {
+class NativeView : SpriteSource {
     
     private var dragHandlers: [MultiTouchHandler] = []
     private var layoutHandlers: [LayoutHandler] = []
@@ -24,8 +24,8 @@ class BaseView : SpriteSource {
     let device: MTLDevice
     let rootGroup : SpriteGroup
     
-    init(viewport: Viewport, device: MTLDevice) {
-        self.viewport = viewport
+    init(screenSize: CGSize, device: MTLDevice) {
+        self.viewport = Viewport(screenSize: screenSize, device: device)
         self.device = device
         self.rootGroup = SpriteGroup(device: device, parent: nil)
     }
@@ -34,7 +34,13 @@ class BaseView : SpriteSource {
         return ctx!
     }
     
-    func transitionTo<T : BaseView>(newView: T, binder : @escaping (T) -> ()) {
+    func render(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int) {
+        viewport.configureViewport(encoder: encoder, uniformBufferIndex: uniformBufferIndex)
+        rootGroup.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex)
+        viewport.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex)
+    }
+    
+    func transitionTo<T : NativeView>(newView: T, binder : @escaping (T) -> ()) {
         newView.initializeCtx(ctx: self.ctx!, transitionService: self.transitionService!)
         binder(newView)
         self.unsetPresenter()
@@ -53,7 +59,6 @@ class BaseView : SpriteSource {
     func initializePostBind(_ presenter: BoxedAny) {
         self.presenter = presenter
         self.transitionService?.postBindTransition(self)
-        
     }
     
     func unsetPresenter() {
@@ -72,7 +77,6 @@ class BaseView : SpriteSource {
         return HandlerRegistration(deregister_callback: {
             self.removeHandler(handler)
         })
-        
     }
     
     func addMagnifyHandler(_ handler: MagnifyHandler) -> HandlerRegistration {
@@ -83,7 +87,6 @@ class BaseView : SpriteSource {
         return HandlerRegistration(deregister_callback: {
             self.removeHandler(handler)
         })
-        
     }
     
     func removeHandler(_ handler: LayoutHandler) {
@@ -120,15 +123,10 @@ class BaseView : SpriteSource {
     }
     
     final func layout(size: CGSize) {
+        viewport.screenSize = size
         layoutHandlers.forEach { (handler) in
             handler.onLayout(width: Int64(size.width), height: Int64(size.height))
         }
-        
-        localLayout(size: size)
-    }
-    
-    func localLayout(size: CGSize) {
-        
     }
     
     func getViewport() -> Viewport {

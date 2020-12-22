@@ -1,12 +1,12 @@
 use crate::event::{EventBus, StartGame};
 use crate::ui::{ClickHandler, HandlerRegistration, HasClickHandlers, HasText};
-use crate::view::{BaseView, MainMenuView};
+use crate::view::{MainMenuView, MainMenuViewImpl, NativeView};
 use crate::view_types::ViewTypes;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub struct MainMenuPresenter<T: ViewTypes> {
-    view: T::MainMenuView,
+    view: MainMenuViewImpl<T>,
     handler_registrations: Mutex<Vec<Box<dyn HandlerRegistration>>>,
     event_bus: EventBus,
 }
@@ -32,7 +32,7 @@ impl<T: ViewTypes> MainMenuPresenter<T> {
     }
 
     pub async fn new(
-        view: T::MainMenuView,
+        view: T::NativeView,
         event_bus: EventBus,
     ) -> Arc<MainMenuPresenter<T>> {
         info!("Starting to build main menu");
@@ -40,7 +40,7 @@ impl<T: ViewTypes> MainMenuPresenter<T> {
         view.initialize_pre_bind();
 
         let result = MainMenuPresenter {
-            view,
+            view: MainMenuViewImpl::new(view),
             handler_registrations: Mutex::new(Vec::new()),
             event_bus,
         };

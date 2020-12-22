@@ -16,18 +16,16 @@ fileprivate let alignedUniformsSize = (MemoryLayout<ViewportUniform>.size + 0xFF
 
 public class Viewport {
     
-    var screenSize = CGSize()
+    var screenSize : CGSize
     var topLeftMajor = SIMD2<Float32>()
     var topLeftMinor = SIMD2<Float32>()
     var scale : Float32 = 1.0
-    
-    var uniformBufferOffset = 0
     
     var uniformBuffer: MTLBuffer
     var uniforms: UnsafeMutablePointer<ViewportUniform>
     var viewLockedSprites: SpriteGroup
     
-    init(device: MTLDevice) {
+    init(screenSize: CGSize, device: MTLDevice) {
         uniformBuffer = device.makeBuffer(
             length: alignedUniformsSize * maxBuffersInFlight,
             options: [])!
@@ -36,6 +34,7 @@ public class Viewport {
             .bindMemory(to:ViewportUniform.self, capacity:1)
         
         viewLockedSprites = SpriteGroup(device: device, parent: nil)
+        self.screenSize = screenSize
     }
     
     func reset() {
@@ -76,8 +75,7 @@ public class Viewport {
     
     func configureViewport(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int) {
 
-        
-        uniformBufferOffset = alignedUniformsSize * uniformBufferIndex
+        let uniformBufferOffset = alignedUniformsSize * uniformBufferIndex
         
         uniforms = UnsafeMutableRawPointer(uniformBuffer.contents() + uniformBufferOffset)
             .bindMemory(to:ViewportUniform.self, capacity:1)
@@ -98,11 +96,14 @@ public class Viewport {
         encoder.setVertexBuffer(uniformBuffer, offset: uniformBufferOffset, index: 1)
     }
     
+    func render(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int) {
+        self.viewLockedSprites.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex)
+    }
+    
     func setVisible(_ visible: Bool) {
         self.viewLockedSprites.setVisible(visible)
     }
 }
-
 
 extension Viewport : SpriteSource {
     func createSprite() -> Sprite {

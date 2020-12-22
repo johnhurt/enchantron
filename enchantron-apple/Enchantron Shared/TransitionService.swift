@@ -13,8 +13,8 @@ import simd
 
 class TransitionService {
     
-    typealias PresenterBinder<T : BaseView> = (T) -> AnyObject
-    typealias TransitionClosure = (BaseView) -> Void
+    typealias PresenterBinder<T : NativeView> = (T) -> AnyObject
+    typealias TransitionClosure = (NativeView) -> Void
     
     let preBindTransition : TransitionClosure
     let postBindTransition : TransitionClosure
@@ -25,7 +25,7 @@ class TransitionService {
         self.postBindTransition = postBindTransition
     }
     
-    func preBindTransition<T: BaseView>(view: T) {
+    func preBindTransition<T: NativeView>(view: T) {
         let transitionOp = {
             self.preBindTransition(view)
         }
@@ -38,7 +38,7 @@ class TransitionService {
         }
     }
     
-    func postBindTransition<T: BaseView>(view: T) {
+    func postBindTransition<T: NativeView>(view: T) {
         let transitionOp = {
             self.postBindTransition(view)
         }

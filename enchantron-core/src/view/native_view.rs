@@ -4,7 +4,7 @@ use crate::ui::{
 };
 use crate::util::BoxedAny;
 
-pub trait BaseView:
+pub trait NativeView:
     SpriteSource
     + HasLayoutHandlers
     + HasMultiTouchHandlers

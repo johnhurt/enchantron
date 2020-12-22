@@ -223,20 +223,6 @@ macro_rules! std_impl {
         })]
     };
 
-    (BaseView) => {
-        vec![
-            vec![one_impl!(impl crate::view::BaseView => {
-                fn initialize_pre_bind();
-                fn initialize_post_bind(presenter: DataType::Any);
-            })],
-            std_impl!(SpriteSource),
-            std_impl!(HasLayoutHandlers),
-            std_impl!(HasMagnifyHandlers),
-            std_impl!(HasMultiTouchHandlers),
-            std_impl!(HasViewport),
-        ].into_iter().flatten().collect()
-    };
-
 }
 
 macro_rules! std_impls {
@@ -440,9 +426,9 @@ lazy_static! {
 
         exclude_from_header = true;
 
-        fn transition_to_loading_view(view: swift_struct!(LoadingView));
-        fn transition_to_main_menu_view(view: swift_struct!(MainMenuView));
-        fn transition_to_game_view(view: swift_struct!(GameView));
+        fn transition_to_loading_view(view: swift_struct!(NativeView));
+        fn transition_to_main_menu_view(view: swift_struct!(NativeView));
+        fn transition_to_game_view(view: swift_struct!(NativeView));
     }),
 
     // UI Components
@@ -521,14 +507,12 @@ lazy_static! {
             type Color = Color;
             type Sprite = Sprite;
             type SpriteGroup = SpriteGroup;
-            type LoadingView = LoadingView;
             type Texture = Texture;
             type Animation = Animation;
             type ResourceLoader = ResourceLoader;
             type SystemView = SystemView;
-            type GameView = GameView;
+            type NativeView = NativeView;
             type Viewport = Viewport;
-            type MainMenuView = MainMenuView;
         }
     }),
 
@@ -582,20 +566,11 @@ lazy_static! {
 
     // Views
 
-    swift_type!(LoadingView : BaseView {
-        impl crate::view::LoadingView => {
-            fn transition_to_main_menu_view();
+    swift_type!(NativeView : SpriteSource + HasLayoutHandlers + HasMagnifyHandlers + HasMultiTouchHandlers + HasViewport {
+        impl crate::view::NativeView => {
+            fn initialize_pre_bind();
+            fn initialize_post_bind(presenter: DataType::Any);
         }
-    }),
-
-    swift_type!(MainMenuView : BaseView {
-        impl crate::view::MainMenuView => {
-            fn transition_to_game_view();
-        }
-    }),
-
-    swift_type!(GameView : BaseView {
-        impl crate::view::GameView => {}
     }),
 
     swift_type!(Viewport : SpriteSource + HasMutableScale + HasMutableLocation + HasMutableVisibility {

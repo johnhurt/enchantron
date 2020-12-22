@@ -9,7 +9,7 @@ use crate::ui::{
     HasMultiTouchHandlers, HasViewport, LayoutHandler, MagnifyHandler,
     MultiTouchHandler, SpriteSource, TouchEvent, TouchTracker,
 };
-use crate::view::BaseView;
+use crate::view::{GameView, GameViewImpl, NativeView};
 use crate::view_types::ViewTypes;
 use futures::future::join_all;
 use futures::pin_mut;
@@ -22,7 +22,7 @@ pub struct GamePresenter<T>
 where
     T: ViewTypes,
 {
-    view: T::GameView,
+    view: GameViewImpl<T>,
     event_bus: EventBus,
     runtime_resources: Ao<RuntimeResources<T>>,
     system_view: Ao<T::SystemView>,
@@ -65,7 +65,7 @@ where
     }
 
     fn bind_ui_events(
-        view: &T::GameView,
+        view: &GameViewImpl<T>,
         event_bus: EventBus,
     ) -> Vec<Box<dyn HandlerRegistration>> {
         let copied_event_bus = event_bus.clone();
@@ -120,13 +120,13 @@ where
     }
 
     pub async fn run(
-        view: T::GameView,
+        raw_view: T::NativeView,
         event_bus: EventBus,
         runtime_resources: Ao<RuntimeResources<T>>,
         system_view: Ao<T::SystemView>,
     ) {
-        view.initialize_pre_bind();
-
+        raw_view.initialize_pre_bind();
+        let view = GameViewImpl::new(raw_view);
         let saved_game = SavedGame::new(Default::default());
 
         let boxed_runtime = Box::new(

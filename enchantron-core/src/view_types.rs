@@ -1,6 +1,6 @@
 use crate::native::{Animation, ResourceLoader, SystemView, Texture};
-use crate::ui::{Color, HandlerRegistration, Sprite, SpriteGroup, Viewport};
-use crate::view::{GameView, LoadingView, MainMenuView};
+use crate::ui::{Color, Sprite, SpriteGroup, Viewport};
+use crate::view::NativeView;
 
 pub trait ViewTypes: 'static + Send + Sync + Unpin {
     type Color: Color;
@@ -18,13 +18,11 @@ pub trait ViewTypes: 'static + Send + Sync + Unpin {
         T = Self::Texture,
         G = Self::SpriteGroup,
     >;
-    type GameView: GameView<
+    type NativeView: NativeView<
         S = Self::Sprite,
         V = Self::Viewport,
         T = Self::Texture,
         G = Self::SpriteGroup,
     >;
-    type LoadingView: LoadingView;
-    type MainMenuView: MainMenuView;
     type SystemView: SystemView<T = Self::Texture, TL = Self::ResourceLoader>;
 }

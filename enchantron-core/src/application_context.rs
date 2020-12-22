@@ -126,7 +126,7 @@ pub struct ApplicationContextInner<T: ViewTypes> {
 }
 
 impl<T: ViewTypes> ApplicationContext<T> {
-    pub fn transition_to_loading_view(&self, view: T::LoadingView) {
+    pub fn transition_to_loading_view(&self, view: T::NativeView) {
         debug!("Transition to loading view");
 
         let self_copy = self.0.clone();
@@ -141,7 +141,7 @@ impl<T: ViewTypes> ApplicationContext<T> {
         ));
     }
 
-    pub fn transition_to_main_menu_view(&self, view: T::MainMenuView) {
+    pub fn transition_to_main_menu_view(&self, view: T::NativeView) {
         debug!("Transition to main menu view");
 
         (*self)
@@ -149,7 +149,7 @@ impl<T: ViewTypes> ApplicationContext<T> {
             .spawn(MainMenuPresenter::<T>::new(view, self.event_bus.clone()));
     }
 
-    pub fn transition_to_game_view(&self, view: T::GameView) {
+    pub fn transition_to_game_view(&self, view: T::NativeView) {
         (*self).tokio_runtime.spawn(GamePresenter::<T>::run(
             view,
             self.event_bus.clone(),

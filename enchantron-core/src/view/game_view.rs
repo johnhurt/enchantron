@@ -1,8 +1,10 @@
-use crate::ui::{
-    HasLayoutHandlers, HasMagnifyHandlers, HasMultiTouchHandlers, HasViewport,
-    SpriteSource,
-};
+use super::NativeView;
+use crate::view_impl;
+use crate::view_types::ViewTypes;
 
-use super::BaseView;
+pub trait GameView: NativeView + Sync + Send + 'static {}
 
-pub trait GameView: BaseView + Sync + Send + 'static {}
+view_impl!(GameViewImpl : GameView {
+});
+
+impl<T> GameView for GameViewImpl<T> where T: ViewTypes {}

@@ -27,8 +27,10 @@ class Renderer: NSObject, MTKViewDelegate {
     
     var uniformBufferIndex = 0
     
-    private var currentView : BaseView
-    private var viewport : Viewport
+    private var currentView : NativeView
+    private var nextView : NativeView?
+    
+    var screenSize = CGSize()
     var screenHeight : Float64 = 0
     
     init?(metalKitView: MTKView) {
@@ -63,25 +65,29 @@ class Renderer: NSObject, MTKViewDelegate {
         let systemView = SystemView(
             resourceLoader: ResourceLoader(loader: MTKTextureLoader(device: device)))
         
-        self.viewport = Viewport(device: device)
         
         let ctx = RustBinder.bindToRust(systemView)
         
-        let loadingView = LoadingView(viewport: viewport, device: device)
-        currentView = loadingView
+        let loadingView = NativeView(screenSize: screenSize, device: device)
+        
+        currentView = NativeView(screenSize: screenSize, device: device)
         
         super.init()
         
         let transitioner = TransitionService(preBindTransition: { (view) in
-            self.viewport.reset()
+            self.nextView = view
         }, postBindTransition: { (view) in
-            self.currentView = view
+            let prevView = self.currentView
+            self.currentView = self.nextView!
+            
+            self.currentView.layout(size: self.screenSize)
+            
+            prevView.unsetPresenter()
+            self.nextView = nil
         })
         
         loadingView.initializeCtx(ctx: ctx, transitionService: transitioner)
         ctx.transitionToLoadingView(view: loadingView)
-        
-        
         
     }
     
@@ -92,10 +98,10 @@ class Renderer: NSObject, MTKViewDelegate {
         return mtlVertexDescriptor
     }
     
-    class func buildRenderPipelineWithDevice(device: MTLDevice,
-                                             metalKitView: MTKView,
-                                             mtlVertexDescriptor: MTLVertexDescriptor) throws -> MTLRenderPipelineState {
-        /// Build a render state pipeline object
+    class func buildRenderPipelineWithDevice(
+        device: MTLDevice,
+        metalKitView: MTKView,
+        mtlVertexDescriptor: MTLVertexDescriptor) throws -> MTLRenderPipelineState {
         
         let library = device.makeDefaultLibrary()
         
@@ -124,28 +130,7 @@ class Renderer: NSObject, MTKViewDelegate {
         return try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
     }
     
-    class func loadTexture(device: MTLDevice,
-                           textureName: String) throws -> MTLTexture {
-        /// Load texture data with optimal parameters for sampling
-
-        let url = Bundle.main.url(forResource: "gist", withExtension: "png")!
-        
-        let textureLoader = MTKTextureLoader(device: device)
-        
-        let textureLoaderOptions = [
-            MTKTextureLoader.Option.textureUsage: NSNumber(value: MTLTextureUsage.shaderRead.rawValue),
-            MTKTextureLoader.Option.textureStorageMode: NSNumber(value: MTLStorageMode.`private`.rawValue)
-        ]
-        
-        
-        let result = try textureLoader.newTexture(URL: url, options: textureLoaderOptions)
-        
-        return result;
-    }
-    
     private func updateDynamicBufferState() {
-        /// Update the state of our uniform buffers before rendering
-        
         uniformBufferIndex = (uniformBufferIndex + 1) % maxBuffersInFlight
     }
     
@@ -166,12 +151,11 @@ class Renderer: NSObject, MTKViewDelegate {
             /// Delay getting the currentRenderPassDescriptor until we absolutely need it to avoid
             ///   holding onto the drawable and blocking the display pipeline any longer than necessary
             let renderPassDescriptor = view.currentRenderPassDescriptor
-            //renderPassDescriptor?.colorAttachments[0].loadAction = .clear
-            renderPassDescriptor?.colorAttachments[0].clearColor = MTLClearColorMake(0.1, 0.1, 0.12, 1.0)
-            //renderPassDescriptor?.colorAttachments[0].storeAction = .store
+            
+            renderPassDescriptor?.colorAttachments[0].clearColor
+                = MTLClearColorMake(0.1, 0.1, 0.12, 1.0)
             
             if let renderPassDescriptor = renderPassDescriptor, let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor) {
-                
                 
                 /// Final pass rendering code here
                 renderEncoder.label = "Primary Render Encoder"
@@ -181,18 +165,14 @@ class Renderer: NSObject, MTKViewDelegate {
                 renderEncoder.setCullMode(.back)
                 
                 updateDynamicBufferState()
-                //updateGameState()
-                
                 
                 renderEncoder.setFrontFacing(.counterClockwise)
-                
                 renderEncoder.setRenderPipelineState(pipelineState)
-                
                 renderEncoder.setDepthStencilState(depthState)
                 
-
                 Sprite.setUpForSpriteRendering(encoder: renderEncoder)
-                currentView.rootGroup.render(
+                
+                currentView.render(
                     encoder: renderEncoder,
                     uniformBufferIndex: uniformBufferIndex)
                 
@@ -210,8 +190,9 @@ class Renderer: NSObject, MTKViewDelegate {
     }
     
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
-        self.viewport.screenSize = size
+        self.screenSize = size
         self.screenHeight = Float64(size.height)
+        self.currentView.layout(size: size)
     }
     
     func magnify(scaleChangeAdditive: Float64, centerPoint: SIMD2<Float64>) {

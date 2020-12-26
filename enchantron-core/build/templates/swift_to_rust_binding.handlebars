@@ -7,7 +7,7 @@ import CoreGraphics
 
 class RustBinder {
   // Bind all the swift functions into rust
-  class func bindToRust(_ systemView: SystemView) -> ApplicationContext {
+  class func bindToRust(_ systemInterop: SystemInterop) -> ApplicationContext {
 
     {{~#each types}}
     {{~#unless rust_owned}}
@@ -24,7 +24,7 @@ class RustBinder {
     {{~/each}}
 
     return ApplicationContext(create_application(
-        OpaquePointer(Unmanaged.passRetained(systemView).toOpaque())))
+        OpaquePointer(Unmanaged.passRetained(systemInterop).toOpaque())))
   }
 
 }

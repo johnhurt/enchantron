@@ -1,6 +1,6 @@
 use crate::application_context::Ao;
 use crate::event::{EventBus, LoadResources};
-use crate::native::{Animations, RuntimeResources, SystemView, Textures};
+use crate::native::{Animations, RuntimeResources, SystemInterop, Textures};
 use crate::ui::{HasIntValue, HasText};
 use crate::view::{LoadingView, LoadingViewImpl, NativeView};
 use crate::view_types::ViewTypes;
@@ -11,7 +11,7 @@ where
     T: ViewTypes,
 {
     view: LoadingViewImpl<T>,
-    system_view: Ao<T::SystemView>,
+    system_interop: Ao<T::SystemInterop>,
     resources_sink: Box<dyn Fn(RuntimeResources<T>) + Send + Sync>,
     event_bus: EventBus,
 }
@@ -22,7 +22,7 @@ where
 {
     async fn load_resources(&self) {
         let resource_loader: &T::ResourceLoader =
-            &self.system_view.get_resource_loader();
+            &self.system_interop.get_resource_loader();
 
         let textures = Textures::<T>::new(resource_loader, &|p| {});
 
@@ -54,22 +54,20 @@ where
 
     pub async fn new(
         view: T::NativeView,
-        system_view: Ao<T::SystemView>,
+        system_interop: Ao<T::SystemInterop>,
         event_bus: EventBus,
         resources_sink: Box<dyn Fn(RuntimeResources<T>) + Send + Sync>,
     ) {
-        view.initialize_pre_bind();
-
         let result: Arc<LoadingPresenter<T>> = LoadingPresenter {
             view: LoadingViewImpl::new(view),
-            system_view,
+            system_interop,
             event_bus,
             resources_sink,
         }
         .bind()
         .await;
 
-        result.view.initialize_post_bind(Box::new(result.clone()));
+        result.view.set_presenter(Box::new(result.clone()));
     }
 }
 

@@ -426,7 +426,7 @@ lazy_static! {
 
         exclude_from_header = true;
 
-        fn transition_to_loading_view(view: swift_struct!(NativeView));
+        fn transition_to_loading_view();
         fn transition_to_main_menu_view(view: swift_struct!(NativeView));
         fn transition_to_game_view(view: swift_struct!(NativeView));
     }),
@@ -510,9 +510,10 @@ lazy_static! {
             type Texture = Texture;
             type Animation = Animation;
             type ResourceLoader = ResourceLoader;
-            type SystemView = SystemView;
+            type SystemInterop = SystemInterop;
             type NativeView = NativeView;
             type Viewport = Viewport;
+            type TransitionService = TransitionService;
         }
     }),
 
@@ -568,8 +569,8 @@ lazy_static! {
 
     swift_type!(NativeView : SpriteSource + HasLayoutHandlers + HasMagnifyHandlers + HasMultiTouchHandlers + HasViewport {
         impl crate::view::NativeView => {
-            fn initialize_pre_bind();
-            fn initialize_post_bind(presenter: DataType::Any);
+            fn set_presenter(presenter: DataType::Any);
+            fn unset_presenter();
         }
     }),
 
@@ -577,14 +578,28 @@ lazy_static! {
         impl crate::ui::Viewport => {}
     }),
 
+    swift_type!(TransitionService {
+        impl crate::ui::TransitionService => {
+            type V = NativeView;
+
+            fn transition_to(
+                view : swift_struct!(Self::V = NativeView),
+                drop_current : BOOLEAN);
+        }
+    }),
+
     // Native resources
 
-    swift_type!(SystemView {
-        impl crate::native::SystemView => {
+    swift_type!(SystemInterop {
+        impl crate::native::SystemInterop => {
             type T = Texture;
             type TL = ResourceLoader;
+            type V = NativeView;
+            type TS = TransitionService;
 
             fn get_resource_loader() -> swift_struct!(Self::TL = ResourceLoader);
+            fn create_native_view() -> swift_struct!(Self::V = NativeView);
+            fn get_transition_service() -> swift_struct!(Self::TS = TransitionService);
         }
     }),
 

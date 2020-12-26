@@ -24,10 +24,10 @@ fn with_mutable_bindings(to_call: impl Fn(&mut Bindings)) {
 }
 
 #[no_mangle]
-pub extern "C" fn create_application(system_view: *mut Opaque_SystemView)
+pub extern "C" fn create_application(system_interop: *mut Opaque_SystemInterop)
     -> *mut ApplicationContext {
   Box::into_raw(Box::new(ApplicationContext::new(
-      SystemView(system_view))))
+      SystemInterop(system_interop))))
 }
 
 // Rust structure containing all the methods bound to non-rust-owned types

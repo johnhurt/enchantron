@@ -34,6 +34,7 @@ pub use self::touch_event::TouchEvent;
 pub use self::touch_event_type::TouchEventType;
 pub use self::touch_point::TouchPoint;
 pub use self::touch_tracker::TouchTracker;
+pub use self::transition_service::TransitionService;
 pub use self::viewport::Viewport;
 pub use self::viewport_info::ViewportInfo;
 
@@ -70,6 +71,7 @@ mod touch_event;
 mod touch_event_type;
 mod touch_point;
 mod touch_tracker;
+mod transition_service;
 mod viewport;
 mod viewport_info;
 

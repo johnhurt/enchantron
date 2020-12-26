@@ -17,8 +17,6 @@ class NativeView : SpriteSource {
     private var magnifyHandlers: [MagnifyHandler] = []
     
     private var presenter : BoxedAny?
-    private var ctx : ApplicationContext?
-    private var transitionService : TransitionService?
     
     let viewport : Viewport
     let device: MTLDevice
@@ -30,39 +28,22 @@ class NativeView : SpriteSource {
         self.rootGroup = SpriteGroup(device: device, parent: nil)
     }
     
-    func getContext() -> ApplicationContext {
-        return ctx!
-    }
-    
     func render(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int) {
         viewport.configureViewport(encoder: encoder, uniformBufferIndex: uniformBufferIndex)
         rootGroup.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex)
         viewport.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex)
     }
     
-    func transitionTo<T : NativeView>(newView: T, binder : @escaping (T) -> ()) {
-        newView.initializeCtx(ctx: self.ctx!, transitionService: self.transitionService!)
-        binder(newView)
-        self.unsetPresenter()
-    }
-    
-    func initializeCtx(ctx : ApplicationContext,
-                       transitionService : TransitionService) {
-        self.ctx = ctx
-        self.transitionService = transitionService
-    }
-    
-    func initializePreBind() {
-        self.transitionService?.preBindTransition(self)
-    }
-    
-    func initializePostBind(_ presenter: BoxedAny) {
-        self.presenter = presenter
-        self.transitionService?.postBindTransition(self)
+    func setPresenter(_ presenter: BoxedAny) {
+        DispatchQueue.main.async {
+            self.presenter = presenter
+        }
     }
     
     func unsetPresenter() {
-        self.presenter = nil
+        DispatchQueue.main.async {
+            self.presenter = nil
+        }
     }
     
     func getDragHandlers() -> [MultiTouchHandler] {

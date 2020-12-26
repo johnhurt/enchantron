@@ -1,5 +1,5 @@
 use crate::event::EventBus;
-use crate::native::RuntimeResources;
+use crate::native::{RuntimeResources, SystemInterop};
 use crate::presenter::{GamePresenter, LoadingPresenter, MainMenuPresenter};
 use crate::view_types::ViewTypes;
 use log::SetLoggerError;
@@ -66,7 +66,7 @@ impl<T> Deref for Ao<T> {
 pub struct ApplicationContext<T: ViewTypes>(Arc<ApplicationContextInner<T>>);
 
 impl<T: ViewTypes> ApplicationContext<T> {
-    pub fn new(system_view: T::SystemView) -> ApplicationContext<T> {
+    pub fn new(system_interop: T::SystemInterop) -> ApplicationContext<T> {
         if LOGGER_RESULT.is_err() {
             println!("Failed to set logger")
         }
@@ -89,20 +89,20 @@ impl<T: ViewTypes> ApplicationContext<T> {
 
         let (event_bus, eb_dropper) = EventBus::new(runtime.clone());
 
-        let boxed_system_view = Box::new(system_view);
-        let system_view = Ao::new(&boxed_system_view);
+        let boxed_system_interop = Box::new(system_interop);
+        let system_interop = Ao::new(&boxed_system_interop);
 
-        let system_view_dropper = move || drop(boxed_system_view);
+        let system_interop_dropper = move || drop(boxed_system_interop);
 
         ApplicationContext(Arc::new(ApplicationContextInner {
             tokio_runtime: runtime,
             event_bus,
-            system_view,
+            system_interop,
             runtime_resources: RwLock::new(None),
             ao_droppers: Mutex::new(vec![
                 Box::new(runtime_dropper),
                 Box::new(eb_dropper),
-                Box::new(system_view_dropper),
+                Box::new(system_interop_dropper),
             ]),
         }))
     }
@@ -119,21 +119,21 @@ impl<T: ViewTypes> Deref for ApplicationContext<T> {
 pub struct ApplicationContextInner<T: ViewTypes> {
     tokio_runtime: Ao<Runtime>,
     event_bus: EventBus,
-    system_view: Ao<T::SystemView>,
+    system_interop: Ao<T::SystemInterop>,
     runtime_resources: RwLock<Option<Ao<RuntimeResources<T>>>>,
 
     ao_droppers: Mutex<Vec<Box<dyn FnOnce() + Send>>>,
 }
 
 impl<T: ViewTypes> ApplicationContext<T> {
-    pub fn transition_to_loading_view(&self, view: T::NativeView) {
+    pub fn transition_to_loading_view(&self) {
         debug!("Transition to loading view");
 
         let self_copy = self.0.clone();
 
         (*self).tokio_runtime.spawn(LoadingPresenter::new(
-            view,
-            self.system_view.clone(),
+            self.system_interop.create_native_view(),
+            self.system_interop.clone(),
             self.event_bus.clone(),
             Box::new(move |resources| {
                 self_copy.set_runtime_resources(resources);
@@ -154,7 +154,7 @@ impl<T: ViewTypes> ApplicationContext<T> {
             view,
             self.event_bus.clone(),
             self.get_runtime_resources(),
-            self.system_view.clone(),
+            self.system_interop.clone(),
         ));
     }
 }

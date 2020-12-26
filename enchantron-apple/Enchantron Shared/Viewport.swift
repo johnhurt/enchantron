@@ -85,14 +85,6 @@ public class Viewport {
         self.uniforms[0].topLeftMinor = self.topLeftMinor
         self.uniforms[0].scale = Float(scale)
         
-        encoder.setViewport(MTLViewport(
-            originX: 0,
-            originY: 0,
-            width: Double(uniforms[0].screenSize.x),
-            height: Double(uniforms[0].screenSize.y),
-            znear: -1,
-            zfar: 1))
-
         encoder.setVertexBuffer(uniformBuffer, offset: uniformBufferOffset, index: 1)
     }
     

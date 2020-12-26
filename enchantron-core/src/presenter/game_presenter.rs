@@ -25,7 +25,7 @@ where
     view: GameViewImpl<T>,
     event_bus: EventBus,
     runtime_resources: Ao<RuntimeResources<T>>,
-    system_view: Ao<T::SystemView>,
+    system_interop: Ao<T::SystemInterop>,
 
     touch_tracker: TouchTracker,
     viewport_presenter: ViewportPresenter<T>,
@@ -113,7 +113,7 @@ where
             self.event_bus.clone(),
             &self.view,
             self.runtime_resources.clone(),
-            self.system_view.clone(),
+            self.system_interop.clone(),
         );
 
         (terrain_presenter)
@@ -123,9 +123,8 @@ where
         raw_view: T::NativeView,
         event_bus: EventBus,
         runtime_resources: Ao<RuntimeResources<T>>,
-        system_view: Ao<T::SystemView>,
+        system_interop: Ao<T::SystemInterop>,
     ) {
-        raw_view.initialize_pre_bind();
         let view = GameViewImpl::new(raw_view);
         let saved_game = SavedGame::new(Default::default());
 
@@ -177,7 +176,7 @@ where
             view,
             event_bus: event_bus.clone(),
             runtime_resources,
-            system_view,
+            system_interop,
             touch_tracker: Default::default(),
             viewport_presenter,
             focused_entity_presenter,
@@ -193,7 +192,7 @@ where
             .register_for_one::<TerrainPresenterStarted>()
             .await;
 
-        presenter.view.initialize_post_bind(Box::new(
+        presenter.view.set_presenter(Box::new(
             event_bus.post_on_drop(StopGameRequested::new()),
         ));
 

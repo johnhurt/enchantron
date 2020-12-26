@@ -24,12 +24,12 @@ macro_rules! view_impl {
             }
 
             impl <T> NativeView for $impl_name<T> where T : ViewTypes {
-                fn initialize_pre_bind(&self) {
-                    self.view_impl.initialize_pre_bind()
+                fn unset_presenter(&self) {
+                    self.view_impl.unset_presenter()
                 }
 
-                fn initialize_post_bind(&self, presenter: crate::util::BoxedAny) {
-                    self.view_impl.initialize_post_bind(presenter)
+                fn set_presenter(&self, presenter: crate::util::BoxedAny) {
+                    self.view_impl.set_presenter(presenter)
                 }
             }
 

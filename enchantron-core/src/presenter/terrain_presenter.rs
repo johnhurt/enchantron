@@ -2,7 +2,7 @@ use crate::application_context::Ao;
 use crate::event::*;
 use crate::game::constants;
 use crate::model::{IPoint, IRect, ISize, Rect, UPoint, URect};
-use crate::native::{RuntimeResources, SystemView};
+use crate::native::{RuntimeResources, SystemInterop};
 use crate::ui::{
     HasMutableLocation, HasMutableSize, HasMutableVisibility, HasMutableZLevel,
     Sprite, SpriteSource, TerrainTextureProvider, TerrainUpdateInfo,
@@ -62,14 +62,14 @@ where
         event_bus: EventBus,
         sprite_source: &S,
         runtime_resources: Ao<RuntimeResources<T>>,
-        system_view: Ao<T::SystemView>,
+        system_interop: Ao<T::SystemInterop>,
     ) -> TerrainPresenter<T>
     where
         S: SpriteSource<T = T::Texture, S = T::Sprite, G = T::SpriteGroup>,
     {
         let terrain_texture_provider = TerrainTextureProvider::new(
             runtime_resources,
-            system_view.get_resource_loader(),
+            system_interop.get_resource_loader(),
         );
         let layer_sprites =
             array_macro::array![|_| sprite_source.create_group(); LAYER_COUNT];

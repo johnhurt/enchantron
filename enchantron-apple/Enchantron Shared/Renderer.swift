@@ -30,8 +30,10 @@ class Renderer: NSObject, MTKViewDelegate {
     private var currentView : NativeView
     private var nextView : NativeView?
     
+    let systemInterop : SystemInterop
     var screenSize = CGSize()
     var screenHeight : Float64 = 0
+    let appCtx : ApplicationContext
     
     init?(metalKitView: MTKView) {
         self.device = metalKitView.device!
@@ -46,9 +48,10 @@ class Renderer: NSObject, MTKViewDelegate {
         let mtlVertexDescriptor = Renderer.buildMetalVertexDescriptor()
         
         do {
-            pipelineState = try Renderer.buildRenderPipelineWithDevice(device: device,
-                                                                       metalKitView: metalKitView,
-                                                                       mtlVertexDescriptor: mtlVertexDescriptor)
+            pipelineState = try Renderer.buildRenderPipelineWithDevice(
+                device: device,
+                metalKitView: metalKitView,
+                mtlVertexDescriptor: mtlVertexDescriptor)
         } catch {
             print("Unable to compile render pipeline state.  Error info: \(error)")
             return nil
@@ -62,32 +65,27 @@ class Renderer: NSObject, MTKViewDelegate {
         
         Sprite.staticInit(device: device)
         
-        let systemView = SystemView(
-            resourceLoader: ResourceLoader(loader: MTKTextureLoader(device: device)))
+        systemInterop = SystemInterop(
+            resourceLoader: ResourceLoader(loader: MTKTextureLoader(device: device)),
+            transitionService: TransitionService(),
+            device: device)
         
+        appCtx = RustBinder.bindToRust(systemInterop)
         
-        let ctx = RustBinder.bindToRust(systemView)
-        
-        let loadingView = NativeView(screenSize: screenSize, device: device)
-        
-        currentView = NativeView(screenSize: screenSize, device: device)
+        // Start with an empty view
+        currentView = NativeView(screenSize: CGSize(), device: device)
         
         super.init()
         
-        let transitioner = TransitionService(preBindTransition: { (view) in
-            self.nextView = view
-        }, postBindTransition: { (view) in
+        systemInterop.transitionService.transiation = { (view) in
             let prevView = self.currentView
             self.currentView = self.nextView!
             
             self.currentView.layout(size: self.screenSize)
             
-            prevView.unsetPresenter()
             self.nextView = nil
-        })
-        
-        loadingView.initializeCtx(ctx: ctx, transitionService: transitioner)
-        ctx.transitionToLoadingView(view: loadingView)
+            return prevView
+        }
         
     }
     
@@ -146,8 +144,7 @@ class Renderer: NSObject, MTKViewDelegate {
             commandBuffer.addCompletedHandler { (_ commandBuffer)-> Swift.Void in
                 semaphore.signal()
             }
-            
-            
+
             /// Delay getting the currentRenderPassDescriptor until we absolutely need it to avoid
             ///   holding onto the drawable and blocking the display pipeline any longer than necessary
             let renderPassDescriptor = view.currentRenderPassDescriptor
@@ -192,6 +189,7 @@ class Renderer: NSObject, MTKViewDelegate {
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
         self.screenSize = size
         self.screenHeight = Float64(size.height)
+        self.systemInterop.setScreenSize(screenSize)
         self.currentView.layout(size: size)
     }
     

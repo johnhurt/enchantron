@@ -13,34 +13,21 @@ import simd
 
 class TransitionService {
     
-    typealias PresenterBinder<T : NativeView> = (T) -> AnyObject
-    typealias TransitionClosure = (NativeView) -> Void
+    typealias TransitionClosure = (NativeView) -> NativeView
     
-    let preBindTransition : TransitionClosure
-    let postBindTransition : TransitionClosure
+    var transiation : TransitionClosure?
     
-    init(preBindTransition: @escaping TransitionClosure
-        , postBindTransition: @escaping TransitionClosure ) {
-        self.preBindTransition = preBindTransition
-        self.postBindTransition = postBindTransition
+    func setTransitioner(transiation: @escaping TransitionClosure ) {
+        self.transiation = transiation
     }
     
-    func preBindTransition<T: NativeView>(view: T) {
+    func transitionTo(_ view: NativeView, _ dropCurrent: Bool) {
         let transitionOp = {
-            self.preBindTransition(view)
-        }
-        
-        if Thread.isMainThread {
-            transitionOp()
-        }
-        else {
-            DispatchQueue.main.sync { transitionOp() }
-        }
-    }
-    
-    func postBindTransition<T: NativeView>(view: T) {
-        let transitionOp = {
-            self.postBindTransition(view)
+            let oldView = self.transiation!(view)
+            
+            if dropCurrent {
+                oldView.unsetPresenter()
+            }
         }
         
         if Thread.isMainThread {

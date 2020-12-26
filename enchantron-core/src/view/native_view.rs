@@ -15,7 +15,7 @@ pub trait NativeView:
     + Sized
     + 'static
 {
-    fn initialize_pre_bind(&self);
+    fn unset_presenter(&self);
 
-    fn initialize_post_bind(&self, presenter: BoxedAny);
+    fn set_presenter(&self, presenter: BoxedAny);
 }

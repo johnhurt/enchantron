@@ -37,8 +37,6 @@ impl<T: ViewTypes> MainMenuPresenter<T> {
     ) -> Arc<MainMenuPresenter<T>> {
         info!("Starting to build main menu");
 
-        view.initialize_pre_bind();
-
         let result = MainMenuPresenter {
             view: MainMenuViewImpl::new(view),
             handler_registrations: Mutex::new(Vec::new()),
@@ -47,7 +45,7 @@ impl<T: ViewTypes> MainMenuPresenter<T> {
 
         let result: Arc<MainMenuPresenter<T>> = result.bind().await;
 
-        result.view.initialize_post_bind(Box::new(result.clone()));
+        result.view.set_presenter(Box::new(result.clone()));
 
         result
     }

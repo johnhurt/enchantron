@@ -62,8 +62,8 @@
 		63C34FF4212F5CF900076E55 /* Sprite.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63C34FF2212F5CF900076E55 /* Sprite.swift */; };
 		63E983832129C9B90056E91C /* Indira_K.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63E983822129C9B90056E91C /* Indira_K.ttf */; };
 		63E983842129C9B90056E91C /* Indira_K.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63E983822129C9B90056E91C /* Indira_K.ttf */; };
-		63E98386212A00EF0056E91C /* SystemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63E98385212A00EF0056E91C /* SystemView.swift */; };
-		63E98387212A00F00056E91C /* SystemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63E98385212A00EF0056E91C /* SystemView.swift */; };
+		63E98386212A00EF0056E91C /* SystemInterop.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63E98385212A00EF0056E91C /* SystemInterop.swift */; };
+		63E98387212A00F00056E91C /* SystemInterop.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63E98385212A00EF0056E91C /* SystemInterop.swift */; };
 		63F97AFA211CC9B500784701 /* RustBinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F97AF9211CC9B500784701 /* RustBinder.swift */; };
 		63F97AFB211CC9B500784701 /* RustBinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F97AF9211CC9B500784701 /* RustBinder.swift */; };
 		63F97B04211CCB0400784701 /* ClickHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F97AFD211CCB0300784701 /* ClickHandler.swift */; };
@@ -119,7 +119,7 @@
 		63C34FF2212F5CF900076E55 /* Sprite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sprite.swift; sourceTree = "<group>"; };
 		63D5899C226E59F200A40E2C /* enchantron.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = enchantron.h; path = "../../enchantron-core/enchantron.h"; sourceTree = "<group>"; };
 		63E983822129C9B90056E91C /* Indira_K.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = Indira_K.ttf; path = ../../resources/fonts/Indira_K.ttf; sourceTree = "<group>"; };
-		63E98385212A00EF0056E91C /* SystemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemView.swift; sourceTree = "<group>"; };
+		63E98385212A00EF0056E91C /* SystemInterop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemInterop.swift; sourceTree = "<group>"; };
 		63F97AF9211CC9B500784701 /* RustBinder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RustBinder.swift; sourceTree = "<group>"; };
 		63F97AFD211CCB0300784701 /* ClickHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClickHandler.swift; sourceTree = "<group>"; };
 		63F97AFE211CCB0300784701 /* TextArea.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextArea.swift; sourceTree = "<group>"; };
@@ -191,7 +191,7 @@
 				633D0B22240FCA2800A40E2C /* SpriteGroup.swift */,
 				637D8F10257EAEC4006185D9 /* SpriteSource.swift */,
 				63F97B03211CCB0400784701 /* SwiftString.swift */,
-				63E98385212A00EF0056E91C /* SystemView.swift */,
+				63E98385212A00EF0056E91C /* SystemInterop.swift */,
 				63F97AFE211CCB0300784701 /* TextArea.swift */,
 				6395650A2126469C006F2A71 /* Texture.swift */,
 				632D2B072411E813002B29D7 /* TouchLookup.swift */,
@@ -452,7 +452,7 @@
 				63983249232A865800569093 /* MagnifyHandler.swift in Sources */,
 				637D8F11257EAEC4006185D9 /* SpriteSource.swift in Sources */,
 				63F97B0A211CCB0400784701 /* TransitionService.swift in Sources */,
-				63E98386212A00EF0056E91C /* SystemView.swift in Sources */,
+				63E98386212A00EF0056E91C /* SystemInterop.swift in Sources */,
 				637D8F14258127AE006185D9 /* TouchType.swift in Sources */,
 				632D2B052411E5F3002B29D7 /* MultiDragHandler.swift in Sources */,
 				63F97B10211CCB0400784701 /* SwiftString.swift in Sources */,
@@ -485,7 +485,7 @@
 				637D8F1625812D61006185D9 /* TouchLookup.swift in Sources */,
 				6398324A232A865800569093 /* MagnifyHandler.swift in Sources */,
 				63F97B0B211CCB0400784701 /* TransitionService.swift in Sources */,
-				63E98387212A00F00056E91C /* SystemView.swift in Sources */,
+				63E98387212A00F00056E91C /* SystemInterop.swift in Sources */,
 				63F97B11211CCB0400784701 /* SwiftString.swift in Sources */,
 				639EBFB323DE46D200A40E2C /* ByteBufferExt.swift in Sources */,
 				633D0B24240FCA2800A40E2C /* SpriteGroup.swift in Sources */,

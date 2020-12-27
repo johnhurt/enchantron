@@ -18,7 +18,7 @@ class NativeView : SpriteSource {
     
     private var presenter : BoxedAny?
     
-    let viewport : Viewport
+    private let viewport : Viewport
     let device: MTLDevice
     let rootGroup : SpriteGroup
     

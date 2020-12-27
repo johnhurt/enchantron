@@ -1,13 +1,13 @@
 #[macro_export]
 macro_rules! view_impl {
 
-    ($impl_name:ident : $view_name:ident {
+    ($impl_name:ident<$view_types_generic:ident> : $view_name:ident {
         $(
             let $field_name:ident : $field_type:ty;
         )*
     }) => {
 
-        pub type $impl_name<T> = hidden::ViewImpl<T>;
+        pub type $impl_name<$view_types_generic> = hidden::ViewImpl<$view_types_generic>;
 
         mod hidden {
             use crate::ui::*;
@@ -16,8 +16,8 @@ macro_rules! view_impl {
             use crate::view::NativeView;
 
             #[derive(derive_new::new)]
-            pub struct ViewImpl<T> where T : ViewTypes {
-                view_impl: T::NativeView,
+            pub struct ViewImpl<$view_types_generic> where $view_types_generic : ViewTypes {
+                view_impl: $view_types_generic::NativeView,
                 $(
                     $field_name: $field_type
                 ),*

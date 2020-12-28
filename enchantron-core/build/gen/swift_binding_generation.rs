@@ -38,6 +38,13 @@ macro_rules! rust_struct {
     ($name:ident : $full_type:ty) => {
         DataType::rust_struct(stringify!($name), Some(stringify!($full_type)))
     };
+    (Self::$generic_symbol:ident = $struct_name:ty) => {
+        DataType::rust_generic(
+            Some(stringify!($generic_symbol)),
+            DataType::rust_struct(stringify!($struct_name), None),
+            true,
+        )
+    };
 }
 
 macro_rules! arg {
@@ -94,7 +101,7 @@ macro_rules! one_impl {
             type $associated_type_name:ident = $real_type:ty;
         )*
         $(
-            fn $method_name:ident($($arg_name:ident : $arg_type_exp:expr),* $(,)? ) $( -> $return_exp:expr)?;
+            fn $method_name:ident($($arg_name:ident : $arg_type_exp:expr),* $(,)? ) $( -> $return_exp:expr)? $( => $impl_method_body:block )?;
         )*
     }) => {{
         let impl_def = impl_def!($trait_name {$(
@@ -103,7 +110,7 @@ macro_rules! one_impl {
 
         let impl_methods = vec![$(
             impl_method!($trait_name {
-                fn $method_name($($arg_name : $arg_type_exp),*) $( -> $return_exp)?
+                fn $method_name($($arg_name : $arg_type_exp),*) $( -> $return_exp)? $( => $impl_method_body )?
             })
         ),*];
 
@@ -293,12 +300,20 @@ macro_rules! impl_def {
 
 macro_rules! impl_method {
     ($trait_name:ty {
-        fn $method_name:ident($($arg_name:ident : $arg_type_exp:expr),* $(,)? ) $( -> $return_exp:expr)?
+        fn $method_name:ident($(
+            $arg_name:ident : $arg_type_exp:expr
+        ),* $(,)? ) $( -> $return_exp:expr)? $( => $impl_method_body:block )?
     }) => {{
         let result = method_builder!($method_name($($arg_name: $arg_type_exp),*) $( -> $return_exp)?);
         let result = result.impl_block(Some(ImplBlockDefBuilder::default()
             .trait_name(stringify!($trait_name))
             .build().unwrap()));
+
+        $(
+            let result = result
+                .custom_rust_code(Some(stringify!($impl_method_body)))
+                .override_default_behavior(true);
+        )?
         result.build().unwrap()
     }};
 }
@@ -512,6 +527,7 @@ lazy_static! {
             type ResourceLoader = ResourceLoader;
             type SystemInterop = SystemInterop;
             type NativeView = NativeView;
+            type LoadingView = crate::view::LoadingViewImpl<Self>;
             type Viewport = Viewport;
             type TransitionService = TransitionService;
         }
@@ -580,11 +596,19 @@ lazy_static! {
 
     swift_type!(TransitionService {
         impl crate::ui::TransitionService => {
-            type V = NativeView;
+            type NV = NativeView;
+            type LV = crate::view::LoadingViewImpl<ViewTypes>;
 
-            fn transition_to(
-                view : swift_struct!(Self::V = NativeView),
+            fn transition_to_native_view(
+                view : swift_struct!(Self::NV = NativeView),
                 drop_current : BOOLEAN);
+
+            fn transition_to_loading_view(
+                view: rust_struct!(Self::LV = crate::view::LoadingViewImpl<ViewTypes>),
+                drop_current: BOOLEAN
+            ) => {
+                self.transition_to_native_view(&view.view_impl, drop_current)
+            };
         }
     }),
 
@@ -594,12 +618,17 @@ lazy_static! {
         impl crate::native::SystemInterop => {
             type T = Texture;
             type TL = ResourceLoader;
-            type V = NativeView;
             type TS = TransitionService;
+            type NV = NativeView;
+            type LV = crate::view::LoadingViewImpl<ViewTypes>;
 
             fn get_resource_loader() -> swift_struct!(Self::TL = ResourceLoader);
-            fn create_native_view() -> swift_struct!(Self::V = NativeView);
+            fn create_native_view() -> swift_struct!(Self::NV = NativeView);
             fn get_transition_service() -> swift_struct!(Self::TS = TransitionService);
+            fn create_loading_view() -> rust_struct!(Self::LV = crate::view::LoadingViewImpl<ViewTypes>) => {
+                crate::view::LoadingViewImpl::new_loading_view(
+                    self.create_native_view())
+            };
         }
     }),
 

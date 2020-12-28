@@ -61,6 +61,7 @@ impl TypeDef {
                 .custom_rust_code(
                     method_def.custom_rust_code.map(|cc| String::from(cc)),
                 )
+                .override_default_behavior(method_def.override_default_behavior)
                 .rust_owned(self.rust_owned)
                 .build()
                 .unwrap();

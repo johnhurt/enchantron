@@ -17,4 +17,5 @@ pub struct RenderableFunction {
     pub return_type: Option<RenderableDataType>,
     pub arguments: Vec<RenderableArgument>,
     pub custom_rust_code: Option<String>,
+    pub override_default_behavior: bool,
 }

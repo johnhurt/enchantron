@@ -83,6 +83,7 @@ pub struct PrimitiveDataType {
 pub struct RustGenericDataType {
     pub symbol: Option<&'static str>,
     pub bound_type: RustStructDataType,
+    pub borrow_outgoing: bool,
 }
 
 #[derive(Serialize, Builder, Default, Clone, Copy)]
@@ -174,12 +175,14 @@ impl DataType {
     pub fn rust_generic(
         symbol: Option<&'static str>,
         bound_type: DataType,
+        as_ref: bool,
     ) -> DataType {
         if let DataType::RustStruct(rust_type) = bound_type {
             DataType::RustGeneric(
                 RustGenericDataTypeBuilder::default()
                     .symbol(symbol)
                     .bound_type(rust_type)
+                    .borrow_outgoing(as_ref)
                     .build()
                     .unwrap(),
             )

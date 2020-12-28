@@ -21,7 +21,7 @@ class TransitionService {
         self.transiation = transiation
     }
     
-    func transitionTo(_ view: NativeView, _ dropCurrent: Bool) {
+    func transitionToNativeView(_ view: NativeView, _ dropCurrent: Bool) {
         let transitionOp = {
             let oldView = self.transiation!(view)
             

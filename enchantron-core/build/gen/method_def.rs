@@ -12,6 +12,7 @@ pub struct MethodDef {
     pub return_type: Option<DataType>,
     pub arguments: Vec<ArgumentDef>,
     pub custom_rust_code: Option<&'static str>,
+    pub override_default_behavior: bool,
 }
 
 impl MethodDef {

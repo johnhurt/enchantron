@@ -72,7 +72,7 @@ impl {{wrapper_name}} {
 // Impl {{trait_name}}
 {{~#each functions}}
 
-{{~#unless is_drop}}
+{{~#unless (or is_drop override_default_behavior)}}
 
 #[no_mangle]
 #[allow(non_snake_case, clippy::not_unsafe_ptr_arg_deref)]
@@ -136,9 +136,11 @@ impl {{#if trait_name}}{{trait_name}} for {{/if}}{{../name}} {
       {{~/each}})
           {{#if return_type}}-> {{return_type.rust_name_internal}}{{/if}} {
     {{#if custom_rust_code}}{{custom_rust_code}}{{/if}}
+    {{#unless override_default_behavior}}
     {{#if return_type}}{{return_type.rust_type_coercion_prefix_incoming}}{{/if}}({{upper_case name}})(self.0
         {{#each arguments}}, {{data_type.rust_type_coercion_prefix_outgoing}}{{snake_case name}}{{data_type.rust_type_coercion_postfix_outgoing}}
         {{~/each}}){{#if return_type}}{{return_type.rust_type_coercion_postfix_incoming}}{{/if}}
+    {{/unless}}
   }
   {{~/each}}
 }
@@ -155,7 +157,7 @@ impl {{#if trait_name}}{{trait_name}} for {{/if}}{{../name}} {
 {{~#each impls}}
 // {{trait_name}}
 {{~#each functions}}
-{{~#unless rust_owned}}
+{{~#unless (or rust_owned override_default_behavior)}}
 
 #[allow(non_snake_case)]
 lazy_static!{

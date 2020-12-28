@@ -17,7 +17,7 @@ macro_rules! view_impl {
 
             #[derive(derive_new::new)]
             pub struct ViewImpl<$view_types_generic> where $view_types_generic : ViewTypes {
-                view_impl: $view_types_generic::NativeView,
+                pub view_impl: $view_types_generic::NativeView,
                 $(
                     $field_name: $field_type
                 ),*

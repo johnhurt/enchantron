@@ -102,6 +102,7 @@ impl RenderableDataType {
                                 .map(|sym| format!("::{}", sym))
                                 .unwrap_or("".to_owned()),
                     )
+                    .borrow_outgoing(generic_type.borrow_outgoing)
             }
             DataType::RustStruct(struct_type) => {
                 render_rust_struct_type(struct_type, builder)

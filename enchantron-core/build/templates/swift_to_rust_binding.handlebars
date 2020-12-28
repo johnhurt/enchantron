@@ -17,7 +17,9 @@ class RustBinder {
 
     // Impl {{trait_name}}
     {{~#each functions}}
+    {{~#unless override_default_behavior}}
     set_{{name}}({{name}})
+    {{~/unless}}
     {{~/each}}
     {{~/each}}
     {{~/unless}}
@@ -75,6 +77,7 @@ class {{name}} {
 
 // Impl {{trait_name}}
 {{~#each functions}}
+{{~#unless override_default_behavior}}
 {{~#if is_drop}}
 
 private func {{name}}(_self: OpaquePointer?) {
@@ -86,18 +89,13 @@ private func {{name}}(ref: OpaquePointer?
     {{#each arguments}}, {{lower_camel name}}: {{data_type.swift_name_incoming}}{{/each}})
         -> {{#if return_type}}{{return_type.swift_name_outgoing}}{{else}}Void{{/if}} {
   let _self : {{type_name}} = Unmanaged.fromOpaque(UnsafeMutableRawPointer(ref!)).takeUnretainedValue()
-{{~#if is_getter}}
-  return  {{return_type.swift_type_coercion_prefix_outgoing}}_self.{{lower_camel field_name}}{{return_type.swift_type_coercion_postfix_outgoing}}
-{{~else}}
-{{~#if is_setter}}
-  _self.{{lower_camel field_name}} = {{#each arguments}}{{data_type.swift_type_coercion_prefix_incoming}}{{lower_camel name}}{{data_type.swift_type_coercion_postfix_incoming}}{{/each}}
-{{~else}}
+
   {{#if return_type}}return {{return_type.swift_type_coercion_prefix_outgoing}}{{/if}}_self.{{lower_camel impl_name}}(
       {{#each arguments}}{{#unless @first}}, {{/unless}}{{data_type.swift_type_coercion_prefix_incoming}}{{lower_camel name}}{{data_type.swift_type_coercion_postfix_incoming}}{{/each}}){{#if return_type}}{{return_type.swift_type_coercion_postfix_outgoing}}{{/if}}
-{{/if}}
-{{/if}}
+
 }
 {{~/if}}
+{{~/unless}}
 {{~/each}}
 {{~/each}}
 {{~/unless}}

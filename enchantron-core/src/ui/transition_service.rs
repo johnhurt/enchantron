@@ -1,11 +1,9 @@
-use crate::view::NativeView;
+use crate::view::{LoadingView, NativeView};
 
 pub trait TransitionService: Send + Sync + 'static {
-    type V: NativeView;
+    type NV: NativeView;
+    type LV: LoadingView;
 
-    fn transition_to(&self, view: &Self::V, drop_current: bool);
-
-    fn transition_and_drop_current(&self, view: &Self::V) {
-        self.transition_to(view, true)
-    }
+    fn transition_to_native_view(&self, view: &Self::NV, drop_current: bool);
+    fn transition_to_loading_view(&self, view: &Self::LV, drop_current: bool);
 }

@@ -2,74 +2,85 @@ use super::{
     HasMutableColor, HasMutableFloatValue, HasMutableLocation, HasMutableSize,
     HasMutableVisibility, Sprite, SpriteGroup, SpriteSource,
 };
-use crate::model::{Rect, ISize, Size};
+use crate::model::{ISize, Rect, Size};
 use crate::view_types::ViewTypes;
 use std::sync::Arc;
 use tokio::sync::mpsc::Sender;
 
-trait ProgressBarCommand<T> : FnOnce(&mut ProgressBarImpl<T>) + Send + 'static {}
+type ProgressBarCommand<T, V> =
+    Box<dyn FnOnce(&mut ProgressBarPrivate<T, V>) + Send + 'static>;
+
+type ProgressBarSelector<T, V> =
+    Box<dyn Fn(&mut V) -> &mut ProgressBarPrivate<T, V> + Send + 'static>;
 
 pub trait ProgressBar: HasMutableFloatValue + Send + Sync + 'static {}
 
-pub struct ProgressBarImpl<T: ViewTypes> {
-    inner: Arc<Inner<T>>,
+pub struct ProgressBarPublic<T: ViewTypes, V> {
+    selector: ProgressBarSelector<T,V>,
+    sender: Arc<Sender<(ProgressBarSelector<T,V>, ProgressBarCommand<T,V>)>>,
 }
 
-struct Inner<T: ViewTypes> {
+pub struct ProgressBarPrivate<T: ViewTypes, V> {
     outline: T::Sprite,
     bar: T::Sprite,
 
     rect: Rect,
     value: f64,
 
-    sender: Sender<Box<dyn ProgressBarCommand<T>>>
+    public: ProgressBarPublic<T>,
 }
 
-impl<T> Clone for ProgressBarImpl<T>
+impl<T> Clone for ProgressBarPublic<T>
 where
     T: ViewTypes,
 {
     fn clone(&self) -> Self {
-        ProgressBarImpl {
-            inner: self.inner.clone(),
+        ProgressBarPublic {
+            sender: self.sender.clone(),
         }
     }
 }
 
-impl<T> ProgressBarImpl<T>
+impl<T> ProgressBarPrivate<T>
 where
     T: ViewTypes,
 {
     pub fn new(
         sprite_source: &impl SpriteSource<T = T::Texture, S = T::Sprite>,
-
-    ) -> ProgressBarImpl<T> {
+        sender: Arc<Sender<ProgressBarCommand<T>>>,
+    ) -> ProgressBarPrivate<T> {
         let outline = sprite_source.create_sprite();
         let bar = sprite_source.create_sprite();
 
-        ProgressBarImpl {
-            inner: Arc::new(Inner {
-                outline,
-                bar,
-                rect: Default::default(),
-                value: Default::default(),
-            }),
+        ProgressBarPrivate {
+            outline,
+            bar,
+            rect: Default::default(),
+            value: Default::default(),
+            public: ProgressBarPublic { sender },
         }
     }
 
-    pub fn layout(&self, size: ISize) {
+    pub fn get_public(&self) -> ProgressBarPublic<T> {
+        self.public.clone()
     }
+
+    pub fn layout(&mut self, size: ISize) {}
+
+    pub fn update_progress(&mut self, progress: f64) {}
+
+    fn render(&self) {}
 }
 
-impl<T> ProgressBar for ProgressBarImpl<T> where T: ViewTypes {}
+impl<T> ProgressBar for ProgressBarPublic<T> where T: ViewTypes {}
 
-impl<T> HasMutableFloatValue for ProgressBarImpl<T>
+impl<T> HasMutableFloatValue for ProgressBarPublic<T>
 where
     T: ViewTypes,
 {
     fn set_value(&self, new_value: f64) {
-        self.sender.try_send(|progress_bar| {
-            progress_bar.
-        })
+        let _ = self.sender.try_send(Box::new(|progress_bar| {
+            progress_bar.update_progress(new_value)
+        }));
     }
 }

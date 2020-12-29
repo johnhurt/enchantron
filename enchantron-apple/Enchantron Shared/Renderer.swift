@@ -28,7 +28,6 @@ class Renderer: NSObject, MTKViewDelegate {
     var uniformBufferIndex = 0
     
     private var currentView : NativeView
-    private var nextView : NativeView?
     
     let systemInterop : SystemInterop
     var screenSize = CGSize()
@@ -78,15 +77,16 @@ class Renderer: NSObject, MTKViewDelegate {
         super.init()
         
         systemInterop.transitionService.transiation = { (view) in
+            
+            view.layout(size: self.screenSize)
+            
             let prevView = self.currentView
-            self.currentView = self.nextView!
+            self.currentView = view
             
-            self.currentView.layout(size: self.screenSize)
-            
-            self.nextView = nil
             return prevView
         }
         
+        appCtx.transitionToLoadingView()
     }
     
     class func buildMetalVertexDescriptor() -> MTLVertexDescriptor {

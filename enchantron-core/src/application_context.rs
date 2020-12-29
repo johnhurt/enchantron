@@ -132,12 +132,8 @@ impl<T: ViewTypes> ApplicationContext<T> {
 
         let self_copy = self.0.clone();
 
-        let view: LoadingViewImpl<T> = LoadingViewImpl::new_loading_view(
-            self.system_interop.create_native_view(),
-        );
-
         (*self).tokio_runtime.spawn(LoadingPresenter::new(
-            view,
+            self.system_interop.create_loading_view(),
             self.system_interop.clone(),
             self.event_bus.clone(),
             Box::new(move |resources| {

@@ -528,6 +528,7 @@ lazy_static! {
             type SystemInterop = SystemInterop;
             type NativeView = NativeView;
             type LoadingView = crate::view::LoadingViewImpl<Self>;
+            type ProgressBar = crate::ui::ProgressBarImpl<Self>;
             type Viewport = Viewport;
             type TransitionService = TransitionService;
         }

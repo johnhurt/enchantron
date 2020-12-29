@@ -6,21 +6,19 @@ use crate::view::{LoadingView, NativeView};
 use crate::view_types::ViewTypes;
 use std::sync::Arc;
 
-pub struct LoadingPresenter<T, V>
+pub struct LoadingPresenter<T>
 where
     T: ViewTypes,
-    V: LoadingView,
 {
-    view: V,
+    view: T::LoadingView,
     system_interop: Ao<T::SystemInterop>,
     resources_sink: Box<dyn Fn(RuntimeResources<T>) + Send + Sync>,
     event_bus: EventBus,
 }
 
-impl<T, V> LoadingPresenter<T, V>
+impl<T> LoadingPresenter<T>
 where
     T: ViewTypes,
-    V: LoadingView,
 {
     async fn load_resources(&self) {
         let resource_loader: &T::ResourceLoader =
@@ -35,7 +33,7 @@ where
         self.view.transition_to_main_menu_view();
     }
 
-    async fn bind(self) -> Arc<LoadingPresenter<T, V>> {
+    async fn bind(self) -> Arc<LoadingPresenter<T>> {
         let result = Arc::new(self);
 
         let load_resources_future =
@@ -55,7 +53,7 @@ where
     }
 
     pub async fn new(
-        view: V,
+        view: T::LoadingView,
         system_interop: Ao<T::SystemInterop>,
         event_bus: EventBus,
         resources_sink: Box<dyn Fn(RuntimeResources<T>) + Send + Sync>,
@@ -73,10 +71,9 @@ where
     }
 }
 
-impl<T, V> Drop for LoadingPresenter<T, V>
+impl<T> Drop for LoadingPresenter<T>
 where
     T: ViewTypes,
-    V: LoadingView,
 {
     fn drop(&mut self) {
         info!("Dropping Loading Presenter")

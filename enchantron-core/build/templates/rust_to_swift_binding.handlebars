@@ -38,7 +38,7 @@ struct Bindings {
 {{~#each types}}
 {{~#each impls}}
 {{~#each functions}}
-{{~#unless rust_owned}}
+{{~#unless (or rust_owned override_default_behavior)}}
 
   {{name}}: Option<extern "C" fn(_self: *mut Opaque_{{type_name}}
       {{#each arguments}}, {{snake_case name}}: {{data_type.rust_name_outgoing}}{{/each}})

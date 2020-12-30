@@ -19,6 +19,8 @@ typedef struct
 {
     float4 position [[position]];
     float2 texCoord;
+    bool hasTexture;
+    float4 color;
 } VertexOut;
 
 vertex VertexOut vertexShader(uint vertexId [[vertex_id]],
@@ -26,7 +28,9 @@ vertex VertexOut vertexShader(uint vertexId [[vertex_id]],
                               constant ViewportUniform &viewport [[buffer(1)]])
 {
     VertexOut out;
-
+    
+    out.color = uniforms.color;
+    out.hasTexture = uniforms.hasTexture;
     
     // Get the viewport size and cast to float.
     float2 halfViewportSize = float2(viewport.screenSize * viewport.scale) / 2;
@@ -56,8 +60,15 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                texture2d<float> tex     [[ texture(0) ]])
 {
     constexpr sampler defaultSampler;
-
-    float4 colorSample = tex.sample(defaultSampler, in.texCoord.xy);
+    
+    float4 colorSample;
+    
+    if (in.hasTexture) {
+        colorSample = tex.sample(defaultSampler, in.texCoord.xy);
+    }
+    else {
+        colorSample = in.color;
+    }
     
     return float4(colorSample);
 }

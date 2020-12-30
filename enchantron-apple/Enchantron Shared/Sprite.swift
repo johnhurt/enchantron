@@ -46,7 +46,7 @@ class Sprite {
     var visible = false
     var topLeftMajor = SIMD2<Float32>()
     var topLeftMinor = SIMD2<Float32>()
-    var color = UInt32()
+    var color = SIMD4<Float>()
     
     weak var container : SpriteGroup?
     
@@ -120,7 +120,12 @@ class Sprite {
     
     func setColor(_ color: UInt32) {
         DispatchQueue.main.async {
-            self.color = color
+            let r = Float((color >> 24) & 255) / 255;
+            let g = Float((color >> 16) & 255) / 255;
+            let b = Float((color >> 8) & 255) / 255;
+            let a = Float((color >> 0) & 255) / 255;
+            let float_color : SIMD4<Float> = [r, g, b, a];
+            self.color = float_color
         }
     }
     
@@ -143,13 +148,16 @@ class Sprite {
         
         uniforms[0].topLeftMajor = topLeftMajor
         uniforms[0].topLeftMinor = topLeftMinor
+        uniforms[0].color = self.color
         
         uniforms[0].size = [Float32(self.size.width), Float32(self.size.height)]
         texture?.fillSpriteUniformUvs(uniforms: uniforms)
         let uniformBufferOffset = uniformBufferIndex * alignedUniformsSize
         
         encoder.setVertexBuffer(uniformBuffer, offset: uniformBufferOffset, index: 0)
-        encoder.setFragmentTexture(texture!.wrapped, index: 0)
+        if (texture != nil) {
+            encoder.setFragmentTexture(texture!.wrapped, index: 0)
+        }
         encoder.drawIndexedPrimitives(
             type: .triangle,
             indexCount: Sprite.indexes.count,

@@ -527,8 +527,8 @@ lazy_static! {
             type ResourceLoader = ResourceLoader;
             type SystemInterop = SystemInterop;
             type NativeView = NativeView;
-            type LoadingView = crate::view::LoadingViewImpl<Self>;
-            type ProgressBar = crate::ui::ProgressBarImpl<Self>;
+            type LoadingView = crate::view::LoadingViewPublic<Self>;
+            type ProgressBar = crate::ui::ProgressBarPublic<Self>;
             type Viewport = Viewport;
             type TransitionService = TransitionService;
         }
@@ -563,7 +563,6 @@ lazy_static! {
         impl crate::ui::Sprite => {
             type T = Texture;
             type A = Animation;
-            type C = Color;
 
             fn set_texture(texture: swift_struct!(Self::T = Texture));
             fn animate(
@@ -598,17 +597,17 @@ lazy_static! {
     swift_type!(TransitionService {
         impl crate::ui::TransitionService => {
             type NV = NativeView;
-            type LV = crate::view::LoadingViewImpl<ViewTypes>;
+            type LV = crate::view::LoadingViewPublic<ViewTypes>;
 
             fn transition_to_native_view(
                 view : swift_struct!(Self::NV = NativeView),
                 drop_current : BOOLEAN);
 
             fn transition_to_loading_view(
-                view: rust_struct!(Self::LV = crate::view::LoadingViewImpl<ViewTypes>),
+                view: rust_struct!(Self::LV = crate::view::LoadingViewPublic<ViewTypes>),
                 drop_current: BOOLEAN
             ) => {
-                self.transition_to_native_view(&view.view_impl, drop_current)
+                self.transition_to_native_view(&view.inner.raw_view, drop_current)
             };
         }
     }),
@@ -621,13 +620,13 @@ lazy_static! {
             type TL = ResourceLoader;
             type TS = TransitionService;
             type NV = NativeView;
-            type LV = crate::view::LoadingViewImpl<ViewTypes>;
+            type LV = crate::view::LoadingViewPublic<ViewTypes>;
 
             fn get_resource_loader() -> swift_struct!(Self::TL = ResourceLoader);
             fn create_native_view() -> swift_struct!(Self::NV = NativeView);
             fn get_transition_service() -> swift_struct!(Self::TS = TransitionService);
-            fn create_loading_view() -> rust_struct!(Self::LV = crate::view::LoadingViewImpl<ViewTypes>) => {
-                crate::view::LoadingViewImpl::new_loading_view(
+            fn create_loading_view() -> rust_struct!(Self::LV = crate::view::LoadingViewPublic<ViewTypes>) => {
+                crate::view::LoadingViewPublic::new_loading_view(
                     self.create_native_view())
             };
         }

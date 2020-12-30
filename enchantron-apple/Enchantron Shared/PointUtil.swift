@@ -21,7 +21,7 @@ class PointUtil {
         
         let resultWhole = (whole + sp) * denom
         
-        return (Float32(resultWhole), Float32(num - resultWhole))
+        return (Float32(resultWhole / denom), Float32(num - resultWhole))
         
     }
     

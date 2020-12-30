@@ -1,26 +1,34 @@
 use super::{
-    HasMutableColor, HasMutableFloatValue, HasMutableLocation, HasMutableSize,
-    HasMutableVisibility, Sprite, SpriteGroup, SpriteSource,
+    Color, HasMutableColor, HasMutableFloatValue, HasMutableLocation,
+    HasMutableSize, HasMutableVisibility, Sprite, SpriteGroup, SpriteSource,
 };
-use crate::model::{ISize, Rect, Size};
+use crate::model::{ISize, Point, Rect, Size};
+use crate::view::{AnyConsumer, WidgetSelector};
 use crate::view_types::ViewTypes;
 use std::sync::Arc;
 use tokio::sync::mpsc::Sender;
 
-type ProgressBarCommand<T, V> =
-    Box<dyn FnOnce(&mut ProgressBarPrivate<T, V>) + Send + 'static>;
+/// Calculate the rect for the bar part of the progress bar given the outline
+/// and progress value (0 - 1)
+fn get_bar_rect(outline_rect: &Rect, progress: f64) -> Rect {
+    let height = outline_rect.size.height / 3.;
+    let top_left = outline_rect.top_left + Point::new(height, height);
+    let width = progress * (outline_rect.size.width - 2. * height);
 
-type ProgressBarSelector<T, V> =
-    Box<dyn Fn(&mut V) -> &mut ProgressBarPrivate<T, V> + Send + 'static>;
+    Rect {
+        top_left,
+        size: Size::new(width, height),
+    }
+}
 
 pub trait ProgressBar: HasMutableFloatValue + Send + Sync + 'static {}
 
-pub struct ProgressBarPublic<T: ViewTypes, V> {
-    selector: ProgressBarSelector<T,V>,
-    sender: Arc<Sender<(ProgressBarSelector<T,V>, ProgressBarCommand<T,V>)>>,
+pub struct ProgressBarPublic<T: ViewTypes> {
+    selector: WidgetSelector<ProgressBarPrivate<T>>,
+    sender: Arc<Sender<AnyConsumer>>,
 }
 
-pub struct ProgressBarPrivate<T: ViewTypes, V> {
+pub struct ProgressBarPrivate<T: ViewTypes> {
     outline: T::Sprite,
     bar: T::Sprite,
 
@@ -36,6 +44,7 @@ where
 {
     fn clone(&self) -> Self {
         ProgressBarPublic {
+            selector: self.selector.clone(),
             sender: self.sender.clone(),
         }
     }
@@ -47,29 +56,43 @@ where
 {
     pub fn new(
         sprite_source: &impl SpriteSource<T = T::Texture, S = T::Sprite>,
-        sender: Arc<Sender<ProgressBarCommand<T>>>,
+        sender: Arc<Sender<AnyConsumer>>,
+        selector: WidgetSelector<ProgressBarPrivate<T>>,
     ) -> ProgressBarPrivate<T> {
         let outline = sprite_source.create_sprite();
         let bar = sprite_source.create_sprite();
+
+        outline.set_color(T::Color::new(0, 0, 0, 255));
+        bar.set_color(T::Color::new(255, 255, 255, 255));
 
         ProgressBarPrivate {
             outline,
             bar,
             rect: Default::default(),
             value: Default::default(),
-            public: ProgressBarPublic { sender },
+            public: ProgressBarPublic { sender, selector },
         }
     }
 
-    pub fn get_public(&self) -> ProgressBarPublic<T> {
+    pub fn public(&self) -> ProgressBarPublic<T> {
         self.public.clone()
     }
 
-    pub fn layout(&mut self, size: ISize) {}
+    pub fn set_rect(&mut self, rect: Rect) {
+        self.rect = rect;
+        self.render();
+    }
 
-    pub fn update_progress(&mut self, progress: f64) {}
+    pub fn update_progress(&mut self, progress: f64) {
+        self.value = progress;
+        self.render();
+    }
 
-    fn render(&self) {}
+    fn render(&self) {
+        let bar_rect = get_bar_rect(&self.rect, self.value);
+        self.outline.set_rect(&self.rect);
+        self.bar.set_rect(&bar_rect);
+    }
 }
 
 impl<T> ProgressBar for ProgressBarPublic<T> where T: ViewTypes {}
@@ -79,8 +102,9 @@ where
     T: ViewTypes,
 {
     fn set_value(&self, new_value: f64) {
-        let _ = self.sender.try_send(Box::new(|progress_bar| {
-            progress_bar.update_progress(new_value)
+        let copy = self.clone();
+        let _ = self.sender.try_send(Box::new(move |any| {
+            (copy.selector)(any).update_progress(new_value)
         }));
     }
 }

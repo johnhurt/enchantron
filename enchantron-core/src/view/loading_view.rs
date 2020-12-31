@@ -1,7 +1,7 @@
 use super::NativeView;
 use crate::model::{ISize, Rect, Size};
 use crate::ui::{
-    HandlerRegistration, HasLayoutHandlers, LayoutHandler, ProgressBar,
+    Color, HandlerRegistration, HasLayoutHandlers, LayoutHandler, ProgressBar,
     ProgressBarPrivate, ProgressBarPublic,
 };
 use crate::view::AnyConsumer;
@@ -11,9 +11,9 @@ use std::any::Any;
 use std::sync::Arc;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
-const MAX_WIDTH_FRAC: f64 = 0.5;
-const HEIGHT_FRAC: f64 = 0.2;
-const BUTTON_ASPECT_RATIO: f64 = 1.618;
+const MAX_WIDTH_FRAC: f64 = 0.8;
+const HEIGHT_FRAC: f64 = 0.1;
+const BUTTON_ASPECT_RATIO: f64 = 1.618 * 3.;
 
 /// Calculate the rectangle for the loading progress bar based on the size
 /// of the screen
@@ -42,6 +42,8 @@ view_impl!(LoadingView<T> {
     widgets {
         progress_bar: ProgressBar
     }
+
+    init = init;
 
     on_layout = on_layout;
 });
@@ -72,6 +74,13 @@ impl<T> LoadingViewPrivate<T>
 where
     T: ViewTypes,
 {
+    fn init(&mut self) {
+        self.progress_bar
+            .set_background_color(T::Color::new(13, 15, 30, 255));
+        self.progress_bar
+            .set_foreground_color(T::Color::new(103, 90, 140, 200));
+    }
+
     fn on_layout(&mut self, size: Size) {
         let loading_rect = calculate_rect_from_size(size);
         self.progress_bar.set_rect(loading_rect);

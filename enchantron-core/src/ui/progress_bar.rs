@@ -63,7 +63,7 @@ where
         let bar = sprite_source.create_sprite();
 
         outline.set_color(T::Color::new(0, 0, 0, 255));
-        bar.set_color(T::Color::new(255, 255, 255, 255));
+        bar.set_color(T::Color::new(200, 200, 200, 255));
 
         ProgressBarPrivate {
             outline,
@@ -76,6 +76,14 @@ where
 
     pub fn public(&self) -> ProgressBarPublic<T> {
         self.public.clone()
+    }
+
+    pub fn set_foreground_color(&self, color: T::Color) {
+        self.bar.set_color(color);
+    }
+
+    pub fn set_background_color(&self, color: T::Color) {
+        self.outline.set_color(color);
     }
 
     pub fn set_rect(&mut self, rect: Rect) {

@@ -50,6 +50,7 @@ macro_rules! view_impl {
                 $private_field:ident : $private_field_type:ty
             ),* $(,)?}
         )?
+        $(init = $init_fn:ident;)?
         $(on_layout = $on_layout_fn:ident;)?
     }
     ) => {
@@ -154,6 +155,9 @@ macro_rules! view_impl {
                     let _ = tokio::spawn(async move {
 
                         let mut private = private;
+
+                        $(private.$init_fn();)?
+
                         while let Some(action) = receiver.recv().await {
                             action(&mut private);
                         }

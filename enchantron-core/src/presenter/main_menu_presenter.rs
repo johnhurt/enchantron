@@ -32,16 +32,15 @@ impl<T: ViewTypes> MainMenuPresenter<T> {
     }
 
     pub async fn new(
-        view: T::NativeView,
+        system_interop: T::SystemInterop,
         event_bus: EventBus,
     ) -> Arc<MainMenuPresenter<T>> {
         info!("Starting to build main menu");
 
+        let view = system_interop.create_main_menu_view();
+
         let result = MainMenuPresenter {
-            view: MainMenuViewPublic::new(
-                view,
-                std::marker::PhantomData::default(),
-            ),
+            view,
             handler_registrations: Mutex::new(Vec::new()),
             event_bus,
         };

@@ -147,9 +147,9 @@ impl<T: ViewTypes> ApplicationContext<T> {
     pub fn transition_to_main_menu_view(&self, view: T::NativeView) {
         debug!("Transition to main menu view");
 
-        (*self)
-            .tokio_runtime
-            .spawn(MainMenuPresenter::<T>::new(view, self.event_bus.clone()));
+        // (*self)
+        //     .tokio_runtime
+        //     .spawn(MainMenuPresenter::<T>::new(view, self.event_bus.clone()));
     }
 
     pub fn transition_to_game_view(&self, view: T::NativeView) {

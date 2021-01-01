@@ -2,8 +2,7 @@ use super::{
     Color, HasMutableColor, HasMutableFloatValue, HasMutableLocation,
     HasMutableSize, HasMutableVisibility, Sprite, SpriteGroup, SpriteSource,
 };
-use crate::model::{ISize, Point, Rect, Size};
-use crate::ui::{AnyConsumer, WidgetSelector};
+use crate::model::{Point, Rect, Size};
 use crate::view_types::ViewTypes;
 use crate::widget;
 use std::sync::Arc;
@@ -72,6 +71,6 @@ where
     T: ViewTypes,
 {
     fn set_value(&self, new_value: f64) {
-        self.send(|mut_self| mut_self.update_progress(new_value))
+        self.send(move |mut_self| mut_self.update_progress(new_value))
     }
 }

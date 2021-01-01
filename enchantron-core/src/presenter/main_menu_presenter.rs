@@ -1,12 +1,17 @@
+use crate::application_context::Ao;
 use crate::event::{EventBus, StartGame};
-use crate::ui::{ClickHandler, HandlerRegistration, HasClickHandlers, HasText};
-use crate::view::{MainMenuView, MainMenuViewPublic, NativeView};
+use crate::native::SystemInterop;
+use crate::ui::{
+    ClickHandler, HandlerRegistration, HasClickHandlers, HasText,
+    TransitionService,
+};
+use crate::view::{MainMenuView, NativeView};
 use crate::view_types::ViewTypes;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub struct MainMenuPresenter<T: ViewTypes> {
-    view: MainMenuViewPublic<T>,
+    view: T::MainMenuView,
     handler_registrations: Mutex<Vec<Box<dyn HandlerRegistration>>>,
     event_bus: EventBus,
 }
@@ -24,7 +29,7 @@ impl<T: ViewTypes> MainMenuPresenter<T> {
 
         result.event_bus.spawn(async move {
             if start_game_event_future.await.is_some() {
-                this.view.transition_to_game_view();
+                // this.view.transition_to_game_view();
             }
         });
 
@@ -32,7 +37,7 @@ impl<T: ViewTypes> MainMenuPresenter<T> {
     }
 
     pub async fn new(
-        system_interop: T::SystemInterop,
+        system_interop: Ao<T::SystemInterop>,
         event_bus: EventBus,
     ) -> Arc<MainMenuPresenter<T>> {
         info!("Starting to build main menu");
@@ -48,6 +53,10 @@ impl<T: ViewTypes> MainMenuPresenter<T> {
         let result: Arc<MainMenuPresenter<T>> = result.bind().await;
 
         result.view.set_presenter(Box::new(result.clone()));
+
+        system_interop
+            .get_transition_service()
+            .transition_to_main_menu_view(&result.view, true);
 
         result
     }

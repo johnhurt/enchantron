@@ -71,7 +71,7 @@ class NativeView : SpriteSource {
     }
     
     func removeHandler(_ handler: LayoutHandler) {
-        DispatchQueue.main.sync {
+        DispatchQueue.main.async {
             if let index = self.layoutHandlers.firstIndex(of: handler) {
                 self.layoutHandlers.remove(at: index)
             }
@@ -222,5 +222,9 @@ class NativeView : SpriteSource {
     
     func createGroup() -> SpriteGroup {
         return createGroupOn(parent: self.rootGroup)
+    }
+    
+    deinit {
+        print("Dropping Native View")
     }
 }

@@ -1,19 +1,6 @@
 use crate::native::Texture;
 use crate::ui::{Sprite, SpriteGroup, SpriteSource};
-use std::any::Any;
-use std::sync::Arc;
-use tokio::sync::mpsc::Sender;
-
-pub type WidgetSelector<W> =
-    Box<dyn Fn(&mut dyn Any) -> &mut W + Send + Sync + 'static>;
-
-pub type AnyConsumer = Box<dyn FnOnce(&mut dyn Any) + Send + Sync + 'static>;
-
-#[derive(derive_new::new)]
-pub struct WidgetPublicMessageSink<W> {
-    pub(crate) sender: Sender<AnyConsumer>,
-    pub(crate) selector: WidgetSelector<W>,
-}
+use crate::util::DynActionSink;
 
 pub trait Widget: Sized {
     type T: Texture;
@@ -22,7 +9,7 @@ pub trait Widget: Sized {
 
     fn new(
         sprite_source: &impl SpriteSource<S = Self::S, T = Self::T, G = Self::G>,
-        sink: WidgetPublicMessageSink<Self>,
+        sink: DynActionSink<Self>,
     ) -> Self;
 }
 
@@ -51,18 +38,19 @@ macro_rules! widget {
         }
 
         mod hidden {
-            use crate::ui::{ Widget, WidgetPublicMessageSink, SpriteSource };
+            use crate::ui::{ Widget, SpriteSource };
             use super::*;
             use crate::view_types::ViewTypes;
             use std::sync::Arc;
+            use crate::util::DynActionSink;
 
             #[derive(derive_new::new)]
             pub struct WidgetPublic<T: ViewTypes> {
-                sink: Arc<WidgetPublicMessageSink<WidgetPrivate<T>>>
+                pub(crate) sink: Arc<DynActionSink<WidgetPrivate<T>>>
             }
 
             pub struct WidgetPrivate<$view_types_generic: ViewTypes> {
-                public: WidgetPublic<$view_types_generic>,
+                public: Option<WidgetPublic<$view_types_generic>>,
                 $($(
                     pub(crate) $sprite_name: $view_types_generic::Sprite,
                 )*)?
@@ -84,11 +72,7 @@ macro_rules! widget {
                     &self,
                     action: impl FnOnce(&mut WidgetPrivate<T>) + Send + Sync + 'static,
                 ) {
-                    let copy = self.clone();
-                    let _ = self
-                        .sink
-                        .sender
-                        .try_send(Box::new(move |any| action((copy.sink.selector)(any))));
+                    self.sink.send(action);
                 }
             }
 
@@ -99,7 +83,7 @@ macro_rules! widget {
 
                 fn new(
                     sprite_source: &impl SpriteSource<S = Self::S, T = Self::T, G = Self::G>,
-                    sink: WidgetPublicMessageSink<WidgetPrivate<T>>
+                    sink: DynActionSink<WidgetPrivate<T>>
                 ) -> WidgetPrivate<T>
                 {
                     $($(
@@ -112,7 +96,7 @@ macro_rules! widget {
                     let public = WidgetPublic::new(Arc::new(sink));
 
                     WidgetPrivate {
-                        public,
+                        public: Some(public),
                         $($(
                             $sprite_name,
                         )*)?
@@ -124,8 +108,8 @@ macro_rules! widget {
             }
 
             impl <T> WidgetPrivate<T> where T: ViewTypes {
-                pub fn public(&self) -> WidgetPublic<T> {
-                    self.public.clone()
+                pub fn public(&mut self) -> WidgetPublic<T> {
+                    self.public.take().expect("Cannot take public more than once")
                 }
             }
         }

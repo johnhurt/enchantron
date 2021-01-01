@@ -46,6 +46,7 @@ pub trait ViewTypes: 'static + Send + Sync + Unpin {
     type TransitionService: TransitionService<
         NV = Self::NativeView,
         LV = Self::LoadingView,
+        MV = Self::MainMenuView,
     >;
     type SystemInterop: SystemInterop<
         T = Self::Texture,
@@ -53,5 +54,6 @@ pub trait ViewTypes: 'static + Send + Sync + Unpin {
         TS = Self::TransitionService,
         NV = Self::NativeView,
         LV = Self::LoadingView,
+        MV = Self::MainMenuView,
     >;
 }

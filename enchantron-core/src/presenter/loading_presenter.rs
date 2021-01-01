@@ -40,9 +40,8 @@ where
         MainMenuPresenter::<T>::new(
             self.system_interop.clone(),
             self.event_bus.clone(),
-        );
-
-        self.view.transition_to_main_menu_view();
+        )
+        .await;
     }
 
     async fn bind(self) -> Arc<LoadingPresenter<T>> {

@@ -1,6 +1,6 @@
 use super::NativeView;
 use crate::model::{Rect, Size};
-use crate::ui::{Button, ButtonPublic};
+use crate::ui::{Button, ButtonPublic, Color};
 use crate::view_impl;
 use crate::view_types::ViewTypes;
 
@@ -25,9 +25,10 @@ fn calculate_rect_from_size(size: Size) -> Rect {
 
 pub trait MainMenuView: 'static + Sized + Send + Sync + NativeView {
     type B: Button;
+
     fn transition_to_game_view(&self);
 
-    fn get_start_new_game_button() -> Self::B;
+    fn get_start_new_game_button(&self) -> Self::B;
 }
 
 view_impl!(MainMenuView<T> {
@@ -52,14 +53,17 @@ where
     }
 }
 
-impl<T> MainMenuViewPublic<T>
+impl<T> MainMenuViewPrivate<T>
 where
     T: ViewTypes,
 {
-    fn init(&mut self) {}
+    fn init(&mut self) {
+        self.start_new_game_button
+            .set_color(T::Color::new(123, 190, 200, 255))
+    }
 
     fn on_layout(&mut self, size: Size) {
         let new_game_button_rect = calculate_rect_from_size(size);
-        self.start_new_game_button.set_rect(&new_game_button_rect);
+        self.start_new_game_button.set_rect(new_game_button_rect);
     }
 }

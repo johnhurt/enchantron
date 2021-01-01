@@ -600,6 +600,7 @@ lazy_static! {
         impl crate::ui::TransitionService => {
             type NV = NativeView;
             type LV = crate::view::LoadingViewPublic<ViewTypes>;
+            type MV = crate::view::MainMenuViewPublic<ViewTypes>;
 
             fn transition_to_native_view(
                 view : swift_struct!(Self::NV = NativeView),
@@ -607,6 +608,13 @@ lazy_static! {
 
             fn transition_to_loading_view(
                 view: rust_struct!(Self::LV = crate::view::LoadingViewPublic<ViewTypes>),
+                drop_current: BOOLEAN
+            ) => {
+                self.transition_to_native_view(&view.inner.raw_view, drop_current)
+            };
+
+            fn transition_to_main_menu_view(
+                view: rust_struct!(Self::MV = crate::view::MainMenuViewPublic<ViewTypes>),
                 drop_current: BOOLEAN
             ) => {
                 self.transition_to_native_view(&view.inner.raw_view, drop_current)
@@ -623,6 +631,7 @@ lazy_static! {
             type TS = TransitionService;
             type NV = NativeView;
             type LV = crate::view::LoadingViewPublic<ViewTypes>;
+            type MV = crate::view::MainMenuViewPublic<ViewTypes>;
 
             fn get_resource_loader() -> swift_struct!(Self::TL = ResourceLoader);
             fn create_native_view() -> swift_struct!(Self::NV = NativeView);
@@ -630,8 +639,8 @@ lazy_static! {
             fn create_loading_view() -> rust_struct!(Self::LV = crate::view::LoadingViewPublic<ViewTypes>) => {
                 crate::view::LoadingViewPublic::new(self.create_native_view())
             };
-            fn create_main_menu_view() -> rust_struct!(Self::LV = crate::view::MainViewPublic<ViewTypes>) => {
-                crate::view::MainViewPublic::new(self.create_native_view())
+            fn create_main_menu_view() -> rust_struct!(Self::MV = crate::view::MainViewPublic<ViewTypes>) => {
+                crate::view::MainMenuViewPublic::new(self.create_native_view())
             };
         }
     }),

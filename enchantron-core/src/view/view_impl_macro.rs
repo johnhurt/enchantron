@@ -25,7 +25,7 @@ macro_rules! widget_constructor {
         paste::paste! {
             [< $widget_type Private >]::new(
                 $container,
-                WidgetPublicMessageSink::new(
+                DynActionSink::new(
                     $sender.clone(),
                     Box::new(|view_as_any: &mut dyn Any| {
                         &mut view_as_any
@@ -63,14 +63,15 @@ macro_rules! view_impl {
 
         mod hidden {
             use crate::ui::*;
-            use crate::model::*;
             use crate::view_types::ViewTypes;
             use super::*;
             use crate::view::{NativeView};
             use std::sync::Arc;
             use std::any::Any;
+            use std::ops::Deref;
             use tokio::sync::mpsc::{channel, Sender};
             use crate::{widget_public_type, widget_private_type, widget_constructor};
+            use crate::util::{ DynActionSink, AnyConsumer };
 
             pub struct ViewPrivate<$view_types_generic: ViewTypes> {
                 $($(
@@ -93,6 +94,14 @@ macro_rules! view_impl {
                 )*)?
             }
 
+            impl <T> Deref for ViewPublic<T> where T: ViewTypes {
+                type Target = Inner<T>;
+
+                fn deref(&self) -> &Inner<T> {
+                    &self.inner
+                }
+            }
+
             impl <$view_types_generic> ViewPublic<$view_types_generic>
                 where $view_types_generic : ViewTypes
             {
@@ -108,7 +117,7 @@ macro_rules! view_impl {
 
                     $($(
 
-                        let $widget_field = widget_constructor!(
+                        let mut $widget_field = widget_constructor!(
                             $widget_type<$view_types_generic>(
                                 &raw_view,
                                 sender,

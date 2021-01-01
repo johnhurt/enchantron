@@ -4,6 +4,7 @@ pub use self::concurrent_slotmap::ConcurrentSlotmap;
 pub use self::corner_values::CornerValues;
 #[cfg(test)]
 pub use self::default_xxhash_ipoint_hasher::DefaultXxHashIPointHasher;
+pub use self::dyn_action_sink::{AnyConsumer, DynActionSink, Selector};
 pub use self::harmonic_perlin_generator::HarmonicPerlinGenerator;
 pub use self::immutable_thread_local::ImmutableThreadLocal;
 pub use self::ipoint_hasher::IPointHasher;
@@ -12,14 +13,14 @@ pub use self::single_perlin_generator::SinglePerlinGenerator;
 pub use self::thread_id::thread_id;
 pub use self::value_rect::ValueRect;
 
+#[cfg(test)]
+mod default_xxhash_ipoint_hasher;
+
 mod boxed_any;
 mod byte_buffer;
 mod concurrent_slotmap;
 mod corner_values;
-
-#[cfg(test)]
-mod default_xxhash_ipoint_hasher;
-
+mod dyn_action_sink;
 mod harmonic_perlin_generator;
 mod immutable_thread_local;
 mod ipoint_hasher;

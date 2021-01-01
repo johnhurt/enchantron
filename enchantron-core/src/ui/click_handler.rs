@@ -4,10 +4,10 @@ macro_rules! create_click_handler {
     };
 }
 
-pub struct ClickHandler(Box<dyn Fn() + Send + 'static>);
+pub struct ClickHandler(Box<dyn Fn() + Send + Sync + 'static>);
 
 impl ClickHandler {
-    pub fn new(_self: Box<dyn Fn() + Send + 'static>) -> ClickHandler {
+    pub fn new(_self: Box<dyn Fn() + Send + Sync + 'static>) -> ClickHandler {
         ClickHandler(_self)
     }
 

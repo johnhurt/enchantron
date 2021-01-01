@@ -1,3 +1,4 @@
+pub use self::button::*;
 pub use self::click_handler::ClickHandler;
 pub use self::color::*;
 pub use self::finger::Finger;
@@ -39,8 +40,9 @@ pub use self::touch_tracker::TouchTracker;
 pub use self::transition_service::TransitionService;
 pub use self::viewport::Viewport;
 pub use self::viewport_info::ViewportInfo;
-pub use self::button::*;
+pub use self::widget::*;
 
+mod button;
 mod color;
 mod finger;
 mod handler_registration;
@@ -79,7 +81,6 @@ mod touch_tracker;
 mod transition_service;
 mod viewport;
 mod viewport_info;
-mod button;
 
 #[macro_use]
 mod widget;

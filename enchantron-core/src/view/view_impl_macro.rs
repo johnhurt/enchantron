@@ -25,13 +25,15 @@ macro_rules! widget_constructor {
         paste::paste! {
             [< $widget_type Private >]::new(
                 $container,
-                $sender.clone(),
-                Arc::new(|view_as_any: &mut dyn Any| {
-                    &mut view_as_any
-                        .downcast_mut::<ViewPrivate<$view_types_generic>>()
-                        .unwrap()
-                        .$widget_field
-                }),
+                WidgetPublicMessageSink::new(
+                    $sender.clone(),
+                    Box::new(|view_as_any: &mut dyn Any| {
+                        &mut view_as_any
+                            .downcast_mut::<ViewPrivate<$view_types_generic>>()
+                            .unwrap()
+                            .$widget_field
+                    })
+                )
             )
         }
     };
@@ -64,8 +66,9 @@ macro_rules! view_impl {
             use crate::model::*;
             use crate::view_types::ViewTypes;
             use super::*;
-            use crate::view::{NativeView, AnyConsumer};
+            use crate::view::{NativeView};
             use std::sync::Arc;
+            use std::any::Any;
             use tokio::sync::mpsc::{channel, Sender};
             use crate::{widget_public_type, widget_private_type, widget_constructor};
 
@@ -101,8 +104,7 @@ macro_rules! view_impl {
                     )*)?
                 ) -> ViewPublic<T> {
 
-                    let (raw_sender, mut receiver) = channel::<AnyConsumer>(32);
-                    let sender = Arc::new(raw_sender);
+                    let (sender, mut receiver) = channel::<AnyConsumer>(32);
 
                     $($(
 

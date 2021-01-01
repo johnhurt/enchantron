@@ -1,8 +1,9 @@
 use crate::native::{Animation, ResourceLoader, SystemInterop, Texture};
 use crate::ui::{
-    Color, ProgressBar, Sprite, SpriteGroup, TransitionService, Viewport,
+    Button, Color, ProgressBar, Sprite, SpriteGroup, TransitionService,
+    Viewport,
 };
-use crate::view::{LoadingView, NativeView};
+use crate::view::{LoadingView, MainMenuView, NativeView};
 
 pub trait ViewTypes: 'static + Send + Sync + Unpin {
     type Color: Color;
@@ -20,6 +21,8 @@ pub trait ViewTypes: 'static + Send + Sync + Unpin {
         T = Self::Texture,
         G = Self::SpriteGroup,
     >;
+    type ProgressBar: ProgressBar;
+    type Button: Button;
     type NativeView: NativeView<
         S = Self::Sprite,
         V = Self::Viewport,
@@ -33,7 +36,13 @@ pub trait ViewTypes: 'static + Send + Sync + Unpin {
         G = Self::SpriteGroup,
         P = Self::ProgressBar,
     >;
-    type ProgressBar: ProgressBar;
+    type MainMenuView: MainMenuView<
+        S = Self::Sprite,
+        V = Self::Viewport,
+        T = Self::Texture,
+        G = Self::SpriteGroup,
+        B = Self::Button,
+    >;
     type TransitionService: TransitionService<
         NV = Self::NativeView,
         LV = Self::LoadingView,

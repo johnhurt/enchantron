@@ -4,7 +4,6 @@ use crate::ui::{
     Color, HandlerRegistration, HasLayoutHandlers, LayoutHandler, ProgressBar,
     ProgressBarPrivate, ProgressBarPublic,
 };
-use crate::view::AnyConsumer;
 use crate::view_impl;
 use crate::view_types::ViewTypes;
 use std::any::Any;
@@ -58,15 +57,6 @@ where
 
     fn get_progress_bar(&self) -> Self::P {
         self.inner.progress_bar.clone()
-    }
-}
-
-impl<T> LoadingViewPublic<T>
-where
-    T: ViewTypes,
-{
-    pub fn new_loading_view(raw_view: T::NativeView) -> LoadingViewPublic<T> {
-        LoadingViewPublic::new(raw_view)
     }
 }
 

@@ -527,8 +527,10 @@ lazy_static! {
             type ResourceLoader = ResourceLoader;
             type SystemInterop = SystemInterop;
             type NativeView = NativeView;
-            type LoadingView = crate::view::LoadingViewPublic<Self>;
             type ProgressBar = crate::ui::ProgressBarPublic<Self>;
+            type Button = crate::ui::ButtonPublic<Self>;
+            type LoadingView = crate::view::LoadingViewPublic<Self>;
+            type MainMenuView = crate::view::MainMenuViewPublic<Self>;
             type Viewport = Viewport;
             type TransitionService = TransitionService;
         }
@@ -626,8 +628,10 @@ lazy_static! {
             fn create_native_view() -> swift_struct!(Self::NV = NativeView);
             fn get_transition_service() -> swift_struct!(Self::TS = TransitionService);
             fn create_loading_view() -> rust_struct!(Self::LV = crate::view::LoadingViewPublic<ViewTypes>) => {
-                crate::view::LoadingViewPublic::new_loading_view(
-                    self.create_native_view())
+                crate::view::LoadingViewPublic::new(self.create_native_view())
+            };
+            fn create_main_menu_view() -> rust_struct!(Self::LV = crate::view::MainViewPublic<ViewTypes>) => {
+                crate::view::MainViewPublic::new(self.create_native_view())
             };
         }
     }),

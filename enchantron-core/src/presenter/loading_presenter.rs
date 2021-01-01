@@ -1,3 +1,4 @@
+use super::MainMenuPresenter;
 use crate::application_context::Ao;
 use crate::event::{EventBus, LoadResources};
 use crate::native::{Animations, RuntimeResources, SystemInterop, Textures};
@@ -5,7 +6,6 @@ use crate::ui::{HasIntValue, HasMutableFloatValue, TransitionService};
 use crate::view::{LoadingView, NativeView};
 use crate::view_types::ViewTypes;
 use std::sync::Arc;
-use super::MainMenuPresenter;
 
 pub struct LoadingPresenter<T>
 where
@@ -37,9 +37,10 @@ where
 
         println!("done loading resources");
 
-        MainMenuPresenter::new(
+        MainMenuPresenter::<T>::new(
             self.system_interop.clone(),
-            self.event_bus.clone())
+            self.event_bus.clone(),
+        );
 
         self.view.transition_to_main_menu_view();
     }

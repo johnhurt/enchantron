@@ -3,17 +3,17 @@ use crate::application_context::{Ao, NUM_CPUS};
 use crate::event::*;
 use crate::game::{Gor, SavedGame, Services};
 use crate::model::{Point, Size};
-use crate::native::RuntimeResources;
+use crate::native::{RuntimeResources, SystemInterop};
 use crate::ui::{
     HandlerRegistration, HasLayoutHandlers, HasMagnifyHandlers,
     HasMultiTouchHandlers, HasViewport, LayoutHandler, MagnifyHandler,
     MultiTouchHandler, SpriteSource, TouchEvent, TouchTracker,
+    TransitionService,
 };
-use crate::view::{GameView, GameViewPublic, NativeView};
+use crate::view::{GameView, NativeView};
 use crate::view_types::ViewTypes;
 use futures::future::join_all;
 use futures::pin_mut;
-use std::marker::PhantomData;
 use std::time::Duration;
 use tokio::runtime::Builder;
 use tokio::select;
@@ -23,7 +23,7 @@ pub struct GamePresenter<T>
 where
     T: ViewTypes,
 {
-    view: GameViewPublic<T>,
+    view: T::GameView,
     event_bus: EventBus,
     runtime_resources: Ao<RuntimeResources<T>>,
     system_interop: Ao<T::SystemInterop>,
@@ -66,7 +66,7 @@ where
     }
 
     fn bind_ui_events(
-        view: &GameViewPublic<T>,
+        view: &T::GameView,
         event_bus: EventBus,
     ) -> Vec<Box<dyn HandlerRegistration>> {
         let copied_event_bus = event_bus.clone();
@@ -121,12 +121,11 @@ where
     }
 
     pub async fn run(
-        raw_view: T::NativeView,
+        view: T::GameView,
         event_bus: EventBus,
         runtime_resources: Ao<RuntimeResources<T>>,
         system_interop: Ao<T::SystemInterop>,
     ) {
-        let view = GameViewPublic::new(raw_view, PhantomData::default());
         let saved_game = SavedGame::new(Default::default());
 
         let boxed_runtime = Box::new(
@@ -157,6 +156,10 @@ where
 
         let _handler_registrations =
             Self::bind_ui_events(&view, event_bus.clone());
+
+        system_interop
+            .get_transition_service()
+            .transition_to_game_view(&view, true);
 
         services
             .run(

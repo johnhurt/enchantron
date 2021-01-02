@@ -54,6 +54,7 @@ macro_rules! view_impl {
         )?
         $(init = $init_fn:ident;)?
         $(on_layout = $on_layout_fn:ident;)?
+        $(on_touch = $on_touch_fn:ident;)?
     }
     ) => {
         paste::paste! {
@@ -142,6 +143,22 @@ macro_rules! view_impl {
                         });
 
                         registrations.push(Box::new(raw_view.add_layout_handler(layout_handler)));
+                    )?
+
+                    $(
+                        let touch_sender = sender.clone();
+                        let touch_handler = MultiTouchHandler::new(move |touch_event| {
+                            let _ = touch_sender.try_send(Box::new(
+                                move |view_as_any| {
+                                    view_as_any
+                                        .downcast_mut::<ViewPrivate<$view_types_generic>>()
+                                        .unwrap()
+                                        .$on_touch_fn(touch_event)
+                                }
+                            ));
+                        });
+
+                        registrations.push(Box::new(raw_view.add_multi_touch_handler(touch_handler)));
                     )?
 
                     let public = ViewPublic {

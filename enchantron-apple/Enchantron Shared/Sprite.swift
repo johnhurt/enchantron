@@ -149,6 +149,7 @@ class Sprite {
         uniforms[0].topLeftMajor = topLeftMajor
         uniforms[0].topLeftMinor = topLeftMinor
         uniforms[0].color = self.color
+        uniforms[0].hasTexture = texture != nil
         
         uniforms[0].size = [Float32(self.size.width), Float32(self.size.height)]
         texture?.fillSpriteUniformUvs(uniforms: uniforms)

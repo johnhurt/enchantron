@@ -6,16 +6,35 @@ use crate::model::{IRect, ISize};
 use crate::native::{ResourceLoader, RuntimeResources};
 use crate::util::ByteBuffer;
 use crate::view_types::ViewTypes;
+use std::ptr::copy_nonoverlapping;
+use std::sync::Arc;
 
 const BROWN_BYTES: [u8; 3] = constants::DIRT_BROWN_RGB;
 const GREEN_BYTES: [u8; 3] = constants::GRASS_GREEN_RGB;
 
-lazy_static! {
-    static ref PALETTE: Vec<u8> = BROWN_BYTES
-        .iter()
-        .cloned()
-        .chain(GREEN_BYTES.iter().cloned())
-        .collect();
+/// Write to the given image-data slice in the locations corresponding to
+/// the
+unsafe fn fill_rect_with_terrain(
+    target: *mut u8,
+    image_width: usize,
+    tile_width: usize,
+    tile_height: usize,
+    terrain: &TerrainType,
+) {
+    let src_bytes = match terrain {
+        TerrainType::Grass => GREEN_BYTES.as_ptr(),
+        TerrainType::Dirt => BROWN_BYTES.as_ptr(),
+    };
+
+    let mut target = target;
+
+    for _ in 0..tile_height {
+        for _ in 0..tile_width {
+            copy_nonoverlapping(src_bytes, target, 3);
+            target = target.add(3);
+        }
+        target = target.add(3 * (image_width - tile_width));
+    }
 }
 
 fn get_texture_data_for_rect(
@@ -31,32 +50,32 @@ fn get_texture_data_for_rect(
     debug_assert_eq!(x_tile_pixels * rect.size.width, texture_size.width);
     debug_assert_eq!(y_tile_pixels * rect.size.height, texture_size.height);
 
-    let mut data = Vec::<u8>::with_capacity(texture_size.area());
+    let mut data = Vec::<u8>::with_capacity(texture_size.area() * 3);
 
     unsafe {
         data.set_len(data.capacity());
-        let mut data_ptr = data.as_mut_ptr();
+        let data_ptr = data.as_mut_ptr();
 
         let terrain_data = terrain_generator.get_for_rect(rect);
 
         terrain_data.for_each_value_coord(|coord, (val, terrain)| {
-            let terrain_val = match terrain {
-                TerrainType::Dirt => 0u8,
-                TerrainType::Grass => 1,
-            };
-            *data_ptr = terrain_val;
-            data_ptr = data_ptr.add(1);
+            let curr_ptr = data_ptr.add(
+                3 * x_tile_pixels
+                    * (coord.x + coord.y * y_tile_pixels * rect.size.width),
+            );
+            fill_rect_with_terrain(
+                curr_ptr,
+                texture_size.width,
+                x_tile_pixels,
+                y_tile_pixels,
+                terrain,
+            )
         });
     }
 
     let mut result = ByteBuffer::new(Vec::<u8>::with_capacity(4096));
 
-    PngGenerator::get_png_indexed(
-        data.as_slice(),
-        PALETTE.clone(),
-        texture_size,
-        &mut result,
-    );
+    PngGenerator::get_png(data.as_slice(), texture_size, &mut result);
 
     result
 }

@@ -67,4 +67,10 @@ where
     pub fn set_color(&mut self, color: T::Color) {
         self.outline.set_color(color)
     }
+
+    pub fn on_click(&mut self) {
+        for handler in self.click_handlers.values() {
+            handler.on_click()
+        }
+    }
 }

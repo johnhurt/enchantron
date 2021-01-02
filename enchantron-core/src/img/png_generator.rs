@@ -14,7 +14,7 @@ impl PngGenerator {
             Encoder::new(target, size.width as u32, size.height as u32);
         encoder.set_color(ColorType::Indexed);
         encoder.set_depth(BitDepth::Eight);
-        encoder.set_compression(png::Compression::Fast);
+        //encoder.set_compression(png::Compression::Fast);
         encoder.set_palette(palette_data);
 
         let mut writer = encoder.write_header().unwrap_or_else(|e| {

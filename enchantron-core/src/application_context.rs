@@ -137,7 +137,7 @@ impl<T: ViewTypes> ApplicationContext<T> {
                 self_copy.system_interop.clone(),
                 self_copy.event_bus.clone(),
                 Box::new(move |resources| {
-                    self_copy.set_runtime_resources(resources);
+                    self_copy.set_runtime_resources(resources)
                 }),
             )
             .await
@@ -153,12 +153,12 @@ impl<T: ViewTypes> ApplicationContext<T> {
     }
 
     pub fn transition_to_game_view(&self, view: T::NativeView) {
-        (*self).tokio_runtime.spawn(GamePresenter::<T>::run(
-            view,
-            self.event_bus.clone(),
-            self.get_runtime_resources(),
-            self.system_interop.clone(),
-        ));
+        // (*self).tokio_runtime.spawn(GamePresenter::<T>::run(
+        //     view,
+        //     self.event_bus.clone(),
+        //     self.get_runtime_resources(),
+        //     self.system_interop.clone(),
+        // ));
     }
 }
 
@@ -166,7 +166,7 @@ impl<T: ViewTypes> ApplicationContextInner<T> {
     pub fn set_runtime_resources(
         &self,
         runtime_resources: RuntimeResources<T>,
-    ) {
+    ) -> Ao<RuntimeResources<T>> {
         let boxed_runtime_resources = Box::new(runtime_resources);
         let runtime_resources_ao = Ao::new(&boxed_runtime_resources);
         let runtime_resources_dropper = move || drop(boxed_runtime_resources);
@@ -174,11 +174,13 @@ impl<T: ViewTypes> ApplicationContextInner<T> {
         if let (Ok(mut runtime_resources_guard), Ok(mut droppers_guard)) =
             (self.runtime_resources.write(), self.ao_droppers.lock())
         {
-            *runtime_resources_guard = Some(runtime_resources_ao);
+            *runtime_resources_guard = Some(runtime_resources_ao.clone());
             droppers_guard.push(Box::new(runtime_resources_dropper));
         } else {
             error!("Failed to unlock runtime_resources for writing");
         }
+
+        runtime_resources_ao
     }
 
     pub fn get_runtime_resources(&self) -> Ao<RuntimeResources<T>> {

@@ -7,13 +7,16 @@ use crate::view::{LoadingView, NativeView};
 use crate::view_types::ViewTypes;
 use std::sync::Arc;
 
+pub type ResourcesSink<T> =
+    Box<dyn Fn(RuntimeResources<T>) -> Ao<RuntimeResources<T>> + Send + Sync>;
+
 pub struct LoadingPresenter<T>
 where
     T: ViewTypes,
 {
     view: T::LoadingView,
     system_interop: Ao<T::SystemInterop>,
-    resources_sink: Box<dyn Fn(RuntimeResources<T>) + Send + Sync>,
+    resources_sink: ResourcesSink<T>,
     event_bus: EventBus,
 }
 
@@ -33,12 +36,14 @@ where
 
         let animations = Animations::<T>::new(resource_loader, &textures);
 
-        (self.resources_sink)(RuntimeResources::new(textures, animations));
+        let runtime_resources =
+            (self.resources_sink)(RuntimeResources::new(textures, animations));
 
         println!("done loading resources");
 
         MainMenuPresenter::<T>::new(
             self.system_interop.clone(),
+            runtime_resources,
             self.event_bus.clone(),
         )
         .await;
@@ -67,7 +72,7 @@ where
         view: T::LoadingView,
         system_interop: Ao<T::SystemInterop>,
         event_bus: EventBus,
-        resources_sink: Box<dyn Fn(RuntimeResources<T>) + Send + Sync>,
+        resources_sink: ResourcesSink<T>,
     ) {
         let si = system_interop.clone();
 

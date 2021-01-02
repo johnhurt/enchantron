@@ -531,6 +531,7 @@ lazy_static! {
             type Button = crate::ui::ButtonPublic<Self>;
             type LoadingView = crate::view::LoadingViewPublic<Self>;
             type MainMenuView = crate::view::MainMenuViewPublic<Self>;
+            type GameView = crate::view::GameViewPublic<Self>;
             type Viewport = Viewport;
             type TransitionService = TransitionService;
         }
@@ -601,6 +602,7 @@ lazy_static! {
             type NV = NativeView;
             type LV = crate::view::LoadingViewPublic<ViewTypes>;
             type MV = crate::view::MainMenuViewPublic<ViewTypes>;
+            type GV = crate::view::GameViewPublic<ViewTypes>;
 
             fn transition_to_native_view(
                 view : swift_struct!(Self::NV = NativeView),
@@ -619,6 +621,13 @@ lazy_static! {
             ) => {
                 self.transition_to_native_view(&view.inner.raw_view, drop_current)
             };
+
+            fn transition_to_game_view(
+                view: rust_struct!(Self::GV = crate::view::GameViewPublic<ViewTypes>),
+                drop_current: BOOLEAN
+            ) => {
+                self.transition_to_native_view(&view.inner.raw_view, drop_current)
+            };
         }
     }),
 
@@ -632,6 +641,7 @@ lazy_static! {
             type NV = NativeView;
             type LV = crate::view::LoadingViewPublic<ViewTypes>;
             type MV = crate::view::MainMenuViewPublic<ViewTypes>;
+            type GV = crate::view::GameViewPublic<ViewTypes>;
 
             fn get_resource_loader() -> swift_struct!(Self::TL = ResourceLoader);
             fn create_native_view() -> swift_struct!(Self::NV = NativeView);
@@ -641,6 +651,9 @@ lazy_static! {
             };
             fn create_main_menu_view() -> rust_struct!(Self::MV = crate::view::MainViewPublic<ViewTypes>) => {
                 crate::view::MainMenuViewPublic::new(self.create_native_view())
+            };
+            fn create_game_view() -> rust_struct!(Self::GV = crate::view::GameViewPublic<ViewTypes>) => {
+                crate::view::GameViewPublic::new(self.create_native_view())
             };
         }
     }),

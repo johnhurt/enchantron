@@ -1,14 +1,25 @@
 use super::NativeView;
+use crate::ui::Button;
 use crate::view_impl;
 use crate::view_types::ViewTypes;
-use std::marker::PhantomData;
 
-pub trait GameView: NativeView + Sync + Send + 'static {}
+pub trait GameView: NativeView + Sync + Send + 'static {
+    type B: Button;
+}
 
 view_impl!(GameView<T> {
+    widgets {
+        pause_button: Button
+    }
+
     private {
-        _phantom_t : PhantomData<T>
+
     }
 });
 
-impl<T> GameView for GameViewPublic<T> where T: ViewTypes {}
+impl<T> GameView for GameViewPublic<T>
+where
+    T: ViewTypes,
+{
+    type B = T::Button;
+}

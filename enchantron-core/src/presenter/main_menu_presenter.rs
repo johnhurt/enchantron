@@ -1,6 +1,7 @@
+use super::GamePresenter;
 use crate::application_context::Ao;
 use crate::event::{EventBus, StartGame};
-use crate::native::SystemInterop;
+use crate::native::{RuntimeResources, SystemInterop};
 use crate::ui::{
     ClickHandler, HandlerRegistration, HasClickHandlers, HasText,
     TransitionService,
@@ -8,17 +9,28 @@ use crate::ui::{
 use crate::view::{MainMenuView, NativeView};
 use crate::view_types::ViewTypes;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 
 pub struct MainMenuPresenter<T: ViewTypes> {
     view: T::MainMenuView,
-    handler_registrations: Mutex<Vec<Box<dyn HandlerRegistration>>>,
+    handler_registrations: Vec<Box<dyn HandlerRegistration>>,
+    system_interop: Ao<T::SystemInterop>,
+    runtime_resources: Ao<RuntimeResources<T>>,
     event_bus: EventBus,
 }
 
 impl<T: ViewTypes> MainMenuPresenter<T> {
-    async fn bind(self) -> Arc<MainMenuPresenter<T>> {
+    async fn bind(mut self) -> Arc<MainMenuPresenter<T>> {
         let copied_event_bus = self.event_bus.clone();
+
+        let click_handler = create_click_handler!({
+            copied_event_bus.post(StartGame::new(true))
+        });
+
+        self.handler_registrations.push(Box::new(
+            self.view
+                .get_start_new_game_button()
+                .add_click_handler(click_handler),
+        ));
 
         let result = Arc::new(self);
 
@@ -29,7 +41,13 @@ impl<T: ViewTypes> MainMenuPresenter<T> {
 
         result.event_bus.spawn(async move {
             if start_game_event_future.await.is_some() {
-                // this.view.transition_to_game_view();
+                GamePresenter::<T>::run(
+                    this.system_interop.create_game_view(),
+                    this.event_bus.clone(),
+                    this.runtime_resources.clone(),
+                    this.system_interop.clone(),
+                )
+                .await;
             }
         });
 
@@ -38,6 +56,7 @@ impl<T: ViewTypes> MainMenuPresenter<T> {
 
     pub async fn new(
         system_interop: Ao<T::SystemInterop>,
+        runtime_resources: Ao<RuntimeResources<T>>,
         event_bus: EventBus,
     ) -> Arc<MainMenuPresenter<T>> {
         info!("Starting to build main menu");
@@ -46,8 +65,10 @@ impl<T: ViewTypes> MainMenuPresenter<T> {
 
         let result = MainMenuPresenter {
             view,
-            handler_registrations: Mutex::new(Vec::new()),
+            handler_registrations: Default::default(),
             event_bus,
+            system_interop: system_interop.clone(),
+            runtime_resources,
         };
 
         let result: Arc<MainMenuPresenter<T>> = result.bind().await;

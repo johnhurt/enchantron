@@ -70,7 +70,14 @@ public class Viewport {
     }
     
     func setLocationAnimated(_ left: Float64, _ top: Float64, _ durationSeconds: Float64) {
-        
+        DispatchQueue.main.async {
+            let (topLeftMajor, topLeftMinor) = PointUtil.toMajorMinor(
+                x: left,
+                y: top)
+            
+            self.topLeftMajor = topLeftMajor
+            self.topLeftMinor = topLeftMinor
+        }
     }
     
     func configureViewport(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int) {

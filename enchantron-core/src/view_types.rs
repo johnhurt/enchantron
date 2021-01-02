@@ -3,7 +3,7 @@ use crate::ui::{
     Button, Color, ProgressBar, Sprite, SpriteGroup, TransitionService,
     Viewport,
 };
-use crate::view::{LoadingView, MainMenuView, NativeView};
+use crate::view::{GameView, LoadingView, MainMenuView, NativeView};
 
 pub trait ViewTypes: 'static + Send + Sync + Unpin {
     type Color: Color;
@@ -43,10 +43,18 @@ pub trait ViewTypes: 'static + Send + Sync + Unpin {
         G = Self::SpriteGroup,
         B = Self::Button,
     >;
+    type GameView: GameView<
+        S = Self::Sprite,
+        V = Self::Viewport,
+        T = Self::Texture,
+        G = Self::SpriteGroup,
+        B = Self::Button,
+    >;
     type TransitionService: TransitionService<
         NV = Self::NativeView,
         LV = Self::LoadingView,
         MV = Self::MainMenuView,
+        GV = Self::GameView,
     >;
     type SystemInterop: SystemInterop<
         T = Self::Texture,
@@ -55,5 +63,6 @@ pub trait ViewTypes: 'static + Send + Sync + Unpin {
         NV = Self::NativeView,
         LV = Self::LoadingView,
         MV = Self::MainMenuView,
+        GV = Self::GameView,
     >;
 }

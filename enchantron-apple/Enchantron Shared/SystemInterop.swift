@@ -8,6 +8,7 @@
 
 import Foundation
 import Metal
+import CoreImage
 
 class SystemInterop {
     let resourceLoader : ResourceLoader

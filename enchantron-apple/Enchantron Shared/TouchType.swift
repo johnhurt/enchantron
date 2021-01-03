@@ -8,9 +8,8 @@
 
 protocol HasTouchInfo : Hashable {
     
-    func getTouchLocation() -> SIMD2<Float64>
+    func getTouchLocation(_ screenScale: Float64) -> SIMD2<Float64>
     func getTapCount() -> Int64
-    
 }
 
 
@@ -20,12 +19,12 @@ typealias TouchType = UITouch
 
 extension UITouch : HasTouchInfo {
     
-    func getTouchLocation() -> SIMD2<Float64> {
+    func getTouchLocation(_ screenScale: Float64) -> SIMD2<Float64> {
         let loc = self.location(in: nil)
-        return [Float64(loc.x), Float64(loc.y)]
+        return [Float64(loc.x) * screenScale, Float64(loc.y) * screenScale]
     }
     
-    func getTapCount() -> Int {
+    func getTapCount() -> Int64 {
         return Int64(self.tapCount)
     }
 }
@@ -60,12 +59,13 @@ extension MouseTouch : HasTouchInfo {
         Int64(self.event.clickCount)
     }
     
-    func getTouchLocation() -> SIMD2<Float64> {
+    func getTouchLocation(_ screenScale: Float64) -> SIMD2<Float64> {
         return [
-            Float64(event.locationInWindow.x),
+            Float64(event.locationInWindow.x) * screenScale,
             Float64(
                 (event.window?.contentView?.bounds.size.height)!
-                    - event.locationInWindow.y)]
+                    - event.locationInWindow.y) * screenScale
+        ]
     }
 }
 

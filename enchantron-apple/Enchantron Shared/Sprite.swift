@@ -64,7 +64,7 @@ class Sprite {
     }
     
     func animate(_ animation: Animation, _ secsPerFrame: Float64) {
-        
+        self.setTexture(animation.frames[0])
     }
     
     func clearAnimations() {
@@ -89,23 +89,23 @@ class Sprite {
     
     func setSizeAnimated(_ width: Float64, _ height: Float64, _ durationSeconds: Float64) {
         
-        if durationSeconds > 0.0 {
-            
-        }
-        else {
+//        if durationSeconds > 0.0 {
+//
+//        }
+//        else {
             DispatchQueue.main.async {
                 self.size = CGSize(width: width, height: height)
             }
-        }
+        //}
         
     }
     
     func setLocationAnimated(_ left: Float64, _ top: Float64, _ durationSeconds: Float64) {
-        
-        if durationSeconds > 0.0 {
-            
-        }
-        else {
+//
+//        if durationSeconds > 0.0 {
+//
+//        }
+//        else {
             DispatchQueue.main.async {
                 
                 let (topLeftMajor, topLeftMinor) = PointUtil.toMajorMinor(
@@ -115,7 +115,7 @@ class Sprite {
                 self.topLeftMajor = topLeftMajor
                 self.topLeftMinor = topLeftMinor
             }
-        }
+        //}
     }
     
     func setColor(_ color: UInt32) {

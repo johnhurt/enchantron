@@ -34,11 +34,13 @@ class Renderer: NSObject, MTKViewDelegate {
     var screenHeight : Float64 = 0
     let appCtx : ApplicationContext
     
-    init?(metalKitView: MTKView) {
+    let screenScale : Float64
+    
+    init?(metalKitView: MTKView, screenScale: Float64) {
         self.device = metalKitView.device!
         guard let queue = self.device.makeCommandQueue() else { return nil }
         self.commandQueue = queue
-        
+        self.screenScale = screenScale
         
         metalKitView.depthStencilPixelFormat = MTLPixelFormat.depth32Float_stencil8
         metalKitView.colorPixelFormat = MTLPixelFormat.bgra8Unorm_srgb
@@ -205,7 +207,7 @@ class Renderer: NSObject, MTKViewDelegate {
         switch touches.count {
         case 1:
             let (id, touch) = touches[0]
-            let globalPoint = touch.getTouchLocation()
+            let globalPoint = touch.getTouchLocation(screenScale)
             currentView.oneDragStarted(
                 id: id,
                 globalPoint: globalPoint,
@@ -215,8 +217,8 @@ class Renderer: NSObject, MTKViewDelegate {
             let (id1, touch1) = touches[0]
             let (id2, touch2) = touches[1]
             
-            let globalPoint1 = touch1.getTouchLocation()
-            let globalPoint2 = touch2.getTouchLocation()
+            let globalPoint1 = touch1.getTouchLocation(screenScale)
+            let globalPoint2 = touch2.getTouchLocation(screenScale)
             
             currentView.twoDragsStarted(
                 id1: id1,
@@ -234,7 +236,7 @@ class Renderer: NSObject, MTKViewDelegate {
         switch touches.count {
         case 1:
             let (id, touch) = touches[0]
-            let globalPoint = touch.getTouchLocation()
+            let globalPoint = touch.getTouchLocation(screenScale)
             currentView.oneDragMoved(
                 id: id,
                 globalPoint: globalPoint,
@@ -244,8 +246,8 @@ class Renderer: NSObject, MTKViewDelegate {
             let (id1, touch1) = touches[0]
             let (id2, touch2) = touches[1]
             
-            let globalPoint1 = touch1.getTouchLocation()
-            let globalPoint2 = touch2.getTouchLocation()
+            let globalPoint1 = touch1.getTouchLocation(screenScale)
+            let globalPoint2 = touch2.getTouchLocation(screenScale)
             
             currentView.twoDragsMoved(
                 id1: id1,
@@ -264,7 +266,7 @@ class Renderer: NSObject, MTKViewDelegate {
             
         case 1:
             let (id, touch) = touches[0]
-            let globalPoint = touch.getTouchLocation()
+            let globalPoint = touch.getTouchLocation(screenScale)
             currentView.oneDragEnded(
                 id: id,
                 globalPoint: globalPoint,
@@ -274,8 +276,8 @@ class Renderer: NSObject, MTKViewDelegate {
             let (id1, touch1) = touches[0]
             let (id2, touch2) = touches[1]
             
-            let globalPoint1 = touch1.getTouchLocation()
-            let globalPoint2 = touch2.getTouchLocation()
+            let globalPoint1 = touch1.getTouchLocation(screenScale)
+            let globalPoint2 = touch2.getTouchLocation(screenScale)
             
             currentView.twoDragsEnded(
                 id1: id1,

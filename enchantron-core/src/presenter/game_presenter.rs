@@ -109,10 +109,13 @@ where
         result
     }
 
-    fn create_sub_presenters(&mut self) -> (TerrainPresenter<T>) {
+    fn create_sub_presenters(
+        &mut self,
+        terrain_sprite_group: &T::SpriteGroup,
+    ) -> (TerrainPresenter<T>) {
         let terrain_presenter = TerrainPresenter::new(
             self.event_bus.clone(),
-            &self.view,
+            terrain_sprite_group,
             self.runtime_resources.clone(),
             self.system_interop.clone(),
         );
@@ -145,6 +148,8 @@ where
 
         let (services, run_bundles, mut droppers) =
             Services::new(boxed_runtime, saved_game);
+
+        let terrain_sprite_group = view.create_group();
 
         let boxed_entity_sprite_group = Box::new(view.create_group());
         let entity_sprite_group = Gor::new(&boxed_entity_sprite_group);
@@ -187,7 +192,8 @@ where
             droppers,
         };
 
-        let (terrain_presenter) = presenter.create_sub_presenters();
+        let (terrain_presenter) =
+            presenter.create_sub_presenters(&terrain_sprite_group);
 
         let sub_presenters_future =
             join_all(vec![event_bus.spawn(terrain_presenter.run())]);

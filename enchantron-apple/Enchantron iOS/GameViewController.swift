@@ -16,6 +16,7 @@ class GameViewController: UIViewController {
     
     var renderer: Renderer!
     var mtkView: MTKView!
+    private let touchTracker = TouchLookup()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,18 +35,17 @@ class GameViewController: UIViewController {
         mtkView.device = defaultDevice
         mtkView.backgroundColor = UIColor.black
 
-        guard let newRenderer = Renderer(metalKitView: mtkView) else {
+        guard let newRenderer = Renderer(metalKitView: mtkView, screenScale: Float64(UIScreen.main.scale)) else {
             print("Renderer cannot be initialized")
             return
         }
-        
-        let nativeSize = (self.skView?.bounds.size)!
-        let scaledSize = scaleSize(nativeSize: nativeSize)
-        
+
         renderer = newRenderer
 
         renderer.mtkView(mtkView, drawableSizeWillChange: mtkView.drawableSize)
 
+        
+        
         mtkView.delegate = renderer
     }
     
@@ -70,35 +70,34 @@ class GameViewController: UIViewController {
         return true
     }
     
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        super.viewWillTransition(to: size, with: coordinator)
+//    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+//        super.viewWillTransition(to: size, with: coordinator)
+//
+//        self.scene?.setSize(size: scaleSize(nativeSize: size))
+//    }
+    
+//    override var acceptsFirstResponder:  Bool {
+//        return true
+//    }
+//
+    override func touchesBegan(_ rawTouches: Set<UITouch>, with event: UIEvent?) {
+        let touches = touchTracker.filterForNewActiveTouches(newTouches: rawTouches)
         
-        self.scene?.setSize(size: scaleSize(nativeSize: size))
-    }
-    
-    override var acceptsFirstResponder:  Bool {
-        return true
-    }
-    
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        
-        self.currentView?.touchesBegan(touches, with: event)
+        self.renderer.dragsStart(touches: touches)
         
     }
     
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.dragsStart(touches:
-            self.touchTracker.filterForNewActiveTouches(newTouches: touches))
+    override func touchesMoved(_ rawTouches: Set<UITouch>, with event: UIEvent?) {
+        let touches = touchTracker.filterForMovedActiveTouches(movedTouches: rawTouches)
+        self.renderer.dragsMoved(touches: touches)
+        
     }
     
-    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.dragsMoved(touches:
-            self.touchTracker.filterForMovedActiveTouches(movedTouches: touches))
-    }
-    
-    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.dragsEnded(touches:
-            self.touchTracker.filterForEndedActiveTouches(endedTouches: touches))
+    override func touchesCancelled(_ rawTouches: Set<UITouch>, with event: UIEvent?) {
+        let touches = touchTracker.filterForEndedActiveTouches(endedTouches: rawTouches)
+        
+        self.renderer.dragsEnded(touches: touches)
+        
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {

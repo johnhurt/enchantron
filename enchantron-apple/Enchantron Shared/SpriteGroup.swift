@@ -26,13 +26,13 @@ class SpriteGroup {
         self.parent = parent
     }
     
-    func render(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int) {
+    func render(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int, time: Float64) {
         for s in sprites {
-            s.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex)
+            s.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex, time: time)
         }
         
         for sg in groups {
-            sg.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex)
+            sg.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex, time: time)
         }
     }
     

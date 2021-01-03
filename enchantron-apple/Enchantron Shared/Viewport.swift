@@ -95,8 +95,11 @@ public class Viewport {
         encoder.setVertexBuffer(uniformBuffer, offset: uniformBufferOffset, index: 1)
     }
     
-    func render(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int) {
-        self.viewLockedSprites.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex)
+    func render(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int, time: Float64) {
+        self.viewLockedSprites.render(
+            encoder: encoder,
+            uniformBufferIndex: uniformBufferIndex,
+            time: time)
     }
     
     func setVisible(_ visible: Bool) {

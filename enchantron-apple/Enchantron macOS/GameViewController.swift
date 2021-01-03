@@ -15,6 +15,7 @@ class GameViewController: NSViewController {
     
     var renderer: Renderer!
     var mtkView: MTKView!
+    var screenScale = Float64()
     
     private let touchTracker = TouchLookup()
     
@@ -33,8 +34,9 @@ class GameViewController: NSViewController {
         }
 
         mtkView.device = defaultDevice
+        screenScale = Float64(NSScreen.main!.backingScaleFactor)
 
-        guard let newRenderer = Renderer(metalKitView: mtkView, 1.0) else {
+        guard let newRenderer = Renderer(metalKitView: mtkView, screenScale: screenScale) else {
             print("Renderer cannot be initialized")
             return
         }
@@ -54,8 +56,8 @@ class GameViewController: NSViewController {
         let rawWindowLocation = self.view.window!.convertFromScreen(mouseLocationRect).origin
         
         let mouseLocation : SIMD2<Float64> = [
-            Float64(rawWindowLocation.x),
-            renderer.screenHeight - Float64(rawWindowLocation.y)
+            Float64(rawWindowLocation.x) * screenScale,
+            renderer.screenHeight - Float64(rawWindowLocation.y) * screenScale
         ]
         
         self.renderer.magnify(

@@ -28,10 +28,10 @@ class NativeView : SpriteSource {
         self.rootGroup = SpriteGroup(device: device, parent: nil)
     }
     
-    func render(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int) {
+    func render(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int, time: Float64) {
         viewport.configureViewport(encoder: encoder, uniformBufferIndex: uniformBufferIndex)
-        rootGroup.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex)
-        viewport.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex)
+        rootGroup.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex, time: time)
+        viewport.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex, time: time)
     }
     
     func setPresenter(_ presenter: BoxedAny) {

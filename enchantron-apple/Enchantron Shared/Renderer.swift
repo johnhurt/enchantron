@@ -173,7 +173,8 @@ class Renderer: NSObject, MTKViewDelegate {
                 
                 currentView.render(
                     encoder: renderEncoder,
-                    uniformBufferIndex: uniformBufferIndex)
+                    uniformBufferIndex: uniformBufferIndex,
+                    time: CACurrentMediaTime())
                 
                 renderEncoder.popDebugGroup()
                 

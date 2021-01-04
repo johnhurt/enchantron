@@ -14,7 +14,7 @@ struct ThreadIdManager {
 impl ThreadIdManager {
     fn new() -> ThreadIdManager {
         ThreadIdManager {
-            limit: usize::MAX,
+            limit: 16,
             free_list: BinaryHeap::new(),
         }
     }

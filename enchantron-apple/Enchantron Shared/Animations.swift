@@ -8,6 +8,7 @@
 
 import Foundation
 import simd
+import CoreImage
 
 struct TextureAnimation {
     let startTime: Float64

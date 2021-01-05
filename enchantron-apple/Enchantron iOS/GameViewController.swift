@@ -70,7 +70,7 @@ class GameViewController: UIViewController {
         return true
     }
     
-//    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+//    override func viewWillTransition(to size: SIMD2<Float64>, with coordinator: UIViewControllerTransitionCoordinator) {
 //        super.viewWillTransition(to: size, with: coordinator)
 //
 //        self.scene?.setSize(size: scaleSize(nativeSize: size))

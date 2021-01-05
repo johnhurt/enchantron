@@ -14,7 +14,7 @@ class SystemInterop {
     let resourceLoader : ResourceLoader
     let transitionService : TransitionService
     let device: MTLDevice
-    private var screenSize = CGSize()
+    private var screenSize = SIMD2<Float64>()
     private var screenSizeLock = NSLock()
     
     init(
@@ -31,7 +31,7 @@ class SystemInterop {
         return self.resourceLoader
     }
     
-    func setScreenSize(_ screenSize: CGSize) {
+    func setScreenSize(_ screenSize: SIMD2<Float64>) {
         screenSizeLock.lock()
         self.screenSize = screenSize
         screenSizeLock.unlock()

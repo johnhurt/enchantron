@@ -22,7 +22,7 @@ class NativeView : SpriteSource {
     let device: MTLDevice
     let rootGroup : SpriteGroup
     
-    init(screenSize: CGSize, device: MTLDevice) {
+    init(screenSize: SIMD2<Float64>, device: MTLDevice) {
         self.viewport = Viewport(screenSize: screenSize, device: device)
         self.device = device
         self.rootGroup = SpriteGroup(device: device, parent: nil)
@@ -103,10 +103,10 @@ class NativeView : SpriteSource {
         }
     }
     
-    final func layout(size: CGSize) {
+    final func layout(size: SIMD2<Float64>) {
         viewport.screenSize = size
         layoutHandlers.forEach { (handler) in
-            handler.onLayout(width: Int64(size.width), height: Int64(size.height))
+            handler.onLayout(width: size.x, height: size.y)
         }
     }
     

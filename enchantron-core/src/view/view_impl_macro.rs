@@ -137,7 +137,7 @@ macro_rules! view_impl {
                                     view_as_any
                                         .downcast_mut::<ViewPrivate<$view_types_generic>>()
                                         .unwrap()
-                                        .$on_layout_fn(Size::new(width as f64, height as f64))
+                                        .$on_layout_fn(Size::new(width, height))
                                 }
                             ));
                         });

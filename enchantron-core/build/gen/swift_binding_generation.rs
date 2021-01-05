@@ -514,7 +514,7 @@ lazy_static! {
     }),
 
     rust_type!(LayoutHandler : crate::ui::LayoutHandler {
-        fn on_layout(width: LONG, height: LONG);
+        fn on_layout(width: DOUBLE, height: DOUBLE);
     }),
 
     empty_type!(ViewTypes {

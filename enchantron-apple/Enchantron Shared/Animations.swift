@@ -71,8 +71,8 @@ struct LocationAnimation {
 }
 
 struct SizeAnimation {
-    let startSize: CGSize
-    let finalSize: CGSize
+    let startSize: SIMD2<Float64>
+    let finalSize: SIMD2<Float64>
     let startTime: Float64
     let endTime: Float64
 }

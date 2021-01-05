@@ -14,24 +14,32 @@ import simd
 class Texture {
     
     let wrapped: MTLTexture
-    let size: CGSize
-    let roi: CGRect
+    let size: SIMD2<Float64>
+    let roiTopLeft: SIMD2<Float64>
+    let roiSize: SIMD2<Float64>
     let uvTopLeft: SIMD2<Float32>
     let uvSize: SIMD2<Float32>
     
     
-    init(wrapped: MTLTexture, roi: CGRect) {
-        self.size = CGSize(width: wrapped.width, height: wrapped.height)
+    init(wrapped: MTLTexture, roiTopLeft: SIMD2<Float64>, roiSize: SIMD2<Float64>) {
+        self.size = [Float64(wrapped.width), Float64(wrapped.height)]
         self.wrapped = wrapped
-        self.roi = roi
-        uvTopLeft = [Float32(roi.origin.x / size.width), Float32(roi.origin.y / size.height)]
-        uvSize = [Float32(roi.size.width / size.width), Float32(roi.size.height / size.height)]
+        self.roiTopLeft = roiTopLeft
+        self.roiSize = roiSize
+        
+        uvTopLeft = [
+            Float32(roiTopLeft.x / size.x),
+            Float32(roiTopLeft.y / size.y)]
+        uvSize = [
+            Float32(roiSize.x / size.x),
+            Float32(roiSize.y / size.y)]
     }
     
     convenience init(wrapped: MTLTexture) {
         self.init(
             wrapped: wrapped,
-            roi: CGRect(x: 0, y: 0, width: wrapped.width, height: wrapped.height))
+            roiTopLeft: [0.0, 0.0],
+            roiSize: [Float64(wrapped.width), Float64(wrapped.height)])
     }
     
     func getSubTexture(
@@ -41,19 +49,16 @@ class Texture {
         _ height: Float64) -> Texture {
         return Texture(
             wrapped: wrapped,
-            roi: CGRect(
-                x: self.roi.origin.x + CGFloat(left),
-                y: self.roi.origin.y + CGFloat(top),
-                width: CGFloat(width),
-                height: CGFloat(height)))
+            roiTopLeft: [roiTopLeft.x + left, roiTopLeft.y + top],
+            roiSize: [width, height])
     }
     
     func getWidth() -> Float64 {
-        return Float64(self.roi.size.width)
+        return Float64(self.roiSize.x)
     }
     
     func getHeight() -> Float64 {
-        return Float64(self.roi.size.height)
+        return Float64(self.roiSize.y)
     }
     
     func fillSpriteUniformUvs(uniforms: UnsafeMutablePointer<SpriteUniform>) {

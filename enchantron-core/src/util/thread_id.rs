@@ -8,13 +8,13 @@ use std::usize;
 // reuse thread IDs where possible to avoid cases where a ThreadLocal grows
 // indefinitely when it is used by many short-lived threads.
 struct ThreadIdManager {
-    limit: usize,
+    created_ids: usize,
     free_list: BinaryHeap<usize>,
 }
 impl ThreadIdManager {
     fn new() -> ThreadIdManager {
         ThreadIdManager {
-            limit: 16,
+            created_ids: 0,
             free_list: BinaryHeap::new(),
         }
     }
@@ -22,9 +22,11 @@ impl ThreadIdManager {
         if let Some(id) = self.free_list.pop() {
             id
         } else {
-            let id = self.limit;
-            self.limit =
-                self.limit.checked_sub(1).expect("Ran out of thread IDs");
+            let id = self.created_ids;
+            self.created_ids = self
+                .created_ids
+                .checked_add(1)
+                .expect("Ran out of thread IDs");
             id
         }
     }

@@ -1,4 +1,4 @@
-use crate::model::Point;
+use crate::model::{Point, Size};
 use crate::ui::{RawTouch, TouchEventType, ViewportInfo};
 
 define_event_bus!(
@@ -44,8 +44,7 @@ macro_rules! define_ui_event {
 define_ui_event!(
     UIEvent {
         Layout {
-            width: i64,
-            height: i64
+            size: Size
         },
         RawTouchEvent {
             state: TouchEventType,

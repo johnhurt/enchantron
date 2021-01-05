@@ -30,7 +30,7 @@ class Renderer: NSObject, MTKViewDelegate {
     private var currentView : NativeView
     
     let systemInterop : SystemInterop
-    var screenSize = CGSize()
+    var screenSize = SIMD2<Float64>()
     var screenHeight : Float64 = 0
     let appCtx : ApplicationContext
     
@@ -74,7 +74,7 @@ class Renderer: NSObject, MTKViewDelegate {
         appCtx = RustBinder.bindToRust(systemInterop)
         
         // Start with an empty view
-        currentView = NativeView(screenSize: CGSize(), device: device)
+        currentView = NativeView(screenSize: SIMD2<Float64>(), device: device)
         
         super.init()
         
@@ -189,9 +189,10 @@ class Renderer: NSObject, MTKViewDelegate {
         }
     }
     
-    func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
+    func mtkView(_ view: MTKView, drawableSizeWillChange rawSize: CGSize) {
+        let size : SIMD2<Float64> = [Float64(rawSize.width), Float64(rawSize.height)]
         self.screenSize = size
-        self.screenHeight = Float64(size.height)
+        self.screenHeight = size.y
         self.systemInterop.setScreenSize(screenSize)
         self.currentView.layout(size: size)
     }

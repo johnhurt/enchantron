@@ -40,7 +40,7 @@ class Sprite {
     }
     
     var texture: Texture?
-    var size = CGSize()
+    var size = SIMD2<Float64>()
     var uniformBuffer: MTLBuffer
     var uniforms: UnsafeMutablePointer<SpriteUniform>
     var visible = false
@@ -107,7 +107,7 @@ class Sprite {
             DispatchQueue.main.async {
                 self.sizeAnimation = SizeAnimation(
                     startSize: self.size,
-                    finalSize: CGSize(width: CGFloat(width), height: CGFloat(height)),
+                    finalSize: [width, height],
                     startTime: now,
                     endTime: now + durationSeconds
                 )
@@ -115,7 +115,7 @@ class Sprite {
         }
         else {
             DispatchQueue.main.async {
-                self.size = CGSize(width: width, height: height)
+                self.size = [width, height]
             }
         }
         
@@ -207,7 +207,7 @@ class Sprite {
         uniforms[0].color = self.color
         uniforms[0].hasTexture = texture != nil
         
-        uniforms[0].size = [Float32(self.size.width), Float32(self.size.height)]
+        uniforms[0].size = [Float32(self.size.x), Float32(self.size.y)]
         texture?.fillSpriteUniformUvs(uniforms: uniforms)
         
         encoder.setVertexBuffer(uniformBuffer, offset: uniformBufferOffset, index: 0)

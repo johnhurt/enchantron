@@ -16,7 +16,7 @@ fileprivate let alignedUniformsSize = (MemoryLayout<ViewportUniform>.size + 0xFF
 
 public class Viewport {
     
-    var screenSize : CGSize
+    var screenSize : SIMD2<Float64>
     var topLeftMajor = SIMD2<Float32>()
     var topLeftMinor = SIMD2<Float32>()
     var scale : Float32 = 1.0
@@ -25,7 +25,7 @@ public class Viewport {
     var uniforms: UnsafeMutablePointer<ViewportUniform>
     var viewLockedSprites: SpriteGroup
     
-    init(screenSize: CGSize, device: MTLDevice) {
+    init(screenSize: SIMD2<Float64>, device: MTLDevice) {
         uniformBuffer = device.makeBuffer(
             length: alignedUniformsSize * maxBuffersInFlight,
             options: [])!
@@ -87,7 +87,7 @@ public class Viewport {
         uniforms = UnsafeMutableRawPointer(uniformBuffer.contents() + uniformBufferOffset)
             .bindMemory(to:ViewportUniform.self, capacity:1)
         
-        self.uniforms[0].screenSize = [Float(screenSize.width), Float(screenSize.height)]
+        self.uniforms[0].screenSize = [Float(screenSize.x), Float(screenSize.y)]
         self.uniforms[0].topLeftMajor = self.topLeftMajor
         self.uniforms[0].topLeftMinor = self.topLeftMinor
         self.uniforms[0].scale = Float(scale)

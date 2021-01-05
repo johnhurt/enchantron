@@ -30,10 +30,7 @@ where
     }
 
     pub fn on_layout(&mut self, layout_event: &Layout) {
-        let new_size =
-            Size::new(layout_event.width as f64, layout_event.height as f64);
-
-        self.layout(new_size);
+        self.layout(layout_event.size);
 
         self.event_bus.post(ViewportChange::new(self.viewport_info));
 

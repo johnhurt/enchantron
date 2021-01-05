@@ -40,7 +40,10 @@ where
     T: ViewTypes,
 {
     fn on_layout(&mut self, event: Layout) {
-        info!("Game view resized to : {}, {}", event.width, event.height);
+        info!(
+            "Game view resized to : {}, {}",
+            event.size.width, event.size.height
+        );
 
         self.viewport_presenter.on_layout(&event);
     }
@@ -77,8 +80,7 @@ where
             |w, h| {
                 copied_event_bus.post::<UI>(
                     Layout {
-                        width: w,
-                        height: h,
+                        size: Size::new(w, h),
                     }
                     .into(),
                 )

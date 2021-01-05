@@ -120,7 +120,7 @@ macro_rules! view_impl {
 
                         let mut $widget_field = widget_constructor!(
                             $widget_type<$view_types_generic>(
-                                &raw_view,
+                                &raw_view.get_viewport(),
                                 sender,
                                 $widget_field
                             )

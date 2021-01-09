@@ -25,15 +25,9 @@ impl FocusedEntityPresenter {
         }
     }
 
-    pub async fn on_touch_event(
-        &mut self,
-        touch_event: TouchEvent,
-    ) -> Option<TouchEvent> {
+    pub async fn on_touch_event(&mut self, touch_event: &TouchEvent) {
         if let Some(tap_event) = TapEvent::from_touch_event(touch_event) {
             self.on_tap(tap_event).await;
-            None
-        } else {
-            Some(touch_event)
         }
     }
 

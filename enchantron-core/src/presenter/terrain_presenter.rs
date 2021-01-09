@@ -324,6 +324,7 @@ where
             sprite_width_in_tiles: UNIT_ZOOM_LEVEL_SPRITE_WIDTH_IN_TILES,
         }
     }
+
     /// Get the terrain rect required to cover the given viewport rect based on
     /// the current size of the terrain sprites array.
     fn viewport_rect_to_terrain_rect(&self, viewport_rect: &Rect) -> IRect {

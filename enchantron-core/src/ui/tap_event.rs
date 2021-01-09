@@ -9,8 +9,8 @@ pub struct TapEvent {
 }
 
 impl TapEvent {
-    pub fn from_touch_event(touch_event: TouchEvent) -> Option<TapEvent> {
-        match touch_event {
+    pub fn from_touch_event(touch_event: &TouchEvent) -> Option<TapEvent> {
+        match *touch_event {
             TouchEvent {
                 state: TouchEventType::End,
                 touch:

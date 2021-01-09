@@ -58,14 +58,11 @@ where
             &self.viewport_presenter.viewport_info,
         );
 
-        let touch_event_opt = self
-            .focused_entity_presenter
-            .on_touch_event(touch_event)
+        self.focused_entity_presenter
+            .on_touch_event(&touch_event)
             .await;
 
-        if let Some(touch_event) = touch_event_opt {
-            self.viewport_presenter.on_touch_event(&touch_event);
-        }
+        self.viewport_presenter.on_touch_event(&touch_event);
     }
 
     fn bind_ui_events(

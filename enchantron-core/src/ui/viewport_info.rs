@@ -1,5 +1,5 @@
+use crate::game::constants;
 use crate::model::{IPoint, Point, Rect, Size};
-
 #[derive(Clone, Debug, Copy)]
 pub struct ViewportInfo {
     pub viewport_rect: Rect,
@@ -122,7 +122,8 @@ impl ViewportInfo {
 
     /// Get the terrain tile point for the given screen point
     pub fn get_terrain_tile_for(&self, screen_point: &Point) -> IPoint {
-        ((screen_point * self.viewport_scale) + self.viewport_rect.top_left)
+        (((screen_point * self.viewport_scale) + self.viewport_rect.top_left)
+            / (constants::UNIT_TERRAIN_TILE_LENGTH as f64))
             .floor()
     }
 }

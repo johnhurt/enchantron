@@ -6,6 +6,7 @@ const SOUTH_POINT: IPoint = IPoint { x: 0, y: 1 };
 const WEST_POINT: IPoint = IPoint { x: -1, y: 0 };
 
 #[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Direction {
     NORTH,
     EAST,

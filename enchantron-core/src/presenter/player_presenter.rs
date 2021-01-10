@@ -109,7 +109,9 @@ where
             EntityMessage::ExitedViewport => {
                 drop(self.view.take());
             }
-            EntityMessage::GoalSet(target_tile) => {}
+            EntityMessage::GoalSet(target_tile) => {
+                debug!("Goal set {:?}", target_tile);
+            }
         }
     }
 

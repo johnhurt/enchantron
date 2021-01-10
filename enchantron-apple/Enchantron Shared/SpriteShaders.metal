@@ -23,7 +23,7 @@ typedef struct
     float4 color;
 } VertexOut;
 
-vertex VertexOut vertexShader(uint vertexId [[vertex_id]],
+vertex VertexOut spriteVertexShader(uint vertexId [[vertex_id]],
                               constant SpriteUniform &uniforms [[buffer(0)]],
                               constant ViewportUniform &viewport [[buffer(1)]])
 {
@@ -56,7 +56,7 @@ vertex VertexOut vertexShader(uint vertexId [[vertex_id]],
     return out;
 }
 
-fragment float4 fragmentShader(VertexOut in [[stage_in]],
+fragment float4 spriteFragmentShader(VertexOut in [[stage_in]],
                                texture2d<float> tex     [[ texture(0) ]])
 {
     constexpr sampler defaultSampler;

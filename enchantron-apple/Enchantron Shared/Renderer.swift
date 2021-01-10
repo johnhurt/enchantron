@@ -20,8 +20,10 @@ class Renderer: NSObject, MTKViewDelegate {
     
     public let device: MTLDevice
     let commandQueue: MTLCommandQueue
-    var pipelineState: MTLRenderPipelineState
     var depthState: MTLDepthStencilState
+    
+    let spritePipeline : SpritePipeline
+    let terrainPipeline : TerrainPipeline
     
     let inFlightSemaphore = DispatchSemaphore(value: maxBuffersInFlight)
     
@@ -46,17 +48,8 @@ class Renderer: NSObject, MTKViewDelegate {
         metalKitView.colorPixelFormat = MTLPixelFormat.bgra8Unorm_srgb
         metalKitView.sampleCount = 1
         
-        let mtlVertexDescriptor = Renderer.buildMetalVertexDescriptor()
-        
-        do {
-            pipelineState = try Renderer.buildRenderPipelineWithDevice(
-                device: device,
-                metalKitView: metalKitView,
-                mtlVertexDescriptor: mtlVertexDescriptor)
-        } catch {
-            print("Unable to compile render pipeline state.  Error info: \(error)")
-            return nil
-        }
+        spritePipeline = SpritePipeline(device: device, view: metalKitView)
+        terrainPipeline = TerrainPipeline(device: device, view: metalKitView)
         
         let depthStateDesciptor = MTLDepthStencilDescriptor()
         depthStateDesciptor.depthCompareFunction = MTLCompareFunction.lessEqual
@@ -89,45 +82,6 @@ class Renderer: NSObject, MTKViewDelegate {
         }
         
         appCtx.transitionToLoadingView()
-    }
-    
-    class func buildMetalVertexDescriptor() -> MTLVertexDescriptor {
-        let mtlVertexDescriptor = MTLVertexDescriptor()
-        
-        
-        return mtlVertexDescriptor
-    }
-    
-    class func buildRenderPipelineWithDevice(
-        device: MTLDevice,
-        metalKitView: MTKView,
-        mtlVertexDescriptor: MTLVertexDescriptor) throws -> MTLRenderPipelineState {
-        
-        let library = device.makeDefaultLibrary()
-        
-        let vertexFunction = library?.makeFunction(name: "vertexShader")
-        let fragmentFunction = library?.makeFunction(name: "fragmentShader")
-        
-        let pipelineDescriptor = MTLRenderPipelineDescriptor()
-        pipelineDescriptor.label = "RenderPipeline"
-        pipelineDescriptor.sampleCount = metalKitView.sampleCount
-        pipelineDescriptor.vertexFunction = vertexFunction
-        pipelineDescriptor.fragmentFunction = fragmentFunction
-        pipelineDescriptor.vertexDescriptor = mtlVertexDescriptor
-        
-        pipelineDescriptor.colorAttachments[0].pixelFormat = metalKitView.colorPixelFormat
-        pipelineDescriptor.colorAttachments[0].isBlendingEnabled = true
-        pipelineDescriptor.colorAttachments[0].rgbBlendOperation = .add
-        pipelineDescriptor.colorAttachments[0].alphaBlendOperation = .add
-        pipelineDescriptor.colorAttachments[0].sourceAlphaBlendFactor = .sourceAlpha
-        pipelineDescriptor.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
-        pipelineDescriptor.colorAttachments[0].destinationRGBBlendFactor = .oneMinusSourceAlpha
-        pipelineDescriptor.colorAttachments[0].destinationAlphaBlendFactor = .oneMinusSourceAlpha
-        
-        pipelineDescriptor.depthAttachmentPixelFormat = metalKitView.depthStencilPixelFormat
-        pipelineDescriptor.stencilAttachmentPixelFormat = metalKitView.depthStencilPixelFormat
-        
-        return try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
     }
     
     private func updateDynamicBufferState() {
@@ -166,15 +120,20 @@ class Renderer: NSObject, MTKViewDelegate {
                 updateDynamicBufferState()
                 
                 renderEncoder.setFrontFacing(.counterClockwise)
-                renderEncoder.setRenderPipelineState(pipelineState)
                 renderEncoder.setDepthStencilState(depthState)
                 
-                Sprite.setUpForSpriteRendering(encoder: renderEncoder)
+                let time = CACurrentMediaTime()
                 
-                currentView.render(
+                terrainPipeline.encode(
                     encoder: renderEncoder,
                     uniformBufferIndex: uniformBufferIndex,
-                    time: CACurrentMediaTime())
+                    time: time)
+                
+                spritePipeline.encode(
+                    encoder: renderEncoder,
+                    view: currentView,
+                    uniformBufferIndex: uniformBufferIndex,
+                    time: time)
                 
                 renderEncoder.popDebugGroup()
                 

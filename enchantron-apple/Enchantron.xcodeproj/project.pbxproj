@@ -10,6 +10,12 @@
 		632D2B052411E5F3002B29D7 /* MultiDragHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632D2B042411E4ED002B29D7 /* MultiDragHandler.swift */; };
 		632D2B062411E5F4002B29D7 /* MultiDragHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632D2B042411E4ED002B29D7 /* MultiDragHandler.swift */; };
 		632D2B082411E813002B29D7 /* TouchLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632D2B072411E813002B29D7 /* TouchLookup.swift */; };
+		6335846C25AA434500A40E2C /* Terrain.metal in Sources */ = {isa = PBXBuildFile; fileRef = 6335846B25AA434500A40E2C /* Terrain.metal */; };
+		6335846D25AA434500A40E2C /* Terrain.metal in Sources */ = {isa = PBXBuildFile; fileRef = 6335846B25AA434500A40E2C /* Terrain.metal */; };
+		6335847125AA454000A40E2C /* TerrainPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6335847025AA454000A40E2C /* TerrainPipeline.swift */; };
+		6335847225AA454000A40E2C /* TerrainPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6335847025AA454000A40E2C /* TerrainPipeline.swift */; };
+		6335847625AA45E600A40E2C /* SpritePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6335847525AA45E600A40E2C /* SpritePipeline.swift */; };
+		6335847725AA45E600A40E2C /* SpritePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6335847525AA45E600A40E2C /* SpritePipeline.swift */; };
 		633D0B23240FCA2800A40E2C /* SpriteGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 633D0B22240FCA2800A40E2C /* SpriteGroup.swift */; };
 		633D0B24240FCA2800A40E2C /* SpriteGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 633D0B22240FCA2800A40E2C /* SpriteGroup.swift */; };
 		6341098A211CC7C000D40139 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63410989211CC7C000D40139 /* AppDelegate.swift */; };
@@ -85,6 +91,9 @@
 /* Begin PBXFileReference section */
 		632D2B042411E4ED002B29D7 /* MultiDragHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiDragHandler.swift; sourceTree = "<group>"; };
 		632D2B072411E813002B29D7 /* TouchLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchLookup.swift; sourceTree = "<group>"; };
+		6335846B25AA434500A40E2C /* Terrain.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Terrain.metal; sourceTree = "<group>"; };
+		6335847025AA454000A40E2C /* TerrainPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerrainPipeline.swift; sourceTree = "<group>"; };
+		6335847525AA45E600A40E2C /* SpritePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpritePipeline.swift; sourceTree = "<group>"; };
 		633D0B22240FCA2800A40E2C /* SpriteGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteGroup.swift; sourceTree = "<group>"; };
 		63410981211CC7C000D40139 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		63410986211CC7C000D40139 /* Enchantron.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Enchantron.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -203,6 +212,8 @@
 				639AD25322AC8E6900A35225 /* Viewport.swift */,
 				63410981211CC7C000D40139 /* Assets.xcassets */,
 				634589F5212624FC00D81EAD /* Resources */,
+				6335847025AA454000A40E2C /* TerrainPipeline.swift */,
+				6335847525AA45E600A40E2C /* SpritePipeline.swift */,
 			);
 			path = "Enchantron Shared";
 			sourceTree = "<group>";
@@ -262,6 +273,7 @@
 			isa = PBXGroup;
 			children = (
 				6379BADA258308BF00524998 /* SpriteShaders.metal */,
+				6335846B25AA434500A40E2C /* Terrain.metal */,
 			);
 			name = Shaders;
 			sourceTree = "<group>";
@@ -442,6 +454,7 @@
 				63F97B06211CCB0400784701 /* TextArea.swift in Sources */,
 				633D0B23240FCA2800A40E2C /* SpriteGroup.swift in Sources */,
 				632D2B082411E813002B29D7 /* TouchLookup.swift in Sources */,
+				6335846C25AA434500A40E2C /* Terrain.metal in Sources */,
 				639CC0DA247098A700A40E2C /* Animation.swift in Sources */,
 				63F97B0C211CCB0400784701 /* HandlerRegistration.swift in Sources */,
 				6395650B2126469C006F2A71 /* Texture.swift in Sources */,
@@ -450,6 +463,7 @@
 				6379BADE2583E02000524998 /* PointUtil.swift in Sources */,
 				6395650E212646BD006F2A71 /* ResourceLoader.swift in Sources */,
 				63C34FF3212F5CF900076E55 /* Sprite.swift in Sources */,
+				6335847625AA45E600A40E2C /* SpritePipeline.swift in Sources */,
 				63C34FF0212F2F4700076E55 /* LayoutHandler.swift in Sources */,
 				63F97B04211CCB0400784701 /* ClickHandler.swift in Sources */,
 				6341098C211CC7C000D40139 /* GameViewController.swift in Sources */,
@@ -461,6 +475,7 @@
 				637D8F14258127AE006185D9 /* TouchType.swift in Sources */,
 				632D2B052411E5F3002B29D7 /* MultiDragHandler.swift in Sources */,
 				63F97B10211CCB0400784701 /* SwiftString.swift in Sources */,
+				6335847125AA454000A40E2C /* TerrainPipeline.swift in Sources */,
 				639AD25422AC8E6900A35225 /* Viewport.swift in Sources */,
 				6341098A211CC7C000D40139 /* AppDelegate.swift in Sources */,
 				6379BADB258308BF00524998 /* SpriteShaders.metal in Sources */,
@@ -476,6 +491,7 @@
 				637D8F12257EAEC4006185D9 /* SpriteSource.swift in Sources */,
 				63F97B07211CCB0400784701 /* TextArea.swift in Sources */,
 				63F97B0D211CCB0400784701 /* HandlerRegistration.swift in Sources */,
+				6335846D25AA434500A40E2C /* Terrain.metal in Sources */,
 				6395650C2126469C006F2A71 /* Texture.swift in Sources */,
 				63F97AFB211CC9B500784701 /* RustBinder.swift in Sources */,
 				6395650F212646BD006F2A71 /* ResourceLoader.swift in Sources */,
@@ -484,6 +500,7 @@
 				6379BADF2583E02000524998 /* PointUtil.swift in Sources */,
 				63C34FF1212F2F4700076E55 /* LayoutHandler.swift in Sources */,
 				632D2B062411E5F4002B29D7 /* MultiDragHandler.swift in Sources */,
+				6335847725AA45E600A40E2C /* SpritePipeline.swift in Sources */,
 				637D8F15258127AE006185D9 /* TouchType.swift in Sources */,
 				63F97B05211CCB0400784701 /* ClickHandler.swift in Sources */,
 				6341099D211CC7C000D40139 /* GameViewController.swift in Sources */,
@@ -495,6 +512,7 @@
 				63F97B11211CCB0400784701 /* SwiftString.swift in Sources */,
 				639EBFB323DE46D200A40E2C /* ByteBufferExt.swift in Sources */,
 				633D0B24240FCA2800A40E2C /* SpriteGroup.swift in Sources */,
+				6335847225AA454000A40E2C /* TerrainPipeline.swift in Sources */,
 				639AD25522AC943E00A35225 /* Viewport.swift in Sources */,
 				6341099B211CC7C000D40139 /* AppDelegate.swift in Sources */,
 				6379BADC258308BF00524998 /* SpriteShaders.metal in Sources */,

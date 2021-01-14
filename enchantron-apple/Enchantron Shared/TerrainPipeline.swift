@@ -60,11 +60,17 @@ class TerrainPipeline {
     
     func encode(
         encoder: MTLRenderCommandEncoder,
+        viewport: Viewport,
         uniformBufferIndex: Int,
         time: Float64
     ) {
         encoder.setRenderPipelineState(pipelineState)
-       
+        
+        viewport.bindToFragmentShader(
+            encoder: encoder,
+            uniformBufferIndex: uniformBufferIndex,
+            bufferIndex: 1)
+        
         encoder.drawIndexedPrimitives(
             type: .triangle,
             indexCount: Sprite.indexes.count,

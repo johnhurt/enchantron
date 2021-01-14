@@ -30,6 +30,10 @@ class NativeView : SpriteSource {
     
     func render(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int, time: Float64) {
         viewport.configureViewport(encoder: encoder, uniformBufferIndex: uniformBufferIndex)
+        viewport.bindToVertexShader(
+            encoder: encoder,
+            uniformBufferIndex: uniformBufferIndex,
+            bufferIndex: 1)
         rootGroup.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex, time: time)
         viewport.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex, time: time)
     }

@@ -126,6 +126,7 @@ class Renderer: NSObject, MTKViewDelegate {
                 
                 terrainPipeline.encode(
                     encoder: renderEncoder,
+                    viewport: currentView.getViewport(),
                     uniformBufferIndex: uniformBufferIndex,
                     time: time)
                 

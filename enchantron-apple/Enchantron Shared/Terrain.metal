@@ -134,9 +134,12 @@ vertex VertexOut vertexShader(uint vertexId [[vertex_id]],
 fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                constant ViewportUniform &viewport [[buffer(1)]])
 {
+    if (viewport.scale < 2.) {
+        return float4();
+    }
     
     float2 terrainPoint = getTerrainPoint(in.uvCoord, viewport);
-    float2 st = floor(terrainPoint) / 647.0;
+    float2 st = terrainPoint / 647.0;
     
     float color = snoise(st);
 //        + snoise(st * 2.0 + 2339.) / 2.0

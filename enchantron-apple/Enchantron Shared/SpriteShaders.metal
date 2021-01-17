@@ -53,6 +53,8 @@ vertex VertexOut spriteVertexShader(uint vertexId [[vertex_id]],
              uniforms.textureUvTopLeft.x + right * uniforms.textureUvSize.x,
              uniforms.textureUvTopLeft.y + bottom * uniforms.textureUvSize.y);
 
+    out.color.a = min(max((4 - viewport.scale) / 2, 0.0), 1.0);
+    
     return out;
 }
 
@@ -65,6 +67,7 @@ fragment float4 spriteFragmentShader(VertexOut in [[stage_in]],
     
     if (in.hasTexture) {
         colorSample = tex.sample(defaultSampler, in.texCoord.xy);
+        colorSample.a = min(in.color.a, colorSample.a);
     }
     else {
         colorSample = in.color;

@@ -13,7 +13,7 @@ use std::iter;
 use tokio::select;
 use tokio::stream::StreamExt;
 
-const TERRAIN_TEXTURE_SIDE_LENGTH: usize = 512;
+const TERRAIN_TEXTURE_SIDE_LENGTH: usize = 256;
 const TERRAIN_TEXTURE_SIDE_LENGTH_F64: f64 = TERRAIN_TEXTURE_SIDE_LENGTH as f64;
 const TERRAIN_TEXTURE_SIZE: ISize = ISize {
     width: TERRAIN_TEXTURE_SIDE_LENGTH,
@@ -255,6 +255,11 @@ where
         &self,
         viewport_info: &ViewportInfo,
     ) -> Option<TerrainUpdateInfo> {
+
+        if (viewport_info.viewport_scale >= 6.) {
+            return None;
+        }
+
         let viewport_rect = &viewport_info.viewport_rect;
 
         let mut terrain_rect =

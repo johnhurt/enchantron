@@ -51,17 +51,11 @@ fn get_animation_duration(
 
 pub trait PlayerView: 'static + Send + Sync + Unpin + EntityView {
     fn rest(&self);
-    fn start_walk(
+    fn walk(
         &self,
         direction: Direction,
         start_tile: &IPoint,
-        start_time: f64,
-        speed: f64,
-    );
-    fn finish_walk(
-        &self,
-        direction: Direction,
-        start_tile: &IPoint,
+        end_tile: &IPoint,
         start_time: f64,
         speed: f64,
     );
@@ -95,17 +89,18 @@ impl<T: ViewTypes> PlayerViewImpl<T> {
 }
 
 impl<T: ViewTypes> PlayerView for PlayerViewImpl<T> {
-    fn start_walk(
+    fn walk(
         &self,
         direction: Direction,
         start_tile: &IPoint,
+        end_tile: &IPoint,
         start_time: f64,
         speed: f64,
     ) {
         let midpoint =
             get_halfway_point_in_texture_coordinates(start_tile, &direction);
 
-        let duration = get_animation_duration(start_time, speed, &self.time);
+        let duration = start_tile.distance_to(end_tile) / speed;
 
         self.bound_sprite.animate(
             &self.runtime_resources.animations().player_walk_south,
@@ -114,24 +109,6 @@ impl<T: ViewTypes> PlayerView for PlayerViewImpl<T> {
 
         self.bound_sprite.set_location_point_animated(
             &(midpoint + PLAYER_TEXTURE_OFFSET),
-            duration,
-        );
-    }
-
-    fn finish_walk(
-        &self,
-        direction: Direction,
-        start_tile: &IPoint,
-        start_time: f64,
-        speed: f64,
-    ) {
-        let destination =
-            get_final_point_in_texture_coordinates(start_tile, &direction);
-
-        let duration = get_animation_duration(start_time, speed, &self.time);
-
-        self.bound_sprite.set_location_point_animated(
-            &(destination + PLAYER_TEXTURE_OFFSET),
             duration,
         );
     }

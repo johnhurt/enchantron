@@ -138,17 +138,16 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     float2 terrainPoint = getTerrainPoint(in.uvCoord, viewport);
     float2 st = floor(terrainPoint) / 647.0;
     
-    float color
-        = snoise(st)
-        + snoise(st * 2.0 + 2339.) / 2.0
-        + snoise(st * 4.0 + 239.) / 4.0 ;
+    float color = snoise(st);
+//        + snoise(st * 2.0 + 2339.) / 2.0
+//        + snoise(st * 4.0 + 239.) / 4.0 ;
     
-    color *= 1.0 / (1.75);
+    //color *= 1.0 / (1.75);
     color = color * 0.5 + 0.5;
     
     float4 brown = float4(0.3, 0.25, 0.1, 1.0);
     float4 green = float4(0.3, 0.9, 0.6, 1.0);
     
-    return color * color * color < 0.2 ? brown : green;
+    return color < 0.5 ? brown : green;
 }
 

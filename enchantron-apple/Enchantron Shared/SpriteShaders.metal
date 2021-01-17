@@ -70,5 +70,5 @@ fragment float4 spriteFragmentShader(VertexOut in [[stage_in]],
         colorSample = in.color;
     }
     
-    return float4(colorSample);
+    return colorSample;
 }

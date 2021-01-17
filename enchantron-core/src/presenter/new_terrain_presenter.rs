@@ -160,22 +160,22 @@ where
             TERRAIN_TEXTURE_SIDE_LENGTH_F64 * UNIT_ZOOM_LEVEL_TILE_LENGTH_F64;
 
         self.update_terrain_sprites(valid_sprite_rect, |sprite, point| {
-            // sprite.set_visible(false);
+            sprite.set_visible(false);
 
-            // let texture_terrain_rect = IRect {
-            //     top_left: *point,
-            //     size: TERRAIN_TEXTURE_SIZE,
-            // };
+            let texture_terrain_rect = IRect {
+                top_left: *point,
+                size: TERRAIN_TEXTURE_SIZE,
+            };
 
-            // sprite.set_texture(
-            //     &self.terrain_texture_provider.get_texture_for_rect(
-            //         &texture_terrain_rect,
-            //         &TERRAIN_TEXTURE_SIZE,
-            //     ),
-            // );
+            sprite.set_texture(
+                &self.terrain_texture_provider.get_texture_for_rect(
+                    &texture_terrain_rect,
+                    &TERRAIN_TEXTURE_SIZE,
+                ),
+            );
 
-            // sprite.set_size(sprite_width, sprite_width);
-            // sprite.set_visible(true);
+            sprite.set_size(sprite_width, sprite_width);
+            sprite.set_visible(true);
         });
     }
 

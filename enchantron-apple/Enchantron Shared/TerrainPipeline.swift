@@ -66,6 +66,8 @@ class TerrainPipeline {
     ) {
         encoder.setRenderPipelineState(pipelineState)
         
+        Sprite.setUpForSpriteRendering(encoder: encoder)
+        
         viewport.bindToFragmentShader(
             encoder: encoder,
             uniformBufferIndex: uniformBufferIndex,

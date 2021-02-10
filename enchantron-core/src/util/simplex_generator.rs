@@ -145,4 +145,17 @@ mod test {
         let g = SimplexGenerator {};
         let v = g.generate(Point::new(1., 1.));
     }
+
+    #[test]
+    fn test_x0_variability() {
+        let v: Vec2 = [101003.0, 230234.0];
+        let mut i = floor_2(&plus_2(&v, &vec_2(dot_2(&v, &[CY, CY]))));
+        let x0_a = plus_2(&minus_2(&v, &i), &vec_2(dot_2(&i, &[CX, CX])));
+
+        let v: Vec2 = [1., 1.];
+        let mut i = floor_2(&plus_2(&v, &vec_2(dot_2(&v, &[CY, CY]))));
+        let x0_b = plus_2(&minus_2(&v, &i), &vec_2(dot_2(&i, &[CX, CX])));
+
+        let diff = minus_2(&x0_a, &x0_b);
+    }
 }

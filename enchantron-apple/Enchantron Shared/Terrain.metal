@@ -14,12 +14,107 @@
 
 using namespace metal;
 
+constant float MAJOR_SIZE = 512.;
+constant float4 C = float4(0.2113248,
+                           // (3.0-sqrt(3.0))/6.0
+                           0.3660254,
+                           // 0.5*(sqrt(3.0)-1.0)
+                           -0.5773502,
+                           // -1.0 + 2.0 * C.x
+                           0.02439024);
+// 1.0 / 41.0
+
+constant float CyNum = 1830127.;
+constant float CyDenom = 5000000.;
 
 // Some useful functions
 float3 mod289(float3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 float2 mod289(float2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 float3 permute(float3 x) { return mod289(((x * 34.0) + 1.0)*x); }
 //float3 permute(float3 x, float2 seed) { return mod289(((x*seed.x)+seed.y)*x); }
+
+float2 quickTwoSum(float a,float b){
+    float s=a+b;
+    float e=b-(s-a);
+    return float2(s,e);
+}
+
+float4 twoSumComp(float2 ari,float2 bri){
+    float2 s=ari+bri;
+    float2 v=s-ari;
+    float2 e=(ari-(s-v))+(bri-v);
+    return float4(s.x,e.x,s.y,e.y);
+}
+
+float2 df64add(float2 a,float2 b){
+    float4 st;
+    st=twoSumComp(a,b);
+    st.y+=st.z;
+    st.xy=quickTwoSum(st.x,st.y);
+    st.y+=st.w;
+    st.xy=quickTwoSum(st.x,st.y);
+    return st.xy;
+}
+
+float2 split(float a){
+    const float split=4097;//(1<<12)+1;
+    float t=a*split;
+    float ahi=t-(t-a);
+    float alo=a-ahi;
+    return float2(ahi,alo);
+}
+
+float2 twoProd(float a,float b){
+    float p=a*b;
+    float2 aS=split(a);
+    float2 bS=split(b);
+    float err=((aS.x*bS.x-p)
+               +aS.x*bS.y+aS.y*bS.x)
+    +aS.y*bS.y;
+    return float2 (p,err);
+}
+
+float2 df64mult(float2 a,float2 b){
+    float2 p;
+    p=twoProd(a.x,b.x);
+    p.y+=a.x*b.y;
+    p.y+=a.y*b.x;
+    p=quickTwoSum(p.x,p.y);
+    return p;
+}
+
+// This is like df64Add but with b.y = 0
+float2 mixedDf64Add(float2 a, float b) {
+    float2 st;
+    
+    float s=a.x + b;
+    float v=s-a.x;
+    float e=(a.x-(s-v))+(b-v);
+    
+    st = float2(s, e);
+    
+    st.y+=a.y;
+    st.xy=quickTwoSum(st.x,st.y);
+    st.xy=quickTwoSum(st.x,st.y);
+    return st.xy;
+}
+
+// This is like df64mult except b.y = 0
+float2 mixedDf64Mult(float2 a, float b) {
+    float2 p;
+    p=twoProd(a.x,b);
+    
+    p.y += a.y * b;
+    p = quickTwoSum(p.x, p.y);
+    
+    return p;
+}
+
+float4 getI(float4 v) {
+    float2 ix = floor(v.xy + (v.x + v.y) * C.y);
+    float2 iMin = floor(v.zw + (v.z + v.w) * C.y)
+    return float4(iMaj, iMin);
+}
 
 //
 // Description : GLSL 2D simplex noise function
@@ -31,58 +126,48 @@ float3 permute(float3 x) { return mod289(((x * 34.0) + 1.0)*x); }
 //  Distributed under the MIT License. See LICENSE file.
 //  https://github.com/ashima/webgl-noise
 //
-float snoise(float2 v) {
-
-    // Precompute values for skewed triangular grid
-    const float4 C = float4(0.2113248,
-                        // (3.0-sqrt(3.0))/6.0
-                        0.3660254,
-                        // 0.5*(sqrt(3.0)-1.0)
-                        -0.5773502,
-                        // -1.0 + 2.0 * C.x
-                        0.02439024);
-                        // 1.0 / 41.0
-
+float snoise(float4 v) {
+    
     // First corner (x0)
-    float2 i  = floor(v + dot(v, C.yy));
-    float2 x0 = v - i + dot(i, C.xx);
-
+    float4 i = getI(v);
+    float4 x0 = v - i + dot(i, C.xxxx);
+    
     // Other two corners (x1, x2)
     float2 i1 = float2(0.0);
     i1 = (x0.x > x0.y)? float2(1.0, 0.0):float2(0.0, 1.0);
     float2 x1 = x0.xy + C.xx - i1;
     float2 x2 = x0.xy + C.zz;
-
+    
     // Do some permutations to avoid
     // truncation effects in permutation
     i = mod289(i);
     float3 p = permute(
-            permute( i.y + float3(0.0, i1.y, 1.0))
-                + i.x + float3(0.0, i1.x, 1.0 ));
-
+                       permute( i.y + float3(0.0, i1.y, 1.0))
+                       + i.x + float3(0.0, i1.x, 1.0 ));
+    
     float3 m = max(0.5 - float3(
-                        dot(x0,x0),
-                        dot(x1,x1),
-                        dot(x2,x2)
-                        ), 0.0);
-
+                                dot(x0,x0),
+                                dot(x1,x1),
+                                dot(x2,x2)
+                                ), 0.0);
+    
     m = m*m ;
     m = m*m ;
-
+    
     // Gradients:
     //  41 pts uniformly over a line, mapped onto a diamond
     //  The ring size 17*17 = 289 is close to a multiple
     //      of 41 (41*7 = 287)
-
+    
     float3 x = 2.0 * fract(p * C.www) - 1.0;
     float3 h = abs(x) - 0.5;
     float3 ox = floor(x + 0.5);
     float3 a0 = x - ox;
-
+    
     // Normalise gradients implicitly by scaling m
     // Approximation of: m *= inversesqrt(a0*a0 + h*h);
     m *= 1.79284291400159 - 0.85373472095314 * (a0*a0+h*h);
-
+    
     // Compute final noise value at P
     float3 g = float3(0.0);
     g.x  = a0.x  * x0.x  + h.x  * x0.y;
@@ -91,24 +176,19 @@ float snoise(float2 v) {
 }
 
 
-float2 getTerrainPoint(float2 uv, constant ViewportUniform &viewport) {
-    float2 result = viewport.topLeftMajor * 512.0 + viewport.topLeftMinor;
+float4 getTerrainPoint(float2 uv, constant ViewportUniform &viewport) {
+    float4 result = float4(
+        viewport.topLeftMajor.x * 512.0,
+        viewport.topLeftMinor.x,
+        viewport.topLeftMajor.y * 512.0,
+        viewport.topLeftMinor.y);
     
-    result += uv * viewport.screenSize * viewport.scale;
+    float2 offset = uv * viewport.screenSize * viewport.scale;
     
-    return result / 16;
-}
-
-int fancyFloor1(float toFloor) {
-    if (toFloor < 0){
-        return int(ceil(toFloor));
-    }
+    result.xy = mixedDf64Add(result.xy, offset.x);
+    result.zw = mixedDf64Add(result.zw, offset.y);
     
-    return int(toFloor);
-}
-
-int2 fancyFloor2(float2 toFloor) {
-    return int2(fancyFloor1(toFloor.x), fancyFloor1(toFloor.y));
+    return result;
 }
 
 typedef struct
@@ -142,8 +222,8 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     float2 st = terrainPoint / 647.0;
     
     float color = snoise(st);
-//        + snoise(st * 2.0 + 2339.) / 2.0
-//        + snoise(st * 4.0 + 239.) / 4.0 ;
+    //        + snoise(st * 2.0 + 2339.) / 2.0
+    //        + snoise(st * 4.0 + 239.) / 4.0 ;
     
     //color *= 1.0 / (1.75);
     color = color * 0.5 + 0.5;

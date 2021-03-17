@@ -40,7 +40,7 @@ vertex VertexOut spriteVertexShader(uint vertexId [[vertex_id]],
     float right = vertexId == 1 || vertexId == 3;
     
     float2 shiftedTopLeft = (uniforms.topLeftMajor - viewport.topLeftMajor)
-        * 512.0 + (uniforms.topLeftMinor - viewport.topLeftMinor);
+         + (uniforms.topLeftMinor - viewport.topLeftMinor);
     
     out.position = vector_float4(
              shiftedTopLeft.x + right * uniforms.size.x,

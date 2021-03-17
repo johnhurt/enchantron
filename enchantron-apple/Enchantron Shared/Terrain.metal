@@ -14,7 +14,6 @@
 
 using namespace metal;
 
-constant float MAJOR_SIZE = 512.;
 constant float4 C = float4(0.2113248,
                            // (3.0-sqrt(3.0))/6.0
                            0.3660254,
@@ -22,14 +21,14 @@ constant float4 C = float4(0.2113248,
                            -0.5773502,
                            // -1.0 + 2.0 * C.x
                            0.02439024);
-// 1.0 / 41.0
+                           // 1.0 / 41.0
 
-constant float CyNum = 1830127.;
-constant float CyDenom = 5000000.;
+constant bool RUN_TESTS = true;
 
 // Some useful functions
 float3 mod289(float3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 float2 mod289(float2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+float2 mod289(float4 x) { return mod289(mod289(x.xy) + mod289(x.zw)); }
 float3 permute(float3 x) { return mod289(((x * 34.0) + 1.0)*x); }
 //float3 permute(float3 x, float2 seed) { return mod289(((x*seed.x)+seed.y)*x); }
 
@@ -46,6 +45,8 @@ float4 twoSumComp(float2 ari,float2 bri){
     return float4(s.x,e.x,s.y,e.y);
 }
 
+
+/// Add two multi-floats together
 float2 df64add(float2 a,float2 b){
     float4 st;
     st=twoSumComp(a,b);
@@ -111,9 +112,19 @@ float2 mixedDf64Mult(float2 a, float b) {
 }
 
 float4 getI(float4 v) {
-    float2 ix = floor(v.xy + (v.x + v.y) * C.y);
-    float2 iMin = floor(v.zw + (v.z + v.w) * C.y)
-    return float4(iMaj, iMin);
+    float2 dottedTerm = df64add(mixedDf64Mult(v.xy, C.y), mixedDf64Mult(v.zw, C.y));
+    float2 ix = df64add(v.xy, dottedTerm);
+    float2 iy = df64add(v.zw, dottedTerm);
+    return floor(float4(ix, iy));
+}
+
+float2 getX0(float4 v, float4 i) {
+    float2 dottedTerm = df64add(mixedDf64Mult(i.xy, C.x), mixedDf64Mult(i.zw, C.x));
+    float2 x0x = df64add(i.xy, dottedTerm);
+    float2 x0y = df64add(i.zw, dottedTerm);
+    x0x = df64add(v.xy, -x0x);
+    x0y = df64add(v.zw, -x0y);
+    return float2(x0x.x + x0x.y, x0y.x + x0y.y);
 }
 
 //
@@ -129,18 +140,17 @@ float4 getI(float4 v) {
 float snoise(float4 v) {
     
     // First corner (x0)
-    float4 i = getI(v);
-    float4 x0 = v - i + dot(i, C.xxxx);
+    float4 i4 = getI(v);
+    float2 x0 = getX0(v, i4);
     
     // Other two corners (x1, x2)
-    float2 i1 = float2(0.0);
-    i1 = (x0.x > x0.y)? float2(1.0, 0.0):float2(0.0, 1.0);
+    float2 i1 = float2(x0.x > x0.y, x0.x <= x0.y);
     float2 x1 = x0.xy + C.xx - i1;
     float2 x2 = x0.xy + C.zz;
     
     // Do some permutations to avoid
     // truncation effects in permutation
-    i = mod289(i);
+    float2 i = mod289(i4);
     float3 p = permute(
                        permute( i.y + float3(0.0, i1.y, 1.0))
                        + i.x + float3(0.0, i1.x, 1.0 ));
@@ -178,9 +188,9 @@ float snoise(float4 v) {
 
 float4 getTerrainPoint(float2 uv, constant ViewportUniform &viewport) {
     float4 result = float4(
-        viewport.topLeftMajor.x * 512.0,
+        viewport.topLeftMajor.x,
         viewport.topLeftMinor.x,
-        viewport.topLeftMajor.y * 512.0,
+        viewport.topLeftMajor.y,
         viewport.topLeftMinor.y);
     
     float2 offset = uv * viewport.screenSize * viewport.scale;
@@ -195,7 +205,75 @@ typedef struct
 {
     float4 position [[position]];
     float2 uvCoord;
+    float4 color;
 } VertexOut;
+
+bool assertEquals(float2 v1, float v2, float t) {
+    return abs(v1.x + v1.y - v2) <= t;
+}
+
+bool assertEqualsMulti(float2 v1, float2 v2, float t) {
+    bool2 result = abs(df64add(v1, -v2)) <= t;
+    return result.x && result.y;
+}
+
+bool testAddMultiFloats() {
+    return assertEquals(df64add(float2(10.0, 0.1), float2(1.01, 0.001)), 11.111, 0.00001)
+            && assertEquals(df64add(float2(1.2e15, 3.4e13), float2(5.6e11, 7.8e9)), 1.2345678e15, 1e9)
+            && assertEquals(df64add(float2(0.03660254, 0.), float2(0.07320508, 0.)), 0.10980762, 0.0001)
+            && assertEquals(floor(df64add(float2(0.2, 0.), float2(0.1098, 0.00000762))), 0.0, 0.0001);
+}
+
+bool testAddMixedFloats() {
+    return assertEquals(mixedDf64Add(float2(10.0, 0.1), 1.01), 11.11, 0.0001)
+            && assertEquals(mixedDf64Add(float2(1.2e15, 3.4e13), 5.6e11), 1.23456e15, 1e9);
+    
+}
+
+bool testMultiplyMultiFloats() {
+    return assertEquals(df64mult(float2(123.0,0.00123), float2(4.0,0.4)), 541.2054, .001);
+}
+
+bool testMultiplyMixedFloats() {
+    return assertEquals(mixedDf64Mult(float2(123.0,0.00123), 4.4), 541.2054, .0001)
+            && assertEquals(mixedDf64Mult(float2(0.1, 0.0), C.y), 0.03660254, 0.0001)
+            && assertEquals(mixedDf64Mult(float2(0.2, 0.0), C.y), 0.07320508, 0.0001);
+}
+
+bool testGetI1() {
+    
+    float4 actual = getI(float4(13.1, 0.0356, -45.2, -0.098));
+    float2 expected = floor(float2(13.1356, -45.298) + dot(float2(13.1356, -45.298), C.yy));
+    return assertEquals(actual.xy, expected.x, 0.)
+            && assertEquals(actual.zw, expected.y, 0.0);
+}
+
+
+bool testGetI2() {
+    
+    float4 actual = getI(float4(130987e3, 356.321, 451e5, 1.11111e4));
+    float4 expected = float4(19544e4, 3868, 10956e4, 7623);
+    return assertEqualsMulti(actual.xy, expected.xy, 4.0)
+            && assertEqualsMulti(actual.zw, expected.zw, 1.0);
+}
+
+
+float4 runTests() {
+    
+    if (!(testAddMultiFloats()
+          && testAddMixedFloats()
+          && testMultiplyMultiFloats()
+          && testMultiplyMixedFloats())) {
+        return float4(0.5, 0.1, 0.1, 1.0);
+    }
+    
+    if (!(testGetI1() && testGetI2())) {
+        return float4(0.5, 0.5, 0.05, 1.0);
+    }
+    
+    return float4(0.1,.6,.2,1.0);
+}
+
 
 vertex VertexOut vertexShader(uint vertexId [[vertex_id]],
                               constant ViewportUniform &viewport [[buffer(1)]])
@@ -208,18 +286,22 @@ vertex VertexOut vertexShader(uint vertexId [[vertex_id]],
     out.position = float4(-1.0 + 2.0 * right, 1.0 - 2.0 * bottom, 0.0, 1.0);
     out.uvCoord = float2(right, bottom);
     
+    if (RUN_TESTS) {
+        out.color = runTests();
+    }
+    
     return out;
 }
 
 fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                constant ViewportUniform &viewport [[buffer(1)]])
 {
-    if (viewport.scale < 2.) {
+    if (!RUN_TESTS && viewport.scale < 2.) {
         return float4();
     }
     
-    float2 terrainPoint = getTerrainPoint(in.uvCoord, viewport);
-    float2 st = terrainPoint / 647.0;
+    float4 terrainPoint = getTerrainPoint(in.uvCoord, viewport);
+    float4 st = terrainPoint / 647.0;
     
     float color = snoise(st);
     //        + snoise(st * 2.0 + 2339.) / 2.0
@@ -231,6 +313,12 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     float4 brown = float4(0.3, 0.25, 0.1, 1.0);
     float4 green = float4(0.3, 0.9, 0.6, 1.0);
     
-    return color < 0.5 ? brown : green;
+    float4 result = color < 0.5 ? brown : green;
+    
+    if (RUN_TESTS) {
+        result = (result + in.color) * 0.5;
+    }
+    
+    return result;
 }
 

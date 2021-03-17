@@ -30,7 +30,7 @@ class PointUtil {
         let (xMajor, xMinor) = eulerDivF(num: x, denom: MAJOR_SIZE)
         let (yMajor, yMinor) = eulerDivF(num: y, denom: MAJOR_SIZE)
         
-        return ([xMajor, yMajor], [xMinor, yMinor])
+        return ([xMajor * Float32(MAJOR_SIZE), yMajor * Float32(MAJOR_SIZE)], [xMinor, yMinor])
     }
 }
 

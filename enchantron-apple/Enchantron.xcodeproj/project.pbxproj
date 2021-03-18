@@ -726,6 +726,9 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../enchantron-core/target/debug";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				MTL_LANGUAGE_REVISION = Metal20;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rookandpawn.Enchantron;
 				PRODUCT_NAME = Enchantron;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -752,6 +755,8 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../enchantron-core/target/release";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_FAST_MATH = YES;
+				MTL_LANGUAGE_REVISION = Metal20;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rookandpawn.Enchantron;
 				PRODUCT_NAME = Enchantron;
 				PROVISIONING_PROFILE_SPECIFIER = "";

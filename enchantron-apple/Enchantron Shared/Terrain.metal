@@ -75,9 +75,31 @@ float2 twoProd(float a,float b){
     return float2 (p,err);
 }
 
-float2 df64mult(float2 a,float2 b){
-    float2 p;
-    p=twoProd(a.x,b.x);
+float wtf(float a, float b, float s) {
+    return fma(a, b, s);
+}
+
+float2 two_prod(float a, float b) {
+    float s = a * b;
+    float t = wtf(a, b, -s);
+    return float2(s, t);
+}
+
+float2 two_hilo_sum(float a, float b) {
+    float2 result = float2(a + b, 0.);
+    result.y = b - (result.x - a);
+    return result;
+}
+
+float2 df64mult(float2 x, float2 y) {
+    float2 p = two_prod(x.x, y.x);
+    float t = x.y * y.y;
+    t = fma(x.x, y.y, fma(x.y, y.x, t)) + p.y;
+    return two_hilo_sum(p.x, t);
+}
+
+float2 df64mult2(float2 a,float2 b){
+    float2 p = twoProd(a.x,b.x);
     p.y+=a.x*b.y;
     p.y+=a.y*b.x;
     p=quickTwoSum(p.x,p.y);
@@ -208,13 +230,17 @@ typedef struct
     float4 color;
 } VertexOut;
 
+bool assertEquals(float v1, float v2, float t) {
+    return abs(v1 - v2) <= t;
+}
+
 bool assertEquals(float2 v1, float v2, float t) {
     return abs(v1.x + v1.y - v2) <= t;
 }
 
-bool assertEqualsMulti(float2 v1, float2 v2, float t) {
-    bool2 result = abs(df64add(v1, -v2)) <= t;
-    return result.x && result.y;
+bool assertEquals(float2 v1, float2 v2, float t) {
+    float2 result = df64add(v1, -v2);
+    return abs(dot(result, float2(1.0))) <= t;
 }
 
 bool testAddMultiFloats() {
@@ -230,14 +256,23 @@ bool testAddMixedFloats() {
     
 }
 
+bool testTwoProd() {
+    float2 actual = two_prod(1.30987e8, 0.3660254);
+    return assertEquals(actual.x, 4.794457e7, 0.0)
+            && assertEquals(actual.y, 0, 0.0);
+}
+
 bool testMultiplyMultiFloats() {
-    return assertEquals(df64mult(float2(123.0,0.00123), float2(4.0,0.4)), 541.2054, .001);
+    return assertEquals(df64mult(float2(123.0,0.00123), float2(4.0,0.4)), 541.2054, .001)
+            && assertEquals(df64mult(float2(123.0,0.00123), float2(4.0,0.4)), 541.2054, .001);
 }
 
 bool testMultiplyMixedFloats() {
     return assertEquals(mixedDf64Mult(float2(123.0,0.00123), 4.4), 541.2054, .0001)
             && assertEquals(mixedDf64Mult(float2(0.1, 0.0), C.y), 0.03660254, 0.0001)
-            && assertEquals(mixedDf64Mult(float2(0.2, 0.0), C.y), 0.07320508, 0.0001);
+            && assertEquals(df64mult(
+                    float2(1.30987e8, 3.56321e2), float2(C.y,0.)),
+                    float2(4.79446e7, 99.4923), 0.8);
 }
 
 bool testGetI1() {
@@ -251,10 +286,10 @@ bool testGetI1() {
 
 bool testGetI2() {
     
-    float4 actual = getI(float4(130987e3, 356.321, 451e5, 1.11111e4));
+    float4 actual = getI(float4(130987e3, 356.321, 4511e4, 1.1111e3));
     float4 expected = float4(19544e4, 3868, 10956e4, 7623);
-    return assertEqualsMulti(actual.xy, expected.xy, 4.0)
-            && assertEqualsMulti(actual.zw, expected.zw, 1.0);
+    return assertEquals(actual.xy, expected.xy, 4.0)
+            && assertEquals(actual.zw, expected.zw, 1.0);
 }
 
 
@@ -263,7 +298,8 @@ float4 runTests() {
     if (!(testAddMultiFloats()
           && testAddMixedFloats()
           && testMultiplyMultiFloats()
-          && testMultiplyMixedFloats())) {
+          && testMultiplyMixedFloats()
+          && testTwoProd())) {
         return float4(0.5, 0.1, 0.1, 1.0);
     }
     

@@ -11,6 +11,9 @@
 #include <simd/simd.h>
 
 #import "ShaderTypes.h"
+#import "DoubleMath.h"
+
+#define RUN_TESTS
 
 using namespace metal;
 
@@ -23,8 +26,6 @@ constant float4 C = float4(0.2113248,
                            0.02439024);
                            // 1.0 / 41.0
 
-constant bool RUN_TESTS = true;
-
 // Some useful functions
 float3 mod289(float3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 float2 mod289(float2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -32,137 +33,20 @@ float2 mod289(float4 x) { return mod289(mod289(x.xz) + mod289(x.yw)); }
 float3 permute(float3 x) { return mod289(((x * 34.0) + 1.0)*x); }
 //float3 permute(float3 x, float2 seed) { return mod289(((x*seed.x)+seed.y)*x); }
 
-float2 quickTwoSum(float a,float b){
-    float s=a+b;
-    float e=b-(s-a);
-    return float2(s,e);
-}
-
-float4 twoSumComp(float2 ari,float2 bri){
-    float2 s=ari+bri;
-    float2 v=s-ari;
-    float2 e=(ari-(s-v))+(bri-v);
-    return float4(s.x,e.x,s.y,e.y);
-}
-
-float2 two_hilo_sum(float a, float b) {
-    float2 result = float2(a + b, 0.);
-    result.y = b - (result.x - a);
-    return result;
-}
-
-float2 two_sum(float a, float b) {
-    float hi = a + b;
-    float a1 = hi - b;
-    float b1 = hi - a1;
-    float lo = (a - a1) + (b - b1);
-    return float2(hi, lo);
-}
-
-float2 df64add(float2 x, float2 y) {
-    float2 hilo = two_sum(x.x, y.x);
-    float2 thilo = two_sum(x.y, y.y);
-    float c = hilo.y + thilo.x;
-    hilo = two_hilo_sum(hilo.x, c);
-    c = thilo.y + hilo.y;
-    return two_hilo_sum(hilo.x, c);
-}
-
-/// Add two multi-floats together
-float2 df64add2(float2 a,float2 b){
-    float4 st;
-    st=twoSumComp(a,b);
-    st.y+=st.z;
-    st.xy=quickTwoSum(st.x,st.y);
-    st.y+=st.w;
-    st.xy=quickTwoSum(st.x,st.y);
-    return st.xy;
-}
-
-float2 split(float a){
-    const float split=4097;//(1<<12)+1;
-    float t=a*split;
-    float ahi=t-(t-a);
-    float alo=a-ahi;
-    return float2(ahi,alo);
-}
-
-float2 twoProd(float a,float b){
-    float p=a*b;
-    float2 aS=split(a);
-    float2 bS=split(b);
-    float err=((aS.x*bS.x-p)
-               +aS.x*bS.y+aS.y*bS.x)
-    +aS.y*bS.y;
-    return float2 (p,err);
-}
-
-float wtf(float a, float b, float s) {
-    return fma(a, b, s);
-}
-
-float2 two_prod(float a, float b) {
-    float s = a * b;
-    float t = wtf(a, b, -s);
-    return float2(s, t);
-}
-
-float2 df64mult(float2 x, float2 y) {
-    float2 p = two_prod(x.x, y.x);
-    float t = x.y * y.y;
-    t = fma(x.x, y.y, t);
-    t = fma(x.y, y.x, t);
-    return two_hilo_sum(p.x, t + p.y);
-}
-
-float2 df64mult2(float2 a,float2 b){
-    float2 p = twoProd(a.x,b.x);
-    p.y+=a.x*b.y;
-    p.y+=a.y*b.x;
-    p=quickTwoSum(p.x,p.y);
-    return p;
-}
-
-// This is like df64Add but with b.y = 0
-float2 mixedDf64Add(float2 a, float b) {
-    float2 st;
-    
-    float s=a.x + b;
-    float v=s-a.x;
-    float e=(a.x-(s-v))+(b-v);
-    
-    st = float2(s, e);
-    
-    st.y+=a.y;
-    st.xy=quickTwoSum(st.x,st.y);
-    st.xy=quickTwoSum(st.x,st.y);
-    return st.xy;
-}
-
-// This is like df64mult except b.y = 0
-float2 mixedDf64Mult(float2 a, float b) {
-    float2 p;
-    p=twoProd(a.x,b);
-    
-    p.y += a.y * b;
-    p = quickTwoSum(p.x, p.y);
-    
-    return p;
-}
 
 float4 getI(float4 v) {
-    float2 dottedTerm = df64add(mixedDf64Mult(v.xy, C.y), mixedDf64Mult(v.zw, C.y));
-    float2 ix = df64add(v.xy, dottedTerm);
-    float2 iy = df64add(v.zw, dottedTerm);
+    float2 dottedTerm = df64Add(mixedDf64Mult(v.xy, C.y), mixedDf64Mult(v.zw, C.y));
+    float2 ix = df64Add(v.xy, dottedTerm);
+    float2 iy = df64Add(v.zw, dottedTerm);
     return floor(float4(ix, iy));
 }
 
 float2 getX0(float4 v, float4 i) {
-    float2 dottedTerm = df64add(
+    float2 dottedTerm = df64Add(
             mixedDf64Mult(i.xy, C.x),
             mixedDf64Mult(i.zw, C.x));
-    float2 x0x = df64add(df64add(v.xy, -i.xy), dottedTerm);
-    float2 x0y = df64add(df64add(v.zw, -i.zw), dottedTerm);
+    float2 x0x = df64Add(df64Add(v.xy, -i.xy), dottedTerm);
+    float2 x0y = df64Add(df64Add(v.zw, -i.zw), dottedTerm);
     return float2(x0x.x + x0x.y, x0y.x + x0y.y);
 }
 
@@ -247,6 +131,61 @@ typedef struct
     float4 color;
 } VertexOut;
 
+float4 runTests();
+
+vertex VertexOut vertexShader(uint vertexId [[vertex_id]],
+                              constant ViewportUniform &viewport [[buffer(1)]])
+{
+    VertexOut out;
+    
+    float bottom = vertexId > 1;
+    float right = vertexId == 1 || vertexId == 3;
+    
+    out.position = float4(-1.0 + 2.0 * right, 1.0 - 2.0 * bottom, 0.0, 1.0);
+    out.uvCoord = float2(right, bottom);
+    
+#ifdef RUN_TESTS
+    out.color = runTests();
+#endif
+    
+    return out;
+}
+
+fragment float4 fragmentShader(VertexOut in [[stage_in]],
+                               constant ViewportUniform &viewport [[buffer(1)]])
+{
+#ifndef RUN_TESTS
+    if (viewport.scale < 2.) {
+        return float4();
+    }
+#endif
+    
+    float4 terrainPoint = getTerrainPoint(in.uvCoord, viewport);
+    float4 st = terrainPoint / 647.0;
+    
+    float color = snoise(st);
+    //        + snoise(st * 2.0 + 2339.) / 2.0
+    //        + snoise(st * 4.0 + 239.) / 4.0 ;
+    
+    //color *= 1.0 / (1.75);
+    color = color * 0.5 + 0.5;
+    
+    float4 brown = float4(0.3, 0.25, 0.1, 1.0);
+    float4 green = float4(0.3, 0.9, 0.6, 1.0);
+    
+    float4 result = color < 0.5 ? brown : green;
+    
+#ifdef RUN_TESTS
+        result = (result + in.color) * 0.5;
+#endif
+    
+    return result;
+}
+
+/* Test */
+
+#ifdef RUN_TESTS
+
 bool assertEquals(float v1, float v2, float t) {
     return abs(v1 - v2) <= t;
 }
@@ -256,15 +195,15 @@ bool assertEquals(float2 v1, float v2, float t) {
 }
 
 bool assertEquals(float2 v1, float2 v2, float t) {
-    float2 result = df64add(v1, -v2);
+    float2 result = df64Add(v1, -v2);
     return abs(dot(result, float2(1.0))) <= t;
 }
 
 bool testAddMultiFloats() {
-    return assertEquals(df64add(float2(10.0, 0.1), float2(1.01, 0.001)), 11.111, 0.00001)
-            && assertEquals(df64add(float2(1.2e15, 3.4e13), float2(5.6e11, 7.8e9)), 1.2345678e15, 1e9)
-            && assertEquals(df64add(float2(0.03660254, 0.), float2(0.07320508, 0.)), 0.10980762, 0.0001)
-            && assertEquals(floor(df64add(float2(0.2, 0.), float2(0.1098, 0.00000762))), 0.0, 0.0001);
+    return assertEquals(df64Add(float2(10.0, 0.1), float2(1.01, 0.001)), 11.111, 0.00001)
+            && assertEquals(df64Add(float2(1.2e15, 3.4e13), float2(5.6e11, 7.8e9)), 1.2345678e15, 1e9)
+            && assertEquals(df64Add(float2(0.03660254, 0.), float2(0.07320508, 0.)), 0.10980762, 0.0001)
+            && assertEquals(floor(df64Add(float2(0.2, 0.), float2(0.1098, 0.00000762))), 0.0, 0.0001);
 }
 
 bool testAddMixedFloats() {
@@ -273,21 +212,40 @@ bool testAddMixedFloats() {
     
 }
 
+bool testBasicMath() {
+    return
+        assertEquals(4097. * 1.30987e8, 536653730000.0, 0)
+        && assertEquals(536653730000.0 - (536653730000.0 - 1.30987e8), 130973700.0, 0)
+        && assertEquals(1.30987e8 - 130973700.0, 13304.0, 0)
+    ;
+}
+
+bool testSplit() {
+    float2 actual1 = split(1.30987e8, splitUgh(1.30987e8));
+    float2 actual2 = split(0.3660254, splitUgh(0.3660254));
+    return assertEquals(actual1.x, 130973700.0, 0.0)
+            && assertEquals(actual1.y, 13304.0, 0)
+            && assertEquals(actual2.x, 0.3659668, 0.0)
+            && assertEquals(actual2.y, 0.000058591366, 0)
+    ;
+}
+
 bool testTwoProd() {
-    float2 actual = two_prod(1.30987e8, 0.3660254);
+    float2 actual = twoProd(1.30987e8, 0.3660254);
     return assertEquals(actual.x, 4.794457e7, 0.0)
-            && assertEquals(actual.y, -0.47050047, 0.0);
+            && assertEquals(actual.y, -0.47050047, 0.0)
+    ;
 }
 
 bool testMultiplyMultiFloats() {
-    return assertEquals(df64mult(float2(123.0,0.00123), float2(4.0,0.4)), 541.2054, .001)
-            && assertEquals(df64mult(float2(123.0,0.00123), float2(4.0,0.4)), 541.2054, .001);
+    return assertEquals(df64Mult(float2(123.0,0.00123), float2(4.0,0.4)), 541.2054, .001)
+            && assertEquals(df64Mult(float2(123.0,0.00123), float2(4.0,0.4)), 541.2054, .001);
 }
 
 bool testMultiplyMixedFloats() {
     return assertEquals(mixedDf64Mult(float2(123.0,0.00123), 4.4), 541.2054, .0001)
             && assertEquals(mixedDf64Mult(float2(0.1, 0.0), C.y), 0.03660254, 0.0001)
-            && assertEquals(df64mult(
+            && assertEquals(df64Mult(
                     float2(1.30987e8, 3.56321e2), float2(C.y,0.)),
                     float2(4.79446e7, 99.4923), 0.8);
 }
@@ -335,16 +293,18 @@ float4 runTests() {
     if (!(testAddMultiFloats()
           && testAddMixedFloats()
           && testMultiplyMultiFloats()
-          //&& testMultiplyMixedFloats()
-          //&& testTwoProd()
+          && testMultiplyMixedFloats()
+          && testBasicMath()
+          && testSplit()
+          && testTwoProd()
         )) {
         return float4(0.5, 0.1, 0.1, 1.0);
     }
     
     if (!(testGetI1()
-          && testGetI2()
-          && testGetX0()
-          && testMod289()
+          //&& testGetI2()
+          //&& testGetX0()
+          //&& testMod289()
           )) {
         return float4(0.6, 0.5, 0.05, 1.0);
     }
@@ -353,50 +313,4 @@ float4 runTests() {
 }
 
 
-vertex VertexOut vertexShader(uint vertexId [[vertex_id]],
-                              constant ViewportUniform &viewport [[buffer(1)]])
-{
-    VertexOut out;
-    
-    float bottom = vertexId > 1;
-    float right = vertexId == 1 || vertexId == 3;
-    
-    out.position = float4(-1.0 + 2.0 * right, 1.0 - 2.0 * bottom, 0.0, 1.0);
-    out.uvCoord = float2(right, bottom);
-    
-    if (RUN_TESTS) {
-        out.color = runTests();
-    }
-    
-    return out;
-}
-
-fragment float4 fragmentShader(VertexOut in [[stage_in]],
-                               constant ViewportUniform &viewport [[buffer(1)]])
-{
-    if (!RUN_TESTS && viewport.scale < 2.) {
-        return float4();
-    }
-    
-    float4 terrainPoint = getTerrainPoint(in.uvCoord, viewport);
-    float4 st = terrainPoint / 647.0;
-    
-    float color = snoise(st);
-    //        + snoise(st * 2.0 + 2339.) / 2.0
-    //        + snoise(st * 4.0 + 239.) / 4.0 ;
-    
-    //color *= 1.0 / (1.75);
-    color = color * 0.5 + 0.5;
-    
-    float4 brown = float4(0.3, 0.25, 0.1, 1.0);
-    float4 green = float4(0.3, 0.9, 0.6, 1.0);
-    
-    float4 result = color < 0.5 ? brown : green;
-    
-    if (RUN_TESTS) {
-        result = (result + in.color) * 0.5;
-    }
-    
-    return result;
-}
-
+#endif

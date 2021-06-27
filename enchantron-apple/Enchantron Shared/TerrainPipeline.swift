@@ -14,8 +14,7 @@ class TerrainPipeline {
     
     class func buildMetalVertexDescriptor() -> MTLVertexDescriptor {
         let mtlVertexDescriptor = MTLVertexDescriptor()
-        
-        
+
         return mtlVertexDescriptor
     }
     
@@ -25,10 +24,23 @@ class TerrainPipeline {
         metalKitView: MTKView,
         mtlVertexDescriptor: MTLVertexDescriptor) throws -> MTLRenderPipelineState {
         
-        let library = device.makeDefaultLibrary()
+        let libraryName : String
         
-        let vertexFunction = library?.makeFunction(name: "vertexShader")
-        let fragmentFunction = library?.makeFunction(name: "fragmentShader")
+        // The metal function fma (Fused Multiply Add) does not seem to work on Radeon
+        // graphics chips, so there are two different terrain shaders. One with and one
+        // without
+        if (device.name.contains("adeon")) {
+            libraryName = "TerrainWithoutFma"
+        } else {
+            libraryName = "TerrainWithFma"
+        }
+        
+        let libraryFile = Bundle.main.path(forResource: libraryName, ofType: "metallib")!
+        
+        let library = try device.makeLibrary(filepath: libraryFile)
+        
+        let vertexFunction = library.makeFunction(name: "vertexShader")
+        let fragmentFunction = library.makeFunction(name: "fragmentShader")
         
         let pipelineDescriptor = MTLRenderPipelineDescriptor()
         pipelineDescriptor.label = "TerrainRenderPipeline"

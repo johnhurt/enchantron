@@ -25,10 +25,12 @@ class SpritePipeline {
         metalKitView: MTKView,
         mtlVertexDescriptor: MTLVertexDescriptor) throws -> MTLRenderPipelineState {
         
-        let library = device.makeDefaultLibrary()
+        let libraryFile = Bundle.main.path(forResource: "SpriteShaders", ofType: "metallib")!
         
-        let vertexFunction = library?.makeFunction(name: "spriteVertexShader")
-        let fragmentFunction = library?.makeFunction(name: "spriteFragmentShader")
+        let library = try device.makeLibrary(filepath: libraryFile)
+        
+        let vertexFunction = library.makeFunction(name: "spriteVertexShader")
+        let fragmentFunction = library.makeFunction(name: "spriteFragmentShader")
         
         let pipelineDescriptor = MTLRenderPipelineDescriptor()
         pipelineDescriptor.label = "SpriteRenderPipeline"

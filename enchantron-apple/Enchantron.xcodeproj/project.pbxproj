@@ -3,15 +3,18 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		632D2B052411E5F3002B29D7 /* MultiDragHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632D2B042411E4ED002B29D7 /* MultiDragHandler.swift */; };
 		632D2B062411E5F4002B29D7 /* MultiDragHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632D2B042411E4ED002B29D7 /* MultiDragHandler.swift */; };
 		632D2B082411E813002B29D7 /* TouchLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632D2B072411E813002B29D7 /* TouchLookup.swift */; };
-		6335846C25AA434500A40E2C /* Terrain.metal in Sources */ = {isa = PBXBuildFile; fileRef = 6335846B25AA434500A40E2C /* Terrain.metal */; };
-		6335846D25AA434500A40E2C /* Terrain.metal in Sources */ = {isa = PBXBuildFile; fileRef = 6335846B25AA434500A40E2C /* Terrain.metal */; };
+		632D570826879BA500A40E2C /* SpriteShaders.metallib in Resources */ = {isa = PBXBuildFile; fileRef = 632D570626879BA500A40E2C /* SpriteShaders.metallib */; };
+		632D570F26879BD200A40E2C /* SpriteShaders.metallib in Resources */ = {isa = PBXBuildFile; fileRef = 632D570D26879BD200A40E2C /* SpriteShaders.metallib */; };
+		632D571A26879D1700A40E2C /* TerrainWithoutFma.metallib in Resources */ = {isa = PBXBuildFile; fileRef = 632D571926879D1700A40E2C /* TerrainWithoutFma.metallib */; };
+		632D572526879FFA00A40E2C /* TerrainWithFma.metallib in Resources */ = {isa = PBXBuildFile; fileRef = 632D572326879FFA00A40E2C /* TerrainWithFma.metallib */; };
+		632D572626879FFA00A40E2C /* TerrainWithoutFma.metallib in Resources */ = {isa = PBXBuildFile; fileRef = 632D572426879FFA00A40E2C /* TerrainWithoutFma.metallib */; };
 		6335847125AA454000A40E2C /* TerrainPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6335847025AA454000A40E2C /* TerrainPipeline.swift */; };
 		6335847225AA454000A40E2C /* TerrainPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6335847025AA454000A40E2C /* TerrainPipeline.swift */; };
 		6335847625AA45E600A40E2C /* SpritePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6335847525AA45E600A40E2C /* SpritePipeline.swift */; };
@@ -31,8 +34,6 @@
 		6346A2632138921200481721 /* RookAndPawn White.png in Resources */ = {isa = PBXBuildFile; fileRef = 6346A2612138921200481721 /* RookAndPawn White.png */; };
 		63531FC32278BD850060D9AD /* libenchantron.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63531FC22278BD850060D9AD /* libenchantron.a */; };
 		63531FC52278BD9E0060D9AD /* libenchantron.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63531FC42278BD9E0060D9AD /* libenchantron.a */; };
-		6379BADB258308BF00524998 /* SpriteShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 6379BADA258308BF00524998 /* SpriteShaders.metal */; };
-		6379BADC258308BF00524998 /* SpriteShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 6379BADA258308BF00524998 /* SpriteShaders.metal */; };
 		6379BADE2583E02000524998 /* PointUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6379BADD2583E02000524998 /* PointUtil.swift */; };
 		6379BADF2583E02000524998 /* PointUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6379BADD2583E02000524998 /* PointUtil.swift */; };
 		637D8F0D2575D07F006185D9 /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 637D8F0C2575D07F006185D9 /* Renderer.swift */; };
@@ -91,6 +92,13 @@
 /* Begin PBXFileReference section */
 		632D2B042411E4ED002B29D7 /* MultiDragHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiDragHandler.swift; sourceTree = "<group>"; };
 		632D2B072411E813002B29D7 /* TouchLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchLookup.swift; sourceTree = "<group>"; };
+		632D56AA2683C4C300A40E2C /* DoubleMath.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = DoubleMath.metal; sourceTree = "<group>"; };
+		632D56AF2683F20400A40E2C /* DoubleMath.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DoubleMath.h; sourceTree = "<group>"; };
+		632D570626879BA500A40E2C /* SpriteShaders.metallib */ = {isa = PBXFileReference; lastKnownFileType = "archive.metal-library"; name = SpriteShaders.metallib; path = target/iphoneos/SpriteShaders.metallib; sourceTree = SOURCE_ROOT; };
+		632D570D26879BD200A40E2C /* SpriteShaders.metallib */ = {isa = PBXFileReference; lastKnownFileType = "archive.metal-library"; name = SpriteShaders.metallib; path = target/macosx/SpriteShaders.metallib; sourceTree = SOURCE_ROOT; };
+		632D571926879D1700A40E2C /* TerrainWithoutFma.metallib */ = {isa = PBXFileReference; lastKnownFileType = "archive.metal-library"; name = TerrainWithoutFma.metallib; path = target/macosx/TerrainWithoutFma.metallib; sourceTree = SOURCE_ROOT; };
+		632D572326879FFA00A40E2C /* TerrainWithFma.metallib */ = {isa = PBXFileReference; lastKnownFileType = "archive.metal-library"; name = TerrainWithFma.metallib; path = target/iphoneos/TerrainWithFma.metallib; sourceTree = SOURCE_ROOT; };
+		632D572426879FFA00A40E2C /* TerrainWithoutFma.metallib */ = {isa = PBXFileReference; lastKnownFileType = "archive.metal-library"; name = TerrainWithoutFma.metallib; path = target/iphoneos/TerrainWithoutFma.metallib; sourceTree = SOURCE_ROOT; };
 		6335846B25AA434500A40E2C /* Terrain.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Terrain.metal; sourceTree = "<group>"; };
 		6335847025AA454000A40E2C /* TerrainPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerrainPipeline.swift; sourceTree = "<group>"; };
 		6335847525AA45E600A40E2C /* SpritePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpritePipeline.swift; sourceTree = "<group>"; };
@@ -167,6 +175,25 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		632D56F52687996400A40E2C /* MetalLibs */ = {
+			isa = PBXGroup;
+			children = (
+				632D571926879D1700A40E2C /* TerrainWithoutFma.metallib */,
+				632D570D26879BD200A40E2C /* SpriteShaders.metallib */,
+			);
+			path = MetalLibs;
+			sourceTree = "<group>";
+		};
+		632D56FE26879A3500A40E2C /* MetalLibs */ = {
+			isa = PBXGroup;
+			children = (
+				632D572326879FFA00A40E2C /* TerrainWithFma.metallib */,
+				632D572426879FFA00A40E2C /* TerrainWithoutFma.metallib */,
+				632D570626879BA500A40E2C /* SpriteShaders.metallib */,
+			);
+			path = MetalLibs;
+			sourceTree = "<group>";
+		};
 		63410978211CC7BE00D40139 = {
 			isa = PBXGroup;
 			children = (
@@ -184,7 +211,6 @@
 				6379BAD92583089C00524998 /* Shaders */,
 				63F97B12211CCC1400784701 /* Enchantron-Bridging-Header.h */,
 				63D5899C226E59F200A40E2C /* enchantron.h */,
-				637D8F0F2575D111006185D9 /* ShaderTypes.h */,
 				6346A2612138921200481721 /* RookAndPawn White.png */,
 				637D8F0C2575D07F006185D9 /* Renderer.swift */,
 				639CC0D9247098A700A40E2C /* Animation.swift */,
@@ -230,6 +256,7 @@
 		63410988211CC7C000D40139 /* Enchantron iOS */ = {
 			isa = PBXGroup;
 			children = (
+				632D56FE26879A3500A40E2C /* MetalLibs */,
 				63410989211CC7C000D40139 /* AppDelegate.swift */,
 				6341098B211CC7C000D40139 /* GameViewController.swift */,
 				6341098D211CC7C000D40139 /* Main.storyboard */,
@@ -242,6 +269,7 @@
 		63410999211CC7C000D40139 /* Enchantron macOS */ = {
 			isa = PBXGroup;
 			children = (
+				632D56F52687996400A40E2C /* MetalLibs */,
 				6341099A211CC7C000D40139 /* AppDelegate.swift */,
 				6341099C211CC7C000D40139 /* GameViewController.swift */,
 				6341099E211CC7C000D40139 /* Main.storyboard */,
@@ -272,8 +300,11 @@
 		6379BAD92583089C00524998 /* Shaders */ = {
 			isa = PBXGroup;
 			children = (
+				637D8F0F2575D111006185D9 /* ShaderTypes.h */,
 				6379BADA258308BF00524998 /* SpriteShaders.metal */,
 				6335846B25AA434500A40E2C /* Terrain.metal */,
+				632D56AA2683C4C300A40E2C /* DoubleMath.metal */,
+				632D56AF2683F20400A40E2C /* DoubleMath.h */,
 			);
 			name = Shaders;
 			sourceTree = "<group>";
@@ -385,11 +416,14 @@
 				63E983832129C9B90056E91C /* Indira_K.ttf in Resources */,
 				6341098F211CC7C000D40139 /* Main.storyboard in Resources */,
 				63B04A96227F06DC00A40E2C /* overworld.png in Resources */,
+				632D572626879FFA00A40E2C /* TerrainWithoutFma.metallib in Resources */,
 				63410992211CC7C000D40139 /* LaunchScreen.storyboard in Resources */,
+				632D572526879FFA00A40E2C /* TerrainWithFma.metallib in Resources */,
 				63B7F4A624AB501A00A40E2C /* gist.png in Resources */,
 				638DC4E32373612000DD724F /* character.png in Resources */,
 				6346A2622138921200481721 /* RookAndPawn White.png in Resources */,
 				634109A8211CC7C000D40139 /* Assets.xcassets in Resources */,
+				632D570826879BA500A40E2C /* SpriteShaders.metallib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -401,9 +435,11 @@
 				634109A0211CC7C000D40139 /* Main.storyboard in Resources */,
 				63B7F4A724AB51A700A40E2C /* gist.png in Resources */,
 				63E983842129C9B90056E91C /* Indira_K.ttf in Resources */,
+				632D571A26879D1700A40E2C /* TerrainWithoutFma.metallib in Resources */,
 				638DC4E42373612000DD724F /* character.png in Resources */,
 				634109A9211CC7C000D40139 /* Assets.xcassets in Resources */,
 				6346A2632138921200481721 /* RookAndPawn White.png in Resources */,
+				632D570F26879BD200A40E2C /* SpriteShaders.metallib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -412,6 +448,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		633D0B212405A4C200A40E2C /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -425,10 +462,11 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\n# The $PATH used by XCode likely won't contain Cargo, fix that.\n# This assumes a default `rustup` setup.\nexport PATH=\"$HOME/.cargo/bin:$PATH\"\n\n# --xcode-integ determines --release and --targets from XCode's env vars.\n# Depending your setup, specify the rustup toolchain explicitly.\ncargo lipo --xcode-integ --manifest-path ../enchantron-core/Cargo.toml\n";
+			shellScript = "\n# The $PATH used by XCode likely won't contain Cargo, fix that.\n# This assumes a default `rustup` setup.\nexport PATH=\"$HOME/.cargo/bin:$PATH\"\n\n# Also add our build scripts dir\nexport PATH=\"${SRCROOT}/build-scripts:$PATH\"\n\n# Build sprite shaders\nbuild-metal.sh -l SpriteShaders -p iphoneos -t \"${SRCROOT}/target\" -s \"${SRCROOT}/Enchantron Shared\" SpriteShaders\n\n# Build the terrain shaders without fma\nbuild-metal.sh -l TerrainWithoutFma -p iphoneos -t \"${SRCROOT}/target\" -s \"${SRCROOT}/Enchantron Shared\" -D WITHOUT_FMA Terrain DoubleMath\n\n# Build the terrain shaders with fma\nbuild-metal.sh -l TerrainWithFma -p iphoneos -t \"${SRCROOT}/target\" -s \"${SRCROOT}/Enchantron Shared\" -D WITH_FMA Terrain DoubleMath\n\n# --xcode-integ determines --release and --targets from XCode's env vars.\n# Depending your setup, specify the rustup toolchain explicitly.\ncargo lipo --xcode-integ --manifest-path ../enchantron-core/Cargo.toml\n";
 		};
 		63634F21250311AF0040F778 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -442,7 +480,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\n# The $PATH used by XCode likely won't contain Cargo, fix that.\n# This assumes a default `rustup` setup.\nexport PATH=\"$HOME/.cargo/bin:$PATH\"\n\ncargo build --manifest-path ../enchantron-core/Cargo.toml\n";
+			shellScript = "set -e\n\n# The $PATH used by XCode likely won't contain Cargo, fix that.\n# This assumes a default `rustup` setup.\nexport PATH=\"$HOME/.cargo/bin:$PATH\"\n\n# Also add our build scripts dir\nexport PATH=\"${SRCROOT}/build-scripts:$PATH\"\n\n# Build sprite shaders\nbuild-metal.sh -l SpriteShaders -p macosx -t \"${SRCROOT}/target\" -s \"${SRCROOT}/Enchantron Shared\" SpriteShaders\n\n# Build the terrain shaders without fma\nbuild-metal.sh -l TerrainWithoutFma -p macosx -t \"${SRCROOT}/target\" -s \"${SRCROOT}/Enchantron Shared\" -D WITHOUT_FMA Terrain DoubleMath\n\n# Build the terrain shaders with fma\n# build-metal.sh -l TerrainWithFma -p macosx -t \"${SRCROOT}/target\" -s \"${SRCROOT}/Enchantron Shared\" -D WITH_FMA Terrain DoubleMath\n\ncargo build --manifest-path ../enchantron-core/Cargo.toml\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -454,7 +492,6 @@
 				63F97B06211CCB0400784701 /* TextArea.swift in Sources */,
 				633D0B23240FCA2800A40E2C /* SpriteGroup.swift in Sources */,
 				632D2B082411E813002B29D7 /* TouchLookup.swift in Sources */,
-				6335846C25AA434500A40E2C /* Terrain.metal in Sources */,
 				639CC0DA247098A700A40E2C /* Animation.swift in Sources */,
 				63F97B0C211CCB0400784701 /* HandlerRegistration.swift in Sources */,
 				6395650B2126469C006F2A71 /* Texture.swift in Sources */,
@@ -478,7 +515,6 @@
 				6335847125AA454000A40E2C /* TerrainPipeline.swift in Sources */,
 				639AD25422AC8E6900A35225 /* Viewport.swift in Sources */,
 				6341098A211CC7C000D40139 /* AppDelegate.swift in Sources */,
-				6379BADB258308BF00524998 /* SpriteShaders.metal in Sources */,
 				63956511212707FF006F2A71 /* NativeView.swift in Sources */,
 				639EBFB223DE46D200A40E2C /* ByteBufferExt.swift in Sources */,
 			);
@@ -491,7 +527,6 @@
 				637D8F12257EAEC4006185D9 /* SpriteSource.swift in Sources */,
 				63F97B07211CCB0400784701 /* TextArea.swift in Sources */,
 				63F97B0D211CCB0400784701 /* HandlerRegistration.swift in Sources */,
-				6335846D25AA434500A40E2C /* Terrain.metal in Sources */,
 				6395650C2126469C006F2A71 /* Texture.swift in Sources */,
 				63F97AFB211CC9B500784701 /* RustBinder.swift in Sources */,
 				6395650F212646BD006F2A71 /* ResourceLoader.swift in Sources */,
@@ -515,7 +550,6 @@
 				6335847225AA454000A40E2C /* TerrainPipeline.swift in Sources */,
 				639AD25522AC943E00A35225 /* Viewport.swift in Sources */,
 				6341099B211CC7C000D40139 /* AppDelegate.swift in Sources */,
-				6379BADC258308BF00524998 /* SpriteShaders.metal in Sources */,
 				639CC0DB247098A700A40E2C /* Animation.swift in Sources */,
 				63956512212707FF006F2A71 /* NativeView.swift in Sources */,
 			);

@@ -27,18 +27,39 @@ constant float4 C = float4(0.2113248,
                            // 1.0 / 41.0
 
 // Some useful functions
-float3 mod289(float3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+float mod289(float x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 float2 mod289(float2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-float2 mod289(float4 x) { return mod289(mod289(x.xz) + mod289(x.yw)); }
+float3 mod289(float3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+
+float multiDfMod289(float2 x) {
+    float2 rawMod = mod289(x);
+    float useSmall = abs(x.y) > 0;
+    
+    float result = rawMod.x + useSmall * rawMod.y;
+    
+    return result - ((result >= 289) * 289);
+}
+
 float3 permute(float3 x) { return mod289(((x * 34.0) + 1.0)*x); }
 //float3 permute(float3 x, float2 seed) { return mod289(((x*seed.x)+seed.y)*x); }
 
+float2 getIStep1(float4 v) {
+    return mixedDf64Mult(v.xy, C.y);
+}
+
+float2 floorDfMulti(float2 v) {
+    float2 rawFloor = floor(v);
+    float x = abs(trunc(v.y)) > 1;
+    float y = v.y < 0;
+    float2 diff = float2(!x * y, x * y);
+    return rawFloor + diff;
+}
 
 float4 getI(float4 v) {
     float2 dottedTerm = df64Add(mixedDf64Mult(v.xy, C.y), mixedDf64Mult(v.zw, C.y));
     float2 ix = df64Add(v.xy, dottedTerm);
     float2 iy = df64Add(v.zw, dottedTerm);
-    return floor(float4(ix, iy));
+    return float4(floorDfMulti(ix), floorDfMulti(iy));
 }
 
 float2 getX0(float4 v, float4 i) {
@@ -73,7 +94,7 @@ float snoise(float4 v) {
     
     // Do some permutations to avoid
     // truncation effects in permutation
-    float2 i = mod289(i4);
+    float2 i = float2(multiDfMod289(i4.xy), multiDfMod289(i4.zw));
     float3 p = permute(
                        permute( i.y + float3(0.0, i1.y, 1.0))
                        + i.x + float3(0.0, i1.x, 1.0 ));
@@ -200,10 +221,12 @@ bool assertEquals(float2 v1, float2 v2, float t) {
 }
 
 bool testAddMultiFloats() {
-    return assertEquals(df64Add(float2(10.0, 0.1), float2(1.01, 0.001)), 11.111, 0.00001)
-            && assertEquals(df64Add(float2(1.2e15, 3.4e13), float2(5.6e11, 7.8e9)), 1.2345678e15, 1e9)
-            && assertEquals(df64Add(float2(0.03660254, 0.), float2(0.07320508, 0.)), 0.10980762, 0.0001)
-            && assertEquals(floor(df64Add(float2(0.2, 0.), float2(0.1098, 0.00000762))), 0.0, 0.0001);
+    return true
+        && assertEquals(df64Add(float2(10.0, 0.1), float2(1.01, 0.001)), float2(11.111, -6.9034286e-8), 0)
+        && assertEquals(df64Add(float2(1.2e15, 3.4e13), float2(5.6e11, 7.8e9)), float2(1.2345678e15, 2.3760384e7), 0)
+        && assertEquals(df64Add(float2(0.03660254, 0.), float2(0.07320508, 0.)), 0.109807625, 0)
+        && assertEquals(df64Add(float2(0.2, 0.), float2(0.1098, 0.00000762)), float2(0.30980763, -1.944045e-9), 0)
+    ;
 }
 
 bool testAddMixedFloats() {
@@ -220,6 +243,10 @@ bool testBasicMath() {
     ;
 }
 
+#ifdef WITHOUT_FMA
+
+#include "NoFmaHelpers.h"
+
 bool testSplit() {
     float2 actual1 = split(1.30987e8, splitUgh(1.30987e8));
     float2 actual2 = split(0.3660254, splitUgh(0.3660254));
@@ -230,10 +257,52 @@ bool testSplit() {
     ;
 }
 
+bool testTwoProd1() {
+    float4 actual = twoProd1(1.30987e8, 0.3660254, float2(536653730000.0, 536522750000.0), float2(1499.606, 1499.24));
+    
+    return true
+        && assertEquals(actual.x, 130973700.0, 0.0)
+        && assertEquals(actual.y, 13304.0, 0)
+        && assertEquals(actual.z, 0.3659668, 0.0)
+        && assertEquals(actual.w, 0.000058591366, 0)
+    ;
+}
+
+bool testTwoProd2() {
+    float4 part1 = float4(130973700.0, 13304.0, 0.3659668, 0.000058591366);
+    float p0 = 47944570.0;
+    
+    float4 actual = twoProd2(p0, part1);
+    return true
+        && assertEquals(actual.x, -12544.0, 0)
+        && assertEquals(actual.y, 7673.9277, 0)
+        && assertEquals(actual.z, 4868.8223, 0)
+        && assertEquals(actual.w, 0.77949953, 0)
+    ;
+}
+
+bool testTwoProdErr() {
+    float2 actual = twoProdErr(float4(-12544.0, 7673.9277, 4868.8223, 0.77949953));
+    return assertEquals(actual.x, -1.25, 0.0)
+            && assertEquals(actual.y, 0.77949953, 0.0)
+    ;
+}
+
+#endif
+
 bool testTwoProd() {
     float2 actual = twoProd(1.30987e8, 0.3660254);
-    return assertEquals(actual.x, 4.794457e7, 0.0)
-            && assertEquals(actual.y, -0.47050047, 0.0)
+    return true
+        && assertEquals(actual.x, 47944570.0, 0)
+        && assertEquals(actual.y, -0.47050047, 0)
+    ;
+}
+
+bool testTwoProdAgain() {
+    float2 actual = twoProd(130987e3, 0.3660254);
+    return true
+        && assertEquals(actual.x, 47944570.0, 0)
+        && assertEquals(actual.y, -0.47050047, 0)
     ;
 }
 
@@ -243,11 +312,22 @@ bool testMultiplyMultiFloats() {
 }
 
 bool testMultiplyMixedFloats() {
-    return assertEquals(mixedDf64Mult(float2(123.0,0.00123), 4.4), 541.2054, .0001)
-            && assertEquals(mixedDf64Mult(float2(0.1, 0.0), C.y), 0.03660254, 0.0001)
-            && assertEquals(df64Mult(
-                    float2(1.30987e8, 3.56321e2), float2(C.y,0.)),
-                    float2(4.79446e7, 99.4923), 0.8);
+    float2 actual1 = mixedDf64Mult(float2(123.0,0.00123), 4.4);
+    float2 actual2 = mixedDf64Mult(float2(0.1, 0.0), C.y);
+    
+    return true
+        && assertEquals(actual1.x, 541.20544, 0)
+        && assertEquals(actual1.y, -2.0605512e-5, 0)
+        && assertEquals(actual2.x, 0.036602538, 0)
+        && assertEquals(actual2.y, 1.2904784e-9, 0)
+    ;
+        
+    
+//    return assertEquals(mixedDf64Mult(float2(123.0,0.00123), 4.4), 541.2054, .0001)
+//            && assertEquals(mixedDf64Mult(float2(0.1, 0.0), C.y), 0.03660254, 0.0001)
+//            && assertEquals(df64Mult(
+//                    float2(1.30987e8, 3.56321e2), float2(C.y,0.)),
+//                    float2(4.79446e7, 99.4923), 0.8);
 }
 
 bool testGetI1() {
@@ -263,9 +343,24 @@ bool testGetI2() {
     
     float4 actual = getI(float4(130987e3, 356.321, 4511e4, 1.1111e3));
     float4 expected = float4(19544e4, 3868, 10956e4, 7623);
-    return assertEquals(actual.xy, expected.xy, 0.0)
-            && assertEquals(actual.zw, expected.zw, 0.0);
+    return true
+            && assertEquals(actual.xy, expected.xy, 0.0)
+            && assertEquals(actual.zw, expected.zw, 0.0)
+    ;
 }
+
+
+bool testGetIStep1() {
+    float2 actual = getIStep1(float4(130987e3, 356.321, 4511e4, 1.1111e3));
+    float2 expected = float2(4.7944696e7, 1.9520264);
+    
+    return true
+            && assertEquals(actual.x, expected.x, 0.0)
+            && assertEquals(actual.y, expected.y, 0.0)
+    ;
+    
+}
+
 
 bool testGetX0() {
     float2 v = float2(100.0, -500.0);
@@ -282,10 +377,13 @@ bool testGetX0() {
 }
 
 bool testMod289() {
-    float2 actual = mod289(float4(123000, 345, -31000, -542));
-    float2 expected = float2(231, -41);
-    return assertEquals(actual.x, expected.x, 0)
-            && assertEquals(actual.y, expected.y, 0);
+    float actual1 = multiDfMod289(float2(123000, 345));
+    float actual2 = multiDfMod289(float2(-31000, -542));
+    float2 expected = float2(231, 289-41);
+    return true
+        && assertEquals(actual1, expected.x, 0)
+        && assertEquals(actual2, expected.y, 0)
+    ;
 }
 
 float4 runTests() {
@@ -295,16 +393,18 @@ float4 runTests() {
           && testMultiplyMultiFloats()
           && testMultiplyMixedFloats()
           && testBasicMath()
-          && testSplit()
+          
           && testTwoProd()
+          
         )) {
         return float4(0.5, 0.1, 0.1, 1.0);
     }
     
     if (!(testGetI1()
-          //&& testGetI2()
-          //&& testGetX0()
-          //&& testMod289()
+         && testGetIStep1()
+         && testGetI2()
+         //&& testGetX0()
+         //&& testMod289()
           )) {
         return float4(0.6, 0.5, 0.05, 1.0);
     }

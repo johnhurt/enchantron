@@ -72,7 +72,12 @@ do
     AIR_FILE="$METAL_BUILD_DIR/$f.air"
     AIR_FILES="$AIR_FILES $AIR_FILE"
     
-    xcrun -sdk $PLATFORM metal -ffast-math -c "$METAL_FILE" -o "${AIR_FILE}" $PREPROCESSOR_DEFINE
+    if [[ $f == *"NoFastMath"* ]]
+    then
+        NO_FAST_MATH="-fno-fast-math"
+    fi
+    
+    xcrun -sdk $PLATFORM metal $NO_FAST_MATH -c "$METAL_FILE" -o "${AIR_FILE}" $PREPROCESSOR_DEFINE
     
 done
 

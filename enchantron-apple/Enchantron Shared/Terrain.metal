@@ -243,53 +243,6 @@ bool testBasicMath() {
     ;
 }
 
-#ifdef WITHOUT_FMA
-
-#include "NoFmaHelpers.h"
-
-bool testSplit() {
-    float2 actual1 = split(1.30987e8, splitUgh(1.30987e8));
-    float2 actual2 = split(0.3660254, splitUgh(0.3660254));
-    return assertEquals(actual1.x, 130973700.0, 0.0)
-            && assertEquals(actual1.y, 13304.0, 0)
-            && assertEquals(actual2.x, 0.3659668, 0.0)
-            && assertEquals(actual2.y, 0.000058591366, 0)
-    ;
-}
-
-bool testTwoProd1() {
-    float4 actual = twoProd1(1.30987e8, 0.3660254, float2(536653730000.0, 536522750000.0), float2(1499.606, 1499.24));
-    
-    return true
-        && assertEquals(actual.x, 130973700.0, 0.0)
-        && assertEquals(actual.y, 13304.0, 0)
-        && assertEquals(actual.z, 0.3659668, 0.0)
-        && assertEquals(actual.w, 0.000058591366, 0)
-    ;
-}
-
-bool testTwoProd2() {
-    float4 part1 = float4(130973700.0, 13304.0, 0.3659668, 0.000058591366);
-    float p0 = 47944570.0;
-    
-    float4 actual = twoProd2(p0, part1);
-    return true
-        && assertEquals(actual.x, -12544.0, 0)
-        && assertEquals(actual.y, 7673.9277, 0)
-        && assertEquals(actual.z, 4868.8223, 0)
-        && assertEquals(actual.w, 0.77949953, 0)
-    ;
-}
-
-bool testTwoProdErr() {
-    float2 actual = twoProdErr(float4(-12544.0, 7673.9277, 4868.8223, 0.77949953));
-    return assertEquals(actual.x, -1.25, 0.0)
-            && assertEquals(actual.y, 0.77949953, 0.0)
-    ;
-}
-
-#endif
-
 bool testTwoProd() {
     float2 actual = twoProd(1.30987e8, 0.3660254);
     return true
@@ -393,7 +346,6 @@ float4 runTests() {
           && testMultiplyMultiFloats()
           && testMultiplyMixedFloats()
           && testBasicMath()
-          
           && testTwoProd()
           
         )) {

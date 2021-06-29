@@ -100,10 +100,6 @@
 		632D571926879D1700A40E2C /* TerrainWithoutFma.metallib */ = {isa = PBXFileReference; lastKnownFileType = "archive.metal-library"; name = TerrainWithoutFma.metallib; path = target/macosx/TerrainWithoutFma.metallib; sourceTree = SOURCE_ROOT; };
 		632D572326879FFA00A40E2C /* TerrainWithFma.metallib */ = {isa = PBXFileReference; lastKnownFileType = "archive.metal-library"; name = TerrainWithFma.metallib; path = target/iphoneos/TerrainWithFma.metallib; sourceTree = SOURCE_ROOT; };
 		632D572426879FFA00A40E2C /* TerrainWithoutFma.metallib */ = {isa = PBXFileReference; lastKnownFileType = "archive.metal-library"; name = TerrainWithoutFma.metallib; path = target/iphoneos/TerrainWithoutFma.metallib; sourceTree = SOURCE_ROOT; };
-		632D572F2688DD6000A40E2C /* NoFmaHelpers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NoFmaHelpers.h; sourceTree = "<group>"; };
-		632D57302688DD7A00A40E2C /* NoFmaHelpersNoFastMath.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = NoFmaHelpersNoFastMath.metal; sourceTree = "<group>"; };
-		632D57372688F94600A40E2C /* YesFmaHelpers.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = YesFmaHelpers.metal; sourceTree = "<group>"; };
-		632D57382688F97400A40E2C /* YesFmaHelpers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = YesFmaHelpers.h; sourceTree = "<group>"; };
 		632D573D2688FAF100A40E2C /* TerrainWithFma.metallib */ = {isa = PBXFileReference; lastKnownFileType = "archive.metal-library"; name = TerrainWithFma.metallib; path = target/macosx/TerrainWithFma.metallib; sourceTree = SOURCE_ROOT; };
 		632D574526890B6F00A40E2C /* DoubleMathHelpers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DoubleMathHelpers.h; sourceTree = "<group>"; };
 		632D574626890B8900A40E2C /* DoubleMathHelpersNoFastMath.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = DoubleMathHelpersNoFastMath.metal; sourceTree = "<group>"; };
@@ -310,10 +306,6 @@
 				6335846B25AA434500A40E2C /* Terrain.metal */,
 				632D56AA2683C4C300A40E2C /* DoubleMath.metal */,
 				632D56AF2683F20400A40E2C /* DoubleMath.h */,
-				632D572F2688DD6000A40E2C /* NoFmaHelpers.h */,
-				632D57302688DD7A00A40E2C /* NoFmaHelpersNoFastMath.metal */,
-				632D57382688F97400A40E2C /* YesFmaHelpers.h */,
-				632D57372688F94600A40E2C /* YesFmaHelpers.metal */,
 				632D574526890B6F00A40E2C /* DoubleMathHelpers.h */,
 				632D574626890B8900A40E2C /* DoubleMathHelpersNoFastMath.metal */,
 			);

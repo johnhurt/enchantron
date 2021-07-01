@@ -16,7 +16,7 @@
 #define RUN_TESTS
 
 using namespace metal;
-
+constant float MAX_INT = 16777216;
 constant float4 C = float4(0.2113248,
                            // (3.0-sqrt(3.0))/6.0
                            0.3660254,
@@ -43,16 +43,14 @@ float multiDfMod289(float2 x) {
 float3 permute(float3 x) { return mod289(((x * 34.0) + 1.0)*x); }
 //float3 permute(float3 x, float2 seed) { return mod289(((x*seed.x)+seed.y)*x); }
 
-float2 getIStep1(float4 v) {
-    return mixedDf64Mult(v.xy, C.y);
-}
-
 float2 floorDfMulti(float2 v) {
+    float hiIsInt = trunc(v.x) == v.x;
+    float loIsFract = trunc(v.y) == 0;
+    float loIsNeg = (v.y < 0);
     float2 rawFloor = floor(v);
-    float x = abs(trunc(v.y)) > 1;
-    float y = v.y < 0;
-    float2 diff = float2(!x * y, x * y);
-    return rawFloor + diff;
+    return float2(
+          rawFloor.x - loIsNeg * loIsFract * hiIsInt,
+          rawFloor.y * (!loIsFract) * hiIsInt);
 }
 
 float4 getI(float4 v) {
@@ -230,8 +228,8 @@ bool testAddMultiFloats() {
 }
 
 bool testAddMixedFloats() {
-    return assertEquals(mixedDf64Add(float2(10.0, 0.1), 1.01), 11.11, 0.0001)
-            && assertEquals(mixedDf64Add(float2(1.2e15, 3.4e13), 5.6e11), 1.23456e15, 1e9);
+    return assertEquals(mixedDf64Add(float2(10.0, 0.1), 1.01), float2(11.11, 3.3527613e-7), 0.000)
+            && assertEquals(mixedDf64Add(float2(1.2e15, 3.4e13), 5.6e11), float2(1.23456e15, 8.388608e6), 0);
     
 }
 
@@ -295,21 +293,65 @@ bool testGetI1() {
 bool testGetI2() {
     
     float4 actual = getI(float4(130987e3, 356.321, 4511e4, 1.1111e3));
-    float4 expected = float4(19544e4, 3868, 10956e4, 7623);
+    float4 expected = float4(1.9544387e8, -6, 1.09567624e8, -3);
     return true
             && assertEquals(actual.xy, expected.xy, 0.0)
             && assertEquals(actual.zw, expected.zw, 0.0)
     ;
 }
 
+float2 getIStep1(float4 v) {
+    return mixedDf64Mult(v.xy, C.y);
+}
 
-bool testGetIStep1() {
-    float2 actual = getIStep1(float4(130987e3, 356.321, 4511e4, 1.1111e3));
-    float2 expected = float2(4.7944696e7, 1.9520264);
+float2 getIStep2(float4 v) {
+    return mixedDf64Mult(v.zw, C.y);
+}
+
+float2 getIStep3(float4 v) {
+    return df64Add(getIStep1(v), getIStep2(v));
+}
+
+float2 getIStep4(float4 v) {
+    return df64Add(v.xy, getIStep3(v));
+}
+
+float2 getIStep5(float4 v) {
+    return floorDfMulti(getIStep4(v));
+}
+
+bool testFloor() {
+    float2 actual = floorDfMulti(float2(1.9544387e8, -5.772616));
+    float2 expected = float2(1.9544387e8, -6);
     
     return true
-            && assertEquals(actual.x, expected.x, 0.0)
-            && assertEquals(actual.y, expected.y, 0.0)
+        && assertEquals(actual.x, expected.x, 0)
+        && assertEquals(actual.y, expected.y, 0)
+    ;
+}
+
+bool testGetISteps() {
+    float2 actual1 = getIStep1(float4(1.3098736e8, -3.679, 4.511111e7, -0.9));
+    float2 expected1 = float2(4.7944696e7, 1.9520321);
+    
+    float2 actual2 = getIStep2(float4(1.3098736e8, -3.679, 4.511111e7, -0.9));
+    float2 expected2 = float2(1.6511812e7, -0.04564798);
+    
+    float2 actual3 = getIStep3(float4(1.3098736e8, -3.679, 4.511111e7, -0.9));
+    float2 expected3 = float2(6.4456508e7, 1.9063841);
+    
+    float2 actual4 = getIStep4(float4(1.3098736e8, -3.679, 4.511111e7, -0.9));
+    float2 expected4 = float2(1.9544387e8, -5.772616);
+    
+    return true
+            && assertEquals(actual1.x, expected1.x, 0.0)
+            && assertEquals(actual1.y, expected1.y, 0.0)
+            && assertEquals(actual2.x, expected2.x, 0.0)
+            && assertEquals(actual2.y, expected2.y, 0.0)
+            && assertEquals(actual3.x, expected3.x, 0.0)
+            && assertEquals(actual3.y, expected3.y, 0.0)
+            && assertEquals(actual4.x, expected4.x, 0.0)
+            && assertEquals(actual4.y, expected4.y, 0.0)
     ;
     
 }
@@ -352,11 +394,13 @@ float4 runTests() {
         return float4(0.5, 0.1, 0.1, 1.0);
     }
     
-    if (!(testGetI1()
-         && testGetIStep1()
+    if (!(true
+         && testGetI1()
+         && testGetISteps()
+         && testFloor()
          && testGetI2()
-         //&& testGetX0()
-         //&& testMod289()
+         && testGetX0()
+         && testMod289()
           )) {
         return float4(0.6, 0.5, 0.05, 1.0);
     }

@@ -73,7 +73,7 @@ class Renderer: NSObject, MTKViewDelegate {
         
         systemInterop.transitionService.transiation = { (view) in
             
-            view.layout(size: self.screenSize)
+            view.layout(size: self.screenSize, scale: screenScale)
             
             let prevView = self.currentView
             self.currentView = view
@@ -154,7 +154,7 @@ class Renderer: NSObject, MTKViewDelegate {
         self.screenSize = size
         self.screenHeight = size.y
         self.systemInterop.setScreenSize(screenSize)
-        self.currentView.layout(size: size)
+        self.currentView.layout(size: size, scale: screenScale)
     }
     
     func magnify(scaleChangeAdditive: Float64, centerPoint: SIMD2<Float64>) {

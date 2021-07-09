@@ -109,26 +109,29 @@ impl SimplexGenerator {
         let x = [
             2.0f32 * (p[0] * CW).fract() - 1.0,
             2.0f32 * (p[1] * CW).fract() - 1.0,
-            2.0f32 * (p[2] * CW).fract() - 1.0
+            2.0f32 * (p[2] * CW).fract() - 1.0,
         ];
 
-        let h = [
-            x[0].abs() - 0.5,
-            x[1].abs() - 0.5,
-            x[2].abs() - 0.5,
-        ];
+        let h = [x[0].abs() - 0.5, x[1].abs() - 0.5, x[2].abs() - 0.5];
 
         let ox = floor_3(&plus_3(&x, &vec_3(0.5)));
         let a0 = minus_3(&x, &ox);
 
-        m = times_3(&m, &minus_3(&vec_3(1.7928429),
-            &times_3(&vec_3(0.85373473),
-            &times_3(&times_3(&a0, &a0), &times_3(&h, &h)))));
+        m = times_3(
+            &m,
+            &minus_3(
+                &vec_3(1.7928429),
+                &times_3(
+                    &vec_3(0.85373473),
+                    &times_3(&times_3(&a0, &a0), &times_3(&h, &h)),
+                ),
+            ),
+        );
 
         let g = [
             a0[0] * x0[0] + h[0] * x0[1],
             a0[1] * x12_top[0] + h[1] * x12_top[1],
-            a0[2] * x12_bottom[0] + h[2] * x12_bottom[1]
+            a0[2] * x12_bottom[0] + h[2] * x12_bottom[1],
         ];
 
         130.0_f32 * dot_3(&m, &g)

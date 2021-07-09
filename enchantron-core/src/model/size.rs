@@ -1,3 +1,4 @@
+use super::Point;
 use std::ops::{Mul, MulAssign};
 
 #[derive(Default, Debug, Clone, PartialEq, Copy)]
@@ -41,5 +42,9 @@ impl Size {
 
     pub fn is_zero(&self) -> bool {
         self.width == 0. && self.height == 0.
+    }
+
+    pub fn as_point(&self) -> Point {
+        Point::new(self.width, self.height)
     }
 }

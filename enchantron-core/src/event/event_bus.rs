@@ -44,7 +44,8 @@ macro_rules! define_ui_event {
 define_ui_event!(
     UIEvent {
         Layout {
-            size: Size
+            size: Size,
+            scale: f64
         },
         RawTouchEvent {
             state: TouchEventType,

@@ -107,10 +107,10 @@ class NativeView : SpriteSource {
         }
     }
     
-    final func layout(size: SIMD2<Float64>) {
+    final func layout(size: SIMD2<Float64>, scale: Float64) {
         viewport.screenSize = size
         layoutHandlers.forEach { (handler) in
-            handler.onLayout(width: size.x, height: size.y)
+            handler.onLayout(width: size.x, height: size.y, scale: scale)
         }
     }
     

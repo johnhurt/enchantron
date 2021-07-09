@@ -74,10 +74,11 @@ where
         let mut result: Vec<Box<dyn HandlerRegistration>> = Vec::new();
 
         result.push(Box::new(view.add_layout_handler(create_layout_handler!(
-            |w, h| {
+            |w, h, s| {
                 copied_event_bus.post::<UI>(
                     Layout {
                         size: Size::new(w, h),
+                        scale: s,
                     }
                     .into(),
                 )

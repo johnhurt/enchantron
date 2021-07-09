@@ -66,7 +66,7 @@ where
             .set_color(T::Color::new(123, 190, 200, 255))
     }
 
-    fn on_layout(&mut self, size: Size) {
+    fn on_layout(&mut self, size: Size, _scale: f64) {
         let new_game_button_rect = calculate_rect_from_size(size);
         self.start_new_game_button.set_rect(new_game_button_rect);
     }

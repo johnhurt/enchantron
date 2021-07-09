@@ -62,9 +62,11 @@ impl PresenterService {
         >,
     ) -> (PresenterService, impl FnOnce()) {
         let boxed_inner = Box::new(Inner {
-            player_presenter_states: RwLock::new(HashMap::from_iter(
-                player_presenter_states.map(|(k, v)| (k, Box::new(v))),
-            )),
+            player_presenter_states: RwLock::new(
+                player_presenter_states
+                    .map(|(k, v)| (k, Box::new(v)))
+                    .collect::<HashMap<_, _>>(),
+            ),
         });
         let inner = Gor::new(&boxed_inner);
 

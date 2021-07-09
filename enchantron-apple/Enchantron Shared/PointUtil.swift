@@ -25,12 +25,16 @@ class PointUtil {
         
     }
     
+    class func split(_ v: Float64) -> SIMD2<Float32> {
+        let hi = Float32(v);
+        return [hi, Float32(v - Float64(hi))];
+    }
+    
     /// Convert the given double-precision coordinate in to a pair of major-minor single-precision coordinates
     class func toMajorMinor(x: Float64, y: Float64) -> (SIMD2<Float32>, SIMD2<Float32>){
-        let (xMajor, xMinor) = eulerDivF(num: x, denom: MAJOR_SIZE)
-        let (yMajor, yMinor) = eulerDivF(num: y, denom: MAJOR_SIZE)
-        
-        return ([xMajor * Float32(MAJOR_SIZE), yMajor * Float32(MAJOR_SIZE)], [xMinor, yMinor])
+        let xSplit = split(x);
+        let ySplit = split(y);
+        return ([xSplit[0], ySplit[0]], [xSplit[1], ySplit[1]])
     }
 }
 

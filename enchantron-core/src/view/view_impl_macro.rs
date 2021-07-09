@@ -131,13 +131,13 @@ macro_rules! view_impl {
 
                     $(
                         let layout_sender = sender.clone();
-                        let layout_handler = create_layout_handler!(|width, height| {
+                        let layout_handler = create_layout_handler!(|width, height, scale| {
                             let _ = layout_sender.try_send(Box::new(
                                 move |view_as_any| {
                                     view_as_any
                                         .downcast_mut::<ViewPrivate<$view_types_generic>>()
                                         .unwrap()
-                                        .$on_layout_fn(Size::new(width, height))
+                                        .$on_layout_fn(Size::new(width, height), scale)
                                 }
                             ));
                         });

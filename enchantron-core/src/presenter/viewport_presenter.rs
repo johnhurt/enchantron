@@ -35,7 +35,7 @@ where
     }
 
     pub fn on_layout(&mut self, layout_event: &Layout) {
-        self.layout(layout_event.size);
+        self.layout(layout_event.size, layout_event.scale);
 
         self.event_bus.post(ViewportChange::new(self.viewport_info));
 
@@ -89,8 +89,8 @@ where
 
     /// Update the layout of the display based on a change in the size of
     /// screen
-    pub fn layout(&mut self, new_size: Size) {
-        self.viewport_info.resize_screen(new_size);
+    pub fn layout(&mut self, new_size: Size, scale: f64) {
+        self.viewport_info.resize_screen(new_size, scale);
     }
 
     /// change the scale of the area shown by the viewport by the given
@@ -122,7 +122,7 @@ where
 
     pub fn move_viewport_by(&mut self, delta_top_left: Point) {
         let new_top_left =
-            &self.viewport_info.viewport_rect.top_left + delta_top_left;
+            self.viewport_info.viewport_rect.top_left + delta_top_left;
 
         self.viewport_info.move_viewport(new_top_left);
     }

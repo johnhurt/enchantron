@@ -53,7 +53,7 @@ vertex VertexOut spriteVertexShader(uint vertexId [[vertex_id]],
              uniforms.textureUvTopLeft.x + right * uniforms.textureUvSize.x,
              uniforms.textureUvTopLeft.y + bottom * uniforms.textureUvSize.y);
 
-    out.color.a = min(max((4 - viewport.scale) / 2, 0.0), 1.0);
+    out.color.a = min(max((4 - viewport.scale * 16) / 2, (float)!out.hasTexture), 1.0) ;
     
     return out;
 }

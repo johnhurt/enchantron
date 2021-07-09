@@ -175,8 +175,11 @@ where
 
         let game_runtime = services.runtime();
 
-        let viewport_presenter =
-            ViewportPresenter::new(view.get_viewport(), event_bus.clone());
+        let viewport_presenter = ViewportPresenter::new(
+            view.get_viewport(),
+            event_bus.clone(),
+            1. / 16.,
+        );
 
         let focused_entity_presenter = FocusedEntityPresenter::new(services);
 

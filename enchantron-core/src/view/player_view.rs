@@ -83,7 +83,7 @@ impl<T: ViewTypes> PlayerViewImpl<T> {
             .set_texture(runtime_resources.textures().gist.south_rest());
         bound_sprite.set_visible(true);
         bound_sprite.set_z_level(constants::ENTITY_Z_LEVEL);
-        bound_sprite.set_size(32., 32.);
+        bound_sprite.set_size(2., 2.);
         bound_sprite.set_location_point(&PLAYER_TEXTURE_OFFSET);
 
         PlayerViewImpl {

@@ -60,7 +60,6 @@ impl TerrainProvider for PerlinTerrain1 {
 
     fn get_for_rect(&self, rect: &IRect) -> ValueRect<(f64, TerrainType)> {
         self.generator.get_rect(rect).map(|v| {
-
             let v = *v + rect.top_left.x as f64 / 100.;
 
             if v < 0. {

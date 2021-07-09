@@ -116,6 +116,14 @@ impl<'a> Add<&'a Size> for &Point {
     }
 }
 
+impl Add<Size> for Point {
+    type Output = Point;
+
+    fn add(self, rhs: Size) -> Point {
+        Point::new(self.x + rhs.width, self.y + rhs.height)
+    }
+}
+
 #[test]
 fn test_distance_to() {
     let p1 = Point::new(0., 0.);

@@ -20,11 +20,16 @@ where
     pub fn new(
         viewport: T::Viewport,
         event_bus: EventBus,
+        starting_scale: f64,
     ) -> ViewportPresenter<T> {
+        let mut viewport_info = ViewportInfo::default();
+        viewport_info.viewport_scale = starting_scale;
+        viewport.set_scale(starting_scale);
+
         ViewportPresenter {
             viewport,
             event_bus,
-            viewport_info: ViewportInfo::default(),
+            viewport_info,
             touch_tracker: PanZoomTracker::default(),
         }
     }

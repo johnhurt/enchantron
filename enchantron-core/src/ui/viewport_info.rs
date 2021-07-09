@@ -122,7 +122,8 @@ impl ViewportInfo {
 
     /// Get the terrain tile point for the given screen point
     pub fn get_terrain_tile_for(&self, screen_point: &Point) -> IPoint {
-        ((screen_point * self.viewport_scale) + self.viewport_rect.top_left)
+        ((screen_point * self.viewport_scale * (1. / 16.))
+            + self.viewport_rect.top_left)
             .floor()
     }
 }

@@ -221,8 +221,9 @@ where
     fn viewport_rect_to_terrain_rect(&self, viewport_rect: &Rect) -> IRect {
         let tile_size_f64 = UNIT_ZOOM_LEVEL_TILE_LENGTH_F64;
 
-        let viewport_top_left = &viewport_rect.top_left;
-        let viewport_bottom_right = viewport_top_left + &viewport_rect.size;
+        let viewport_top_left = &viewport_rect.top_left * (1. / 256.);
+        let viewport_bottom_right =
+            viewport_top_left + viewport_rect.size * (1. / 256.);
 
         let top_left = IPoint {
             x: (viewport_top_left.x / tile_size_f64).floor() as i64,
@@ -255,8 +256,7 @@ where
         &self,
         viewport_info: &ViewportInfo,
     ) -> Option<TerrainUpdateInfo> {
-
-        if (viewport_info.viewport_scale >= 6.) {
+        if viewport_info.viewport_scale >= 6. / 16. {
             return None;
         }
 

@@ -15,6 +15,8 @@
 
 using namespace metal;
 
+#define TILE_SCALE 16
+
 typedef struct
 {
     float4 position [[position]];
@@ -53,7 +55,7 @@ vertex VertexOut spriteVertexShader(uint vertexId [[vertex_id]],
              uniforms.textureUvTopLeft.x + right * uniforms.textureUvSize.x,
              uniforms.textureUvTopLeft.y + bottom * uniforms.textureUvSize.y);
 
-    out.color.a = min(max((4 - viewport.scale * 16) / 2, (float)!out.hasTexture), 1.0) ;
+    out.color.a = clamp((4 - viewport.scale * TILE_SCALE) / 2, (float)!out.hasTexture, 1.0);
     
     return out;
 }

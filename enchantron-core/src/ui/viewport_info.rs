@@ -13,9 +13,7 @@ fn get_viewport_size(
     screen_scale: f64,
     viewport_scale: f64,
 ) -> Size {
-    screen_size
-        * (viewport_scale
-            / screen_scale)
+    screen_size * (viewport_scale / screen_scale)
 }
 
 #[derive(Clone, Debug, Copy)]
@@ -55,7 +53,7 @@ impl ViewportInfo {
             * (1. / self.screen_scale))
             - (new_size.as_point() * (1. / new_screen_scale));
 
-        position_shift *= self.viewport_scale * 0.5;
+        position_shift *= self.viewport_scale;
 
         let new_position = Point::new(
             self.viewport_rect.top_left.x + position_shift.x,
@@ -158,13 +156,11 @@ mod test {
         assert_eq!(
             get_viewport_size(Size::new(600., 400.), 2.0, 1.0),
             Size::new(300., 200.)
-                * (1. / constants::BASE_SCALED_PIXELS_PER_TILE)
         );
 
         assert_eq!(
             get_viewport_size(Size::new(600., 400.), 2.0, 4.0),
             Size::new(1200., 800.)
-                * (1. / constants::BASE_SCALED_PIXELS_PER_TILE)
         );
     }
 }

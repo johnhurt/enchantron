@@ -13,6 +13,8 @@
 #import "ShaderTypes.h"
 #import "DoubleMath.h"
 
+#define TILE_SCALE 16
+
 //#define RUN_TESTS
 
 using namespace metal;
@@ -173,7 +175,7 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                constant ViewportUniform &viewport [[buffer(1)]])
 {
 #ifndef RUN_TESTS
-    if (viewport.scale < 1./16.) {
+    if (viewport.scale < 1. / TILE_SCALE ) {
         return float4();
     }
 #endif

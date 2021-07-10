@@ -248,7 +248,7 @@ where
         &self,
         viewport_info: &ViewportInfo,
     ) -> Option<TerrainUpdateInfo> {
-        if viewport_info.viewport_scale >= 6. / 16. {
+        if viewport_info.viewport_scale >= 6. / constants::TILE_SCALE {
             return None;
         }
 

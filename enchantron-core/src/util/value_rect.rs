@@ -45,9 +45,9 @@ impl<T> ValueRect<T> {
         let filler_ref = &mut filler;
 
         (0..values_height).for_each(|v_y| {
-            coord.x = rect.top_left.y + (v_y * y_stride) as i64;
+            coord.y = rect.top_left.y + (v_y * y_stride) as i64;
             (0..values_width).for_each(|v_x| {
-                coord.y = rect.top_left.x + (v_x * x_stride) as i64;
+                coord.x = rect.top_left.x + (v_x * x_stride) as i64;
                 values.push(filler_ref(&coord))
             });
         });

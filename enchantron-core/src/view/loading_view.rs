@@ -6,8 +6,6 @@ use crate::ui::{
 };
 use crate::view_impl;
 use crate::view_types::ViewTypes;
-use std::any::Any;
-use std::sync::Arc;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 const MAX_WIDTH_FRAC: f64 = 0.8;
@@ -67,7 +65,7 @@ where
             .set_foreground_color(T::Color::new(103, 90, 140, 200));
     }
 
-    fn on_layout(&mut self, size: Size) {
+    fn on_layout(&mut self, size: Size, _scale: f64) {
         let loading_rect = calculate_rect_from_size(size);
         self.progress_bar.set_rect(loading_rect);
     }

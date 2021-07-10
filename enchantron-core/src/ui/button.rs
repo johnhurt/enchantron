@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 lazy_static! {
-    static ref handler_registration_id: AtomicU64 = AtomicU64::default();
+    static ref HANDLER_REGISTRATION_ID: AtomicU64 = AtomicU64::default();
 }
 
 pub trait Button: HasClickHandlers + Send + Sync + 'static {}
@@ -34,7 +34,7 @@ where
     type R = RustHandlerRegistration;
 
     fn add_click_handler(&self, handler: ClickHandler) -> Self::R {
-        let key = handler_registration_id.fetch_add(1, Ordering::Relaxed);
+        let key = HANDLER_REGISTRATION_ID.fetch_add(1, Ordering::Relaxed);
 
         self.sink.send(move |button| {
             button.add_click_handler(key, handler);

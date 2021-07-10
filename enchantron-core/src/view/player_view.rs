@@ -9,15 +9,12 @@ use crate::ui::{
 };
 use crate::view_types::ViewTypes;
 
-const UNIT_TERRAIN_TILE_LENGTH_F64: f64 =
-    constants::UNIT_TERRAIN_TILE_LENGTH as f64;
-
 /// This adjusts where the player's sprite is placed relative to the sprite's
 /// origin. The player's textures are all referenced from the center, but the
 /// tiled terrain is referenced from the top-left corner of every tile
 const PLAYER_TEXTURE_OFFSET: Point = Point {
-    x: UNIT_TERRAIN_TILE_LENGTH_F64 / 2.,
-    y: -UNIT_TERRAIN_TILE_LENGTH_F64 / 8.,
+    x: 1. / 2.,
+    y: -1. / 8.,
 };
 
 /// Get the point that's halfway from the given starting point in the given
@@ -26,8 +23,7 @@ fn get_halfway_point_in_texture_coordinates(
     start: &IPoint,
     dir: &Direction,
 ) -> Point {
-    (start * UNIT_TERRAIN_TILE_LENGTH_F64)
-        + (dir.get_point() * (UNIT_TERRAIN_TILE_LENGTH_F64 / 2.))
+    start + (dir.get_point() * (1. / 2.))
 }
 
 /// Get the point adjacent to the given point in the given direction in texture
@@ -36,8 +32,7 @@ fn get_final_point_in_texture_coordinates(
     start: &IPoint,
     dir: &Direction,
 ) -> Point {
-    (start * UNIT_TERRAIN_TILE_LENGTH_F64)
-        + (dir.get_point() * UNIT_TERRAIN_TILE_LENGTH_F64)
+    (start + dir.get_point()).into()
 }
 
 /// Convert the given start time and speed into a duration length
@@ -83,7 +78,7 @@ impl<T: ViewTypes> PlayerViewImpl<T> {
             .set_texture(runtime_resources.textures().gist.south_rest());
         bound_sprite.set_visible(true);
         bound_sprite.set_z_level(constants::ENTITY_Z_LEVEL);
-        bound_sprite.set_size(32., 32.);
+        bound_sprite.set_size(2., 2.);
         bound_sprite.set_location_point(&PLAYER_TEXTURE_OFFSET);
 
         PlayerViewImpl {

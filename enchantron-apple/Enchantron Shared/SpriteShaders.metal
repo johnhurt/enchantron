@@ -23,7 +23,7 @@ typedef struct
     float4 color;
 } VertexOut;
 
-vertex VertexOut vertexShader(uint vertexId [[vertex_id]],
+vertex VertexOut spriteVertexShader(uint vertexId [[vertex_id]],
                               constant SpriteUniform &uniforms [[buffer(0)]],
                               constant ViewportUniform &viewport [[buffer(1)]])
 {
@@ -40,7 +40,7 @@ vertex VertexOut vertexShader(uint vertexId [[vertex_id]],
     float right = vertexId == 1 || vertexId == 3;
     
     float2 shiftedTopLeft = (uniforms.topLeftMajor - viewport.topLeftMajor)
-        * 512.0 + (uniforms.topLeftMinor - viewport.topLeftMinor);
+         + (uniforms.topLeftMinor - viewport.topLeftMinor);
     
     out.position = vector_float4(
              shiftedTopLeft.x + right * uniforms.size.x,
@@ -53,10 +53,12 @@ vertex VertexOut vertexShader(uint vertexId [[vertex_id]],
              uniforms.textureUvTopLeft.x + right * uniforms.textureUvSize.x,
              uniforms.textureUvTopLeft.y + bottom * uniforms.textureUvSize.y);
 
+    out.color.a = min(max((4 - viewport.scale * 16) / 2, (float)!out.hasTexture), 1.0) ;
+    
     return out;
 }
 
-fragment float4 fragmentShader(VertexOut in [[stage_in]],
+fragment float4 spriteFragmentShader(VertexOut in [[stage_in]],
                                texture2d<float> tex     [[ texture(0) ]])
 {
     constexpr sampler defaultSampler;
@@ -65,10 +67,11 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     
     if (in.hasTexture) {
         colorSample = tex.sample(defaultSampler, in.texCoord.xy);
+        colorSample.a = min(in.color.a, colorSample.a);
     }
     else {
         colorSample = in.color;
     }
     
-    return float4(colorSample);
+    return colorSample;
 }

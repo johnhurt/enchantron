@@ -1,6 +1,8 @@
 use crate::application_context::Ao;
 use crate::game::constants;
-use crate::game::{PerlinTerrain1, TerrainProvider, TerrainType};
+use crate::game::{
+    SimplexTerrain1 as PerlinTerrain1, TerrainProvider, TerrainType,
+};
 use crate::img::PngGenerator;
 use crate::model::{IRect, ISize};
 use crate::native::{ResourceLoader, RuntimeResources};

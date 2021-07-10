@@ -15,7 +15,6 @@ fn get_viewport_size(
 ) -> Size {
     screen_size
         * (viewport_scale
-            / constants::BASE_SCALED_PIXELS_PER_TILE
             / screen_scale)
 }
 

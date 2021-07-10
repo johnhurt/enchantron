@@ -13,10 +13,9 @@
 #import "ShaderTypes.h"
 #import "DoubleMath.h"
 
-#define RUN_TESTS
+//#define RUN_TESTS
 
 using namespace metal;
-constant float MAX_INT = 16777216;
 constant float4 C = float4(0.2113248,
                            // (3.0-sqrt(3.0))/6.0
                            0.3660254,
@@ -174,7 +173,7 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                constant ViewportUniform &viewport [[buffer(1)]])
 {
 #ifndef RUN_TESTS
-    if (viewport.scale < 2.) {
+    if (viewport.scale < 1./16.) {
         return float4();
     }
 #endif
@@ -272,13 +271,6 @@ bool testMultiplyMixedFloats() {
         && assertEquals(actual2.x, 0.036602538, 0)
         && assertEquals(actual2.y, 1.2904784e-9, 0)
     ;
-        
-    
-//    return assertEquals(mixedDf64Mult(float2(123.0,0.00123), 4.4), 541.2054, .0001)
-//            && assertEquals(mixedDf64Mult(float2(0.1, 0.0), C.y), 0.03660254, 0.0001)
-//            && assertEquals(df64Mult(
-//                    float2(1.30987e8, 3.56321e2), float2(C.y,0.)),
-//                    float2(4.79446e7, 99.4923), 0.8);
 }
 
 bool testGetI1() {

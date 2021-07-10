@@ -77,11 +77,12 @@ impl ViewportInfo {
         scale_change_additive: f64,
         magnify_center_screen_point: Point,
     ) {
+        let old_scale = self.viewport_scale;
         let new_scale = self.viewport_scale * (1. - scale_change_additive);
 
         self.viewport_scale = new_scale;
 
-        let new_size = &self.screen_size * new_scale;
+        let new_size = get_viewport_size(self.screen_size, self.screen_scale, new_scale);
 
         let magnify_center_fraction = Point::new(
             magnify_center_screen_point.x / self.screen_size.width,
@@ -89,7 +90,11 @@ impl ViewportInfo {
         );
 
         let position_shift = {
-            let size = &self.viewport_rect.size;
+            let size = get_viewport_size(
+                self.screen_size,
+                self.screen_scale,
+                old_scale,
+            );
 
             Point::new(
                 (size.width - new_size.width) * magnify_center_fraction.x,

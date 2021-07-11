@@ -65,8 +65,7 @@ mod test {
 
         PngGenerator::get_png(data.as_slice(), &size, &mut result);
 
-        let name =
-            format!("/Users/kguthrie/Downloads/img_{}.png", result.len());
+        let name = format!("target/img_{}.png", result.len());
 
         let mut pos = 0;
         let mut buffer = File::create(&name).expect("");
@@ -101,8 +100,7 @@ mod test {
             &mut result,
         );
 
-        let name =
-            format!("/Users/kguthrie/Downloads/img_{}.png", result.len());
+        let name = format!("target/img_{}.png", result.len());
 
         let mut pos = 0;
         let mut buffer = File::create(&name).expect("");

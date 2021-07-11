@@ -91,6 +91,14 @@ impl DivAssign<f64> for Point {
     }
 }
 
+impl Sub<Point> for Point {
+    type Output = Point;
+
+    fn sub(self, rhs: Point) -> Point {
+        Point::new(self.x - rhs.x, self.y - rhs.y)
+    }
+}
+
 impl<'a, 'b> Sub<&'a Point> for &'b Point {
     type Output = Point;
 
@@ -137,6 +145,26 @@ impl<'a> Add<&'a Size> for &Point {
 
     fn add(self, rhs: &'a Size) -> Point {
         Point::new(self.x + rhs.width, self.y + rhs.height)
+    }
+}
+
+impl Add<Size> for Point {
+    type Output = Point;
+
+    fn add(self, rhs: Size) -> Point {
+        Point::new(self.x + rhs.width, self.y + rhs.height)
+    }
+}
+
+impl From<IPoint> for Point {
+    fn from(other: IPoint) -> Point {
+        Point::new(other.x as f64, other.y as f64)
+    }
+}
+
+impl From<&IPoint> for Point {
+    fn from(other: &IPoint) -> Point {
+        Point::new(other.x as f64, other.y as f64)
     }
 }
 

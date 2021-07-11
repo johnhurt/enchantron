@@ -33,6 +33,9 @@ class GameViewController: NSViewController {
             return
         }
 
+        let name = defaultDevice.name
+        
+        
         mtkView.device = defaultDevice
         screenScale = Float64(NSScreen.main!.backingScaleFactor)
 

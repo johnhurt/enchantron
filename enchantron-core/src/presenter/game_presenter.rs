@@ -1,7 +1,7 @@
 use super::{FocusedEntityPresenter, TerrainPresenter, ViewportPresenter};
 use crate::application_context::{Ao, NUM_CPUS};
 use crate::event::*;
-use crate::game::{Gor, SavedGame, Services};
+use crate::game::{constants, Gor, SavedGame, Services};
 use crate::model::{Point, Size};
 use crate::native::{RuntimeResources, SystemInterop};
 use crate::ui::{
@@ -74,10 +74,11 @@ where
         let mut result: Vec<Box<dyn HandlerRegistration>> = Vec::new();
 
         result.push(Box::new(view.add_layout_handler(create_layout_handler!(
-            |w, h| {
+            |w, h, s| {
                 copied_event_bus.post::<UI>(
                     Layout {
                         size: Size::new(w, h),
+                        scale: s,
                     }
                     .into(),
                 )
@@ -175,8 +176,11 @@ where
 
         let game_runtime = services.runtime();
 
-        let viewport_presenter =
-            ViewportPresenter::new(view.get_viewport(), event_bus.clone());
+        let viewport_presenter = ViewportPresenter::new(
+            view.get_viewport(),
+            event_bus.clone(),
+            1. / constants::TILE_SCALE,
+        );
 
         let focused_entity_presenter = FocusedEntityPresenter::new(services);
 

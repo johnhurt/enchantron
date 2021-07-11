@@ -81,7 +81,7 @@ public class Viewport {
     }
     
     func configureViewport(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int) {
-
+        
         let uniformBufferOffset = alignedUniformsSize * uniformBufferIndex
         
         uniforms = UnsafeMutableRawPointer(uniformBuffer.contents() + uniformBufferOffset)
@@ -91,10 +91,28 @@ public class Viewport {
         self.uniforms[0].topLeftMajor = self.topLeftMajor
         self.uniforms[0].topLeftMinor = self.topLeftMinor
         self.uniforms[0].scale = Float(scale)
-        
-        encoder.setVertexBuffer(uniformBuffer, offset: uniformBufferOffset, index: 1)
+     
     }
     
+    func bindToVertexShader(
+        encoder: MTLRenderCommandEncoder,
+        uniformBufferIndex: Int,
+        bufferIndex: Int) {
+        
+        let uniformBufferOffset = alignedUniformsSize * uniformBufferIndex
+        
+        encoder.setVertexBuffer(uniformBuffer, offset: uniformBufferOffset, index: bufferIndex)
+    }
+    
+    func bindToFragmentShader(
+        encoder: MTLRenderCommandEncoder,
+        uniformBufferIndex: Int,
+        bufferIndex: Int) {
+        
+        let uniformBufferOffset = alignedUniformsSize * uniformBufferIndex
+        
+        encoder.setFragmentBuffer(uniformBuffer, offset: uniformBufferOffset, index: bufferIndex)
+    }
     func render(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int, time: Float64) {
         self.viewLockedSprites.render(
             encoder: encoder,

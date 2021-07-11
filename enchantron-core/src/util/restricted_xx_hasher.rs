@@ -38,7 +38,7 @@ impl RestrictedXxHasher {
             current_value = current_value.wrapping_add(value);
             current_value = current_value.rotate_left(31);
             current_value.wrapping_mul(PRIME_1)
-        };
+        }
 
         let v1 = PRIME_1.wrapping_add(PRIME_2);
         let v2 = PRIME_2;

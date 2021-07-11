@@ -30,6 +30,10 @@ class NativeView : SpriteSource {
     
     func render(encoder: MTLRenderCommandEncoder, uniformBufferIndex: Int, time: Float64) {
         viewport.configureViewport(encoder: encoder, uniformBufferIndex: uniformBufferIndex)
+        viewport.bindToVertexShader(
+            encoder: encoder,
+            uniformBufferIndex: uniformBufferIndex,
+            bufferIndex: 1)
         rootGroup.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex, time: time)
         viewport.render(encoder: encoder, uniformBufferIndex: uniformBufferIndex, time: time)
     }
@@ -103,10 +107,10 @@ class NativeView : SpriteSource {
         }
     }
     
-    final func layout(size: SIMD2<Float64>) {
+    final func layout(size: SIMD2<Float64>, scale: Float64) {
         viewport.screenSize = size
         layoutHandlers.forEach { (handler) in
-            handler.onLayout(width: size.x, height: size.y)
+            handler.onLayout(width: size.x, height: size.y, scale: scale)
         }
     }
     

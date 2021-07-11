@@ -131,6 +131,27 @@ impl<'a, 'b> Add<&'b IPoint> for &'a IPoint {
     }
 }
 
+impl Add<Point> for &IPoint {
+    type Output = Point;
+
+    fn add(self, rhs: Point) -> Point {
+        Point {
+            x: self.x as f64 + rhs.x,
+            y: self.y as f64 + rhs.y,
+        }
+    }
+}
+impl<'a, 'b> Add<&'b Point> for &'a IPoint {
+    type Output = Point;
+
+    fn add(self, rhs: &'b Point) -> Point {
+        Point {
+            x: self.x as f64 + rhs.x,
+            y: self.y as f64 + rhs.y,
+        }
+    }
+}
+
 impl<'a, 'b> Sub<&'b IPoint> for &'a IPoint {
     type Output = IPoint;
 

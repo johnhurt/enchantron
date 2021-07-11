@@ -3,7 +3,7 @@ use crate::game::{
     Direction, EntityMessage, EntityRunBundle, LocationService, Player,
     PresenterServiceLease, Services, Time,
 };
-use crate::model::IPoint;
+use crate::model::{IPoint, Point};
 use crate::view::PlayerView;
 use tokio::select;
 use tokio::sync::mpsc::Receiver;
@@ -58,8 +58,7 @@ pub struct PlayerPresenterState {
 enum CoarseState {
     Spawning(f64),
     Idle(f64),
-    WalkingOut(f64),
-    WalkingIn(f64),
+    Walking(f64, Point, IPoint),
 }
 
 impl Default for PlayerPresenterState {
@@ -109,8 +108,24 @@ where
             EntityMessage::ExitedViewport => {
                 drop(self.view.take());
             }
-            EntityMessage::GoalSet(target_tile) => {}
+            EntityMessage::GoalSet(target_tile) => {
+                debug!("Goal set {:?}", target_tile);
+
+            }
         }
+    }
+
+    async fn get_location(&self) -> IPoint {
+        self.location_service.get_by_key(&self.player.location_key).await
+            .expect("The player should be in the loop while active")
+            .top_left
+    }
+
+    Add a new state for state transition in stead of starting animation in
+    interrupt handler
+
+    fn start_walking(&mut self, target_tile: IPoint) {
+        let start_tile = self.location_service.get_by_key(key)
     }
 
     pub async fn run(mut self) {
@@ -130,11 +145,10 @@ where
                 Idle(start) => {
                     self.view.as_ref().map(V::rest);
 
-                    interruptible!(self.time.sleep_until(start + 0.5));
-
-                    self.state.coarse_state = WalkingIn(self.time.now());
+                    interruptible!(self.time.sleep_until(start + 10.));
                 }
-                WalkingIn(start) => {
+                StartWalking =>
+                Walking(start_time, start_point, end_point) => {
                     let tile = self
                         .location_service
                         .get_by_key(&self.player.location_key)
@@ -143,32 +157,17 @@ where
                         .top_left;
 
                     self.view.as_ref().map(|view| {
-                        view.start_walk(Direction::SOUTH, &tile, start, 0.5)
+                        view.walk(
+                            Direction::SOUTH,
+                            &tile,
+                            self.state.move_target.as_ref().unwrap(),
+                            start_time,
+                            0.5,
+                        )
                     });
 
                     interruptible!(self.time.sleep_until(start + 1.));
                     self.state.coarse_state = WalkingOut(self.time.now());
-                }
-                WalkingOut(start) => {
-                    let tile = self
-                        .location_service
-                        .get_by_key(&self.player.location_key)
-                        .await
-                        .unwrap()
-                        .top_left;
-
-                    self.location_service
-                        .move_by_key_delta(
-                            &self.player.location_key,
-                            Direction::SOUTH.get_point(),
-                        )
-                        .await;
-
-                    self.view.as_ref().map(|view| {
-                        view.finish_walk(Direction::SOUTH, &tile, start, 0.5);
-                    });
-                    interruptible!(self.time.sleep_until(start + 1.));
-                    self.state.coarse_state = Idle(self.time.now());
                 }
             }
         }

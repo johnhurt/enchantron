@@ -55,6 +55,10 @@ impl IPoint {
     pub fn component_min(&self, other: &IPoint) -> IPoint {
         IPoint::new(self.x.min(other.x), self.y.min(other.y))
     }
+
+    pub fn as_point(&self) -> Point {
+        Point::new(self.x as f64, self.y as f64)
+    }
 }
 
 impl Mul<i64> for IPoint {

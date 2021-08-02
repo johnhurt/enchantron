@@ -82,7 +82,8 @@ impl ViewportInfo {
 
         self.viewport_scale = new_scale;
 
-        let new_size = get_viewport_size(self.screen_size, self.screen_scale, new_scale);
+        let new_size =
+            get_viewport_size(self.screen_size, self.screen_scale, new_scale);
 
         let magnify_center_fraction = Point::new(
             magnify_center_screen_point.x / self.screen_size.width,

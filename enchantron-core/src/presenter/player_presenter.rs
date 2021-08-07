@@ -135,38 +135,10 @@ where
                     self.state.coarse_state = WalkingIn(self.time.now());
                 }
                 WalkingIn(start) => {
-                    let tile = self
-                        .location_service
-                        .get_by_key(&self.player.location_key)
-                        .await
-                        .unwrap()
-                        .top_left;
-
-                    self.view.as_ref().map(|view| {
-                        view.start_walk(Direction::SOUTH, &tile, start, 0.5)
-                    });
-
                     interruptible!(self.time.sleep_until(start + 1.));
                     self.state.coarse_state = WalkingOut(self.time.now());
                 }
                 WalkingOut(start) => {
-                    let tile = self
-                        .location_service
-                        .get_by_key(&self.player.location_key)
-                        .await
-                        .unwrap()
-                        .top_left;
-
-                    self.location_service
-                        .move_by_key_delta(
-                            &self.player.location_key,
-                            Direction::SOUTH.get_point(),
-                        )
-                        .await;
-
-                    self.view.as_ref().map(|view| {
-                        view.finish_walk(Direction::SOUTH, &tile, start, 0.5);
-                    });
                     interruptible!(self.time.sleep_until(start + 1.));
                     self.state.coarse_state = Idle(self.time.now());
                 }

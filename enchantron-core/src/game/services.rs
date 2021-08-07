@@ -64,7 +64,7 @@ impl Services {
         let runtime_dropper = move || drop(boxed_runtime);
         let time = Time::new(runtime.clone());
         let (location_service, location_service_dropper) =
-            LocationService::new_from_data(&locations);
+            LocationService::new_from_data(time.clone(), &locations);
 
         let mut entity_channels = entities.map(|data| {
             let (send, recv) = channel(ENTITY_MESSAGE_CHANNEL_SIZE);

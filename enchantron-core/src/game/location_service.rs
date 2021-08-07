@@ -1,5 +1,7 @@
-use super::{Entity, Gor, LocationKey, LocationWriteResponse, Time};
-use crate::model::{IPoint, IRect, ISize, Point};
+use super::{
+    Entity, Gor, LocationKey, LocationWriteResponse, Time, TimeSource,
+};
+use crate::model::{IPoint, IRect, ISize, Point, Rect};
 use one_way_slot_map::SlotMap;
 use rstar::{PointDistance, RTree, RTreeObject};
 use std::collections::HashMap;
@@ -9,19 +11,18 @@ use std::ptr;
 use tokio::sync::RwLock;
 
 // This value determines the window size for an entity based on its max speed
-const MAX_SECS_BETWEEN_REINSERTS : f64 = 8.;
+const MAX_SECS_BETWEEN_REINSERTS: f64 = 8.;
 
 // This value determines how close to the edge of the window an entity is
 // allowed to get before the window is moved
-const MIN_SECS_BETWEEN_REINSERTS : f64 = 0.5;
+const MIN_SECS_BETWEEN_REINSERTS: f64 = 0.5;
 
 // Movement operations on the location service will provide a time at which the
 // entity will need to be updated. This time will be when the entity is
 // calculated to exit the window multiplied by this safety factor
-const UPDATE_INTERVAL_SAFETY_FRACTION : f64 = 0.75;
+const UPDATE_INTERVAL_SAFETY_FRACTION: f64 = 0.75;
 
 // Default
-
 
 #[derive(Debug, Copy, Clone, derive_new::new)]
 pub struct WindowedLocation {
@@ -120,6 +121,77 @@ impl From<WindowedLocation> for WindowedLocationPointer {
     }
 }
 
+impl WindowedLocation {
+    /// Check to see if this window contains the center it represents
+    fn check_window_contains_location(&self) -> bool {
+        self.window.contains_point(&self.center.floor())
+    }
+
+    /// Move the window for this windowed pointer to be the rectangle around the
+    /// actual location
+    fn recenter_window(&mut self) {
+        let dist = self.radius + MAX_SECS_BETWEEN_REINSERTS / self.max_speed;
+
+        self.window = IRect {
+            top_left: self.center.floor(),
+            size: ISize::new(1, 1),
+        };
+
+        self.window.expanded_by(dist.ceil() as usize);
+    }
+
+    /// Get the topmost and leftmost point that the center can be inside the
+    /// window.
+    fn center_limit_rect(&self) -> Rect {
+        let mut result = self.window.as_rect();
+        result.top_left.x += self.radius;
+        result.top_left.y += self.radius;
+        result.size.width -= 2. * self.radius;
+        result.size.height -= 2. * self.radius;
+        result
+    }
+
+    ///  Get the time until any part of the entity exits the window
+    fn time_until_boundary(&self) -> f64 {
+        let center_limit_rect = self.center_limit_rect();
+        let offset_from_limit = self.center - center_limit_rect.top_left;
+
+        let x_time = if self.velocity.x < 0. {
+            offset_from_limit.x / self.velocity.x
+        } else if self.velocity.x > 0. {
+            (center_limit_rect.size.width - offset_from_limit.x)
+                / self.velocity.x
+        } else {
+            f64::MAX
+        };
+
+        let y_time = if self.velocity.y < 0. {
+            offset_from_limit.y / self.velocity.y
+        } else if self.velocity.y > 0. {
+            (center_limit_rect.size.width - offset_from_limit.y)
+                / self.velocity.y
+        } else {
+            f64::MAX
+        };
+
+        x_time.min(y_time)
+    }
+
+    /// Use the center by using dead reckoning from the current center and ref
+    /// time to the given current time at the current velocity
+    fn update_center(&mut self, new_ref_time: f64) {
+        let new_center =
+            self.center + self.velocity * (new_ref_time - self.ref_time);
+        self.center = new_center;
+        self.ref_time = new_ref_time;
+    }
+
+    /// Check to see if the entity plus radius contains the given point
+    fn check_entity_contains(&self, point: &Point) -> bool {
+        self.center.distance_squared_to(point) <= self.radius
+    }
+}
+
 impl WindowedLocationPointer {
     fn new(
         entity: Entity,
@@ -128,16 +200,12 @@ impl WindowedLocationPointer {
         radius: f64,
         max_speed: f64,
         ref_time: f64,
-        window: IRect
+        window: IRect,
     ) -> WindowedLocationPointer {
         WindowedLocation::new(
-            center,
-            radius,
-            ref_time,
-            max_speed,
-            velocity,
-            entity,
-            window).into()
+            center, radius, ref_time, max_speed, velocity, entity, window,
+        )
+        .into()
     }
 
     fn new_with_centered_window(
@@ -146,48 +214,21 @@ impl WindowedLocationPointer {
         velocity: Point,
         radius: f64,
         max_speed: f64,
-        time: &Time) -> WindowedLocationPointer
-    {
+        time: &impl TimeSource,
+    ) -> WindowedLocationPointer {
         let mut result = WindowedLocationPointer::new(
-            entity, center, velocity, radius, max_speed, time.now(), IRect::default()
+            entity,
+            center,
+            velocity,
+            radius,
+            max_speed,
+            time.current_time(),
+            IRect::default(),
         );
 
         result.recenter_window();
 
         result
-    }
-
-    fn check_window_contains_location(&self) -> bool {
-        let inner = &**self;
-        inner.window.contains_point(&inner.center.floor())
-    }
-
-    /// Move the window for this windowed pointer to be the rectangle around the
-    /// actual location
-    fn recenter_window(&mut self) {
-        let inner = &mut **self;
-        let dist = inner.radius + MAX_SECS_BETWEEN_REINSERTS / inner.max_speed;
-
-        inner.window = IRect {
-            top_left: inner.center.floor(),
-            size: ISize::new(1, 1)
-        };
-
-        inner.window.expanded_by(dist.ceil() as usize);
-    }
-
-    /// Get the topmost and leftmost point that the center can be inside the
-    /// window.
-    fn get_top_left_center_limit(&self) -> Point {
-        let result = self.window.top_left.as_point();
-        result.x += self.radius;
-        result.y += self.radius;
-        result
-    }
-
-    ///  Get the time until any part of the entity exits the window
-    fn time_until_boundary(&self) -> f64 {
-        0.0
     }
 }
 
@@ -225,21 +266,42 @@ impl Clone for WindowedLocationPointer {
 
 #[derive(Clone, Debug)]
 pub struct LocationService {
-    inner: Gor<RwLock<Inner>>,
+    inner: Gor<RwLock<LocationServiceInner<Time>>>,
 }
 
 #[derive(Debug)]
-struct Inner {
-    time: Time,
+struct LocationServiceInner<TS>
+where
+    TS: TimeSource,
+{
+    time: TS,
     rtree: RTree<WindowedLocationPointer>,
     slot_map: SlotMap<LocationKey, Entity, WindowedLocationPointer>,
     slot_keys_by_entity: HashMap<Entity, LocationKey>,
 }
 
+macro_rules! with_inner {
+    ($v:vis $fn_name:ident = |&$inner:ident $(, $arg:ident : $arg_type:ty )* | -> $ret_type:ty => $body:tt) => {
+
+        impl <TS: TimeSource> LocationServiceInner<TS> {
+            pub fn $fn_name($inner : &LocationServiceInner<TS>, $($arg: $arg_type),*) -> $ret_type $body
+        }
+
+        impl LocationService {
+            $v async fn $fn_name(&self, $($arg: $arg_type),*) -> $ret_type {
+                let inner = self.inner.read().await;
+                LocationServiceInner::$fn_name(&*inner, $($arg),*)
+            }
+        }
+
+    };
+}
+
 #[allow(dead_code)]
 impl LocationService {
     pub fn new(time: Time) -> (LocationService, impl FnOnce() + Send) {
-        let boxed_inner = Box::new(RwLock::new(Inner::new(time)));
+        let boxed_inner =
+            Box::new(RwLock::new(LocationServiceInner::new(time)));
         let inner = Gor::new(&boxed_inner);
 
         (LocationService { inner }, move || drop(boxed_inner))
@@ -249,13 +311,18 @@ impl LocationService {
         time: Time,
         data: &SlotMap<LocationKey, Entity, WindowedLocation>,
     ) -> (LocationService, impl FnOnce() + Send) {
-        let boxed_inner = Box::new(RwLock::new(Inner::new_from_data(time, data)));
+        let boxed_inner = Box::new(RwLock::new(
+            LocationServiceInner::new_from_data(time, data),
+        ));
         let inner = Gor::new(&boxed_inner);
 
         (LocationService { inner }, move || drop(boxed_inner))
     }
 
-    async fn with_inner<T>(&self, action: impl FnOnce(&Inner) -> T) -> T {
+    async fn with_inner<T>(
+        &self,
+        action: impl FnOnce(&LocationServiceInner<Time>) -> T,
+    ) -> T {
         let inner = self.inner.read().await;
 
         action(&*inner)
@@ -263,27 +330,25 @@ impl LocationService {
 
     async fn with_inner_mut<T>(
         &self,
-        action: impl FnOnce(&mut Inner) -> T,
+        action: impl FnOnce(&mut LocationServiceInner<Time>) -> T,
     ) -> T {
         let mut inner = self.inner.write().await;
 
         action(&mut *inner)
     }
 
-    pub async fn insert(&self,
+    pub async fn insert(
+        &self,
         center: Point,
         radius: f64,
-        ref_time: f64,
         max_speed: f64,
         velocity: Point,
-        entity: Entity) -> (LocationKey,LocationWriteResponse) {
-        self.with_inner_mut(|inner| inner.insert(
-            center,
-            radius,
-            ref_time,
-            max_speed,
-            velocity,
-            entity,)).await
+        entity: Entity,
+    ) -> (LocationKey, LocationWriteResponse) {
+        self.with_inner_mut(|inner| {
+            inner.insert(center, radius, max_speed, velocity, entity)
+        })
+        .await
     }
 
     /// Get the current position for the given key
@@ -291,25 +356,20 @@ impl LocationService {
         self.with_inner(|inner| inner.get_by_key(key)).await
     }
 
-    pub async fn update_by_key(&self, key: &LocationKey, new_center: Point, new_velocity: Point) {
-        self.with_inner_mut(|inner| inner.update_by_key(key, new_center, new_velocity))
+    pub async fn update_by_key(
+        &self,
+        key: &LocationKey,
+        new_velocity: Option<Point>,
+    ) -> Option<LocationWriteResponse> {
+        self.with_inner_mut(|inner| inner.update_by_key(key, new_velocity))
             .await
-    }
-
-    pub async fn move_by_key_delta(&self, key: &LocationKey, shift: &IPoint) {
-        self.with_inner_mut(|inner| inner.move_by_key_delta(key, shift))
-            .await
-    }
-
-    pub async fn get_entities_at(&self, point: &IPoint) -> Vec<Entity> {
-        self.with_inner(|inner| inner.get_entities_at(point)).await
     }
 }
 
 #[allow(dead_code)]
-impl Inner {
-    fn new(time: Time) -> Inner {
-        Inner {
+impl<TS: TimeSource> LocationServiceInner<TS> {
+    fn new(time: TS) -> Self {
+        LocationServiceInner {
             time,
             rtree: RTree::new(),
             slot_map: SlotMap::new(),
@@ -318,9 +378,9 @@ impl Inner {
     }
 
     fn new_from_data(
-        time: Time,
+        time: TS,
         data: &SlotMap<LocationKey, Entity, WindowedLocation>,
-    ) -> Inner {
+    ) -> Self {
         let mut rtree = RTree::new();
         let mut slot_keys_by_entity = HashMap::default();
 
@@ -336,7 +396,7 @@ impl Inner {
             wp_clone
         });
 
-        Inner {
+        LocationServiceInner {
             time,
             rtree,
             slot_map,
@@ -344,36 +404,32 @@ impl Inner {
         }
     }
 
-    fn insert(&mut self,
+    fn insert(
+        &mut self,
         center: Point,
         radius: f64,
-        ref_time: f64,
         max_speed: f64,
         velocity: Point,
-        entity: Entity ) -> (LocationKey, LocationWriteResponse) {
+        entity: Entity,
+    ) -> (LocationKey, LocationWriteResponse) {
         let wp = WindowedLocationPointer::new_with_centered_window(
-            entity,
-            center,
-            velocity,
-            radius,
-            max_speed,
-            &self.time);
+            entity, center, velocity, radius, max_speed, &self.time,
+        );
         let wp_clone = wp.clone();
+
+        let next_update_time = self.time.current_time()
+            + wp.time_until_boundary() * UPDATE_INTERVAL_SAFETY_FRACTION;
 
         self.rtree.insert(wp);
         let result = self.slot_map.insert(entity, wp_clone);
 
         self.slot_keys_by_entity.insert(entity, result);
 
-
-        (result, LocationWriteResponse::new())
+        (result, LocationWriteResponse::new(next_update_time, None))
     }
 
     fn get_by_key(&self, key: &LocationKey) -> Option<Point> {
-        self.slot_map
-            .get(key)
-            .map(WindowedLocationPointer::read)
-            .map(|wp| wp.center)
+        self.slot_map.get(key).map(|wp| wp.center)
     }
 
     fn get_by_entity(&self, entity: &Entity) -> Option<(LocationKey, Point)> {
@@ -389,39 +445,42 @@ impl Inner {
         }
     }
 
-    fn update_by_key(&mut self, key: &LocationKey, new_center: Point, new_velocity: Point) {
-        if let Some(wp) = self.slot_map.get_mut(key) {
-            wp.write().center.top_left = new_location;
-            if !wp.check_window_contains_location() {
+    fn update_by_key(
+        &mut self,
+        key: &LocationKey,
+        new_velocity_opt: Option<Point>,
+    ) -> Option<LocationWriteResponse> {
+        self.slot_map.get_mut(key).map(|wp| {
+            let window = &mut **wp;
+
+            window.update_center(self.time.current_time());
+
+            if let Some(new_velocity) = new_velocity_opt {
+                window.velocity = new_velocity;
+            }
+
+            let mut time_to_boundary = window.time_until_boundary();
+
+            // We need to recenter the window if the center is too close to the
+            // boundary or it has escaped all together
+            if time_to_boundary < MIN_SECS_BETWEEN_REINSERTS
+                || !window.check_window_contains_location()
+            {
                 let mut owned_wp = self
                     .rtree
                     .remove(wp)
                     .expect("Entity pointer should still be in rtree");
                 owned_wp.recenter_window();
+
+                time_to_boundary = owned_wp.time_until_boundary();
+
                 self.rtree.insert(owned_wp);
             }
-        }
-    }
 
-    fn move_by_key_delta(&mut self, key: &LocationKey, shift: &IPoint) {
-        if let Some(wp) = self.slot_map.get_mut(key) {
-            wp.write().location.top_left += shift;
-            if !wp.check_window_contains_location() {
-                let mut owned_wp = self
-                    .rtree
-                    .remove(wp)
-                    .expect("Entity pointer should still be in rtree");
-                owned_wp.recenter_window();
-                self.rtree.insert(owned_wp);
-            }
-        }
-    }
-
-    fn get_entities_at(&self, point: &IPoint) -> Vec<Entity> {
-        self.rtree
-            .locate_all_at_point(point)
-            .map(|wp| wp.read().entity)
-            .collect()
+            let next_update_time = self.time.current_time()
+                + wp.time_until_boundary() * UPDATE_INTERVAL_SAFETY_FRACTION;
+            LocationWriteResponse::new(next_update_time, None)
+        })
     }
 
     fn remove_by_key(&mut self, key: &LocationKey) -> Option<Point> {
@@ -431,22 +490,44 @@ impl Inner {
                 .remove(wp_ref)
                 .expect("Entity missing from rtree when present in slot map");
 
-            let _ = self.slot_keys_by_entity.remove(&wp_ref.read().entity);
+            let _ = self.slot_keys_by_entity.remove(&wp_ref.entity);
 
-            Some(wp_ref.read().center)
+            Some(wp_ref.center)
         } else {
             None
         }
     }
 }
 
+with_inner! {
+    pub get_entities_at = |&self, point: &Point| -> Vec<Entity> => {
+        self.rtree
+            .locate_all_at_point(&point.floor())
+            .filter(|wp| wp.check_entity_contains(point))
+            .map(|wp| wp.entity)
+            .collect()
+    }
+}
+
 #[cfg(test)]
 mod test {
 
+    use std::time::Duration;
+
+    use tokio::runtime::{Builder, Runtime};
+
     use super::*;
 
-    fn create_service() -> Inner {
-        Inner::new()
+    impl TimeSource for f64 {
+        fn current_time(&self) -> f64 {
+            *self
+        }
+    }
+
+    type TestService = LocationServiceInner<f64>;
+
+    fn create_service() -> TestService {
+        TestService::new(0.)
     }
 
     fn player() -> Entity {
@@ -457,27 +538,41 @@ mod test {
     fn test_crud() {
         let mut s = create_service();
 
-        let key = s.insert(player(), IPoint::new(1, 1));
+        let (key, write_resp) = s.insert(
+            Point::new(1., 1.5),
+            1.5,
+            8.,
+            Point::new(2., 1.),
+            player(),
+        );
 
         let r = s.get_by_key(&key);
 
-        assert_eq!(r, Some(IRect::new(1, 1, 1, 1)));
+        assert_eq!(r, Some(Point::new(1., 1.5)));
 
-        assert_eq!(vec![player()], s.get_entities_at(&IPoint::new(1, 1)));
+        assert_eq!(vec![player()], s.get_entities_at(&Point::new(1., 1.)));
 
-        s.move_by_key(&key, IPoint::new(2, 2));
+        s.time = 2.0;
 
-        assert_eq!(Vec::<Entity>::new(), s.get_entities_at(&IPoint::new(1, 1)));
+        s.update_by_key(&key, Some(Point::new(0., 0.)));
 
-        assert_eq!(vec![player()], s.get_entities_at(&IPoint::new(2, 2)));
+        assert_eq!(
+            Vec::<Entity>::new(),
+            s.get_entities_at(&Point::new(1., 1.))
+        );
+
+        assert_eq!(vec![player()], s.get_entities_at(&Point::new(5., 3.)));
 
         let r = s.get_by_key(&key);
 
-        assert_eq!(r, Some(IRect::new(2, 2, 1, 1)));
+        assert_eq!(r, Some(Point::new(5., 3.5)));
 
-        assert_eq!(Some(IRect::new(2, 2, 1, 1)), s.remove_by_key(&key));
+        assert_eq!(Some(Point::new(5., 3.5)), s.remove_by_key(&key));
 
-        assert_eq!(Vec::<Entity>::new(), s.get_entities_at(&IPoint::new(2, 2)));
+        assert_eq!(
+            Vec::<Entity>::new(),
+            s.get_entities_at(&Point::new(5., 3.))
+        );
 
         assert_eq!(None, s.get_by_key(&key));
         assert_eq!(None, s.get_by_entity(&player()));
@@ -491,20 +586,30 @@ mod test {
     fn test_movement_within_and_out_of_window() {
         let mut s = create_service();
 
-        let key = s.insert(player(), IPoint::new(1, 1));
+        let (key, write_resp) =
+            s.insert(Point::new(1., 1.), 1.5, 8., Point::new(2., 2.), player());
 
-        let initial_window = s.slot_map.get(&key).unwrap().read().window;
+        let r = s.get_by_key(&key);
 
-        s.move_by_key(&key, IPoint::new(2, 2));
+        let initial_window = s.slot_map.get(&key).unwrap().window;
 
-        assert_eq!(vec![player()], s.get_entities_at(&IPoint::new(2, 2)));
+        s.time = 1.0;
 
-        assert_eq!(initial_window, s.slot_map.get(&key).unwrap().read().window);
+        s.update_by_key(&key, None);
 
-        s.move_by_key(&key, IPoint::new(1000, 1000));
+        assert_eq!(vec![player()], s.get_entities_at(&Point::new(3., 3.)));
 
-        assert_ne!(initial_window, s.slot_map.get(&key).unwrap().read().window);
+        assert_eq!(initial_window, s.slot_map.get(&key).unwrap().window);
 
-        assert_eq!(vec![player()], s.get_entities_at(&IPoint::new(1000, 1000)));
+        s.time = 1.0;
+
+        s.update_by_key(&key, None);
+
+        assert_ne!(initial_window, s.slot_map.get(&key).unwrap().window);
+
+        assert_eq!(
+            vec![player()],
+            s.get_entities_at(&Point::new(2003., 2003.))
+        );
     }
 }

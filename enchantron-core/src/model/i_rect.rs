@@ -1,4 +1,4 @@
-use super::{IPoint, ISize};
+use super::{IPoint, ISize, Rect};
 use rstar::{Envelope, Point, PointDistance, RTreeObject};
 use std::cmp::{max, min};
 
@@ -190,6 +190,15 @@ impl IRect {
                 height: self.size.height + 2 * offset,
             },
         }
+    }
+
+    pub fn as_rect(&self) -> Rect {
+        Rect::new(
+            self.top_left.x as f64,
+            self.top_left.y as f64,
+            self.size.width as f64,
+            self.size.height as f64,
+        )
     }
 }
 

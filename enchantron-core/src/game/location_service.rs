@@ -23,7 +23,6 @@ const MIN_SECS_BETWEEN_REINSERTS: f64 = 0.5;
 const UPDATE_INTERVAL_SAFETY_FRACTION: f64 = 0.75;
 
 // Default
-
 #[derive(Debug, Copy, Clone, derive_new::new)]
 pub struct WindowedLocation {
     pub center: Point,
@@ -40,14 +39,6 @@ struct WindowedLocationPointer {
     owner: bool,
     p: *const WindowedLocation,
     _marker: PhantomData<WindowedLocation>,
-}
-
-fn get_windowed_offset_for(entity: &Entity) -> usize {
-    use Entity::*;
-
-    match entity {
-        Player(_) => 8,
-    }
 }
 
 impl PartialEq for WindowedLocationPointer {
@@ -177,6 +168,12 @@ impl WindowedLocation {
         x_time.min(y_time)
     }
 
+    /// Since the location is stored at a specific time and with a fixed
+    /// velocity, we need to know the time we are measuring the position at
+    fn get_center_at_time(&self, time: f64) -> Point {
+        self.center + (self.velocity * (time - self.ref_time))
+    }
+
     /// Use the center by using dead reckoning from the current center and ref
     /// time to the given current time at the current velocity
     fn update_center(&mut self, new_ref_time: f64) {
@@ -186,9 +183,10 @@ impl WindowedLocation {
         self.ref_time = new_ref_time;
     }
 
-    /// Check to see if the entity plus radius contains the given point
-    fn check_entity_contains(&self, point: &Point) -> bool {
-        self.center.distance_squared_to(point) <= self.radius
+    /// Check to see if the entity plus radius contains the given point at the
+    /// given time
+    fn check_entity_contains(&self, point: &Point, time: f64) -> bool {
+        self.get_center_at_time(time).distance_squared_to(point) <= self.radius
     }
 }
 
@@ -450,7 +448,7 @@ impl<TS: TimeSource> LocationServiceInner<TS> {
         key: &LocationKey,
         new_velocity_opt: Option<Point>,
     ) -> Option<LocationWriteResponse> {
-        self.slot_map.get_mut(key).map(|wp| {
+        if let Some(wp) = self.slot_map.get_mut(key) {
             let window = &mut **wp;
 
             window.update_center(self.time.current_time());
@@ -479,8 +477,10 @@ impl<TS: TimeSource> LocationServiceInner<TS> {
 
             let next_update_time = self.time.current_time()
                 + wp.time_until_boundary() * UPDATE_INTERVAL_SAFETY_FRACTION;
-            LocationWriteResponse::new(next_update_time, None)
-        })
+            Some(LocationWriteResponse::new(next_update_time, None))
+        } else {
+            None
+        }
     }
 
     fn remove_by_key(&mut self, key: &LocationKey) -> Option<Point> {
@@ -492,7 +492,7 @@ impl<TS: TimeSource> LocationServiceInner<TS> {
 
             let _ = self.slot_keys_by_entity.remove(&wp_ref.entity);
 
-            Some(wp_ref.center)
+            Some(wp_ref.get_center_at_time(self.time.current_time()))
         } else {
             None
         }
@@ -503,7 +503,7 @@ with_inner! {
     pub get_entities_at = |&self, point: &Point| -> Vec<Entity> => {
         self.rtree
             .locate_all_at_point(&point.floor())
-            .filter(|wp| wp.check_entity_contains(point))
+            .filter(|wp| wp.check_entity_contains(point, self.time.current_time()))
             .map(|wp| wp.entity)
             .collect()
     }

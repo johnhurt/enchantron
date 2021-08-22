@@ -41,6 +41,11 @@ impl Point {
             y: self.y.floor() as i64,
         }
     }
+
+    pub fn len(&self) -> f64 {
+        (self.x * self.x + self.y * self.y).sqrt()
+    }
+
 }
 
 impl Mul<f64> for Point {

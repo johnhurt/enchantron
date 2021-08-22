@@ -28,6 +28,18 @@ macro_rules! handle_interrupts {
     };
 }
 
+macro_rules! wait_until_interrupted {
+    ($this:ident) => {
+        if let Some(val) = $this.interrupts.recv().await {
+            $this.handle_interrupt(val);
+            continue;
+        }
+        else {
+            break;
+        }
+    }
+}
+
 macro_rules! interruptible {
     ($this:ident$(.$prop_or_func:ident)+($($arg:expr),*)) => {
         handle_interrupts!($this, $this$(.$prop_or_func)+($($arg),*));
@@ -58,8 +70,8 @@ pub struct PlayerPresenterState {
 enum CoarseState {
     Spawning(f64),
     Idle(f64),
-    WalkingOut(f64),
-    WalkingIn(f64),
+    StarWalk(f64),
+    Walking(f64, f64),
 }
 
 impl Default for PlayerPresenterState {
@@ -109,7 +121,10 @@ where
             EntityMessage::ExitedViewport => {
                 drop(self.view.take());
             }
-            EntityMessage::GoalSet(target_tile) => {}
+            EntityMessage::GoalSet(target_tile) => {
+                self.state.move_target = Some(target_tile);
+                self.state.coarse_state = CoarseState::StarWalk(self.time.now());
+            }
         }
     }
 
@@ -130,17 +145,15 @@ where
                 Idle(start) => {
                     self.view.as_ref().map(V::rest);
 
-                    interruptible!(self.time.sleep_until(start + 0.5));
-
-                    self.state.coarse_state = WalkingIn(self.time.now());
+                    wait_until_interrupted!(self);
                 }
-                WalkingIn(start) => {
-                    interruptible!(self.time.sleep_until(start + 1.));
-                    self.state.coarse_state = WalkingOut(self.time.now());
+                StarWalk(start) => {
+                    let dist =
+                    self.location_service.update_by_key(self.player.location_key, new_velocity_opt)
                 }
-                WalkingOut(start) => {
+                Walking(start, next_update) => {
                     interruptible!(self.time.sleep_until(start + 1.));
-                    self.state.coarse_state = Idle(self.time.now());
+                    self.state.coarse_state = Walking(self.time.now());
                 }
             }
         }

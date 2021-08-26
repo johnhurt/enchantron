@@ -1,6 +1,7 @@
+use super::location::LocationService;
 use super::{
     EntityData, EntityMessage, EntityRunBundle, EntityService, EntityType, Gor,
-    LocationService, MessageService, PresenterService, SavedGame, Time,
+    MessageService, PresenterService, SavedGame, Time,
 };
 use crate::application_context::Ao;
 use crate::native::RuntimeResources;

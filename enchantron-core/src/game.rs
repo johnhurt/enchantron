@@ -7,8 +7,6 @@ pub use self::entity_service::EntityService;
 pub use self::entity_slot_key::*;
 pub use self::entity_type::EntityType;
 pub use self::gor::Gor;
-pub use self::location_response::*;
-pub use self::location_service::{LocationService, WindowedLocation};
 pub use self::message_service::MessageService;
 pub use self::perlin_terrain_1::PerlinTerrain1;
 pub use self::player::Player;
@@ -23,6 +21,7 @@ pub use self::time_source::TimeSource;
 pub use self::view_service::ViewService;
 
 pub mod constants;
+pub mod location;
 
 mod direction;
 mod entity;
@@ -33,8 +32,6 @@ mod entity_service;
 mod entity_slot_key;
 mod entity_type;
 mod gor;
-mod location_response;
-mod location_service;
 mod message_service;
 mod perlin_terrain_1;
 mod player;

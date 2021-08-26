@@ -1,6 +1,5 @@
-use super::{
-    Entity, Gor, LocationKey, LocationWriteResponse, Time, TimeSource,
-};
+use super::{MovementRequest, MovementResponse, WindowedLocation};
+use crate::game::{Entity, Gor, LocationKey, Time, TimeSource};
 use crate::model::{IPoint, IRect, ISize, Point, Rect};
 use one_way_slot_map::SlotMap;
 use rstar::{PointDistance, RTree, RTreeObject};
@@ -11,40 +10,20 @@ use std::ptr;
 use tokio::sync::RwLock;
 
 // This value determines the window size for an entity based on its max speed
-const MAX_SECS_BETWEEN_REINSERTS: f64 = 8.;
+pub const MAX_SECS_BETWEEN_REINSERTS: f64 = 8.;
 
 // This value determines how close to the edge of the window an entity is
 // allowed to get before the window is moved
-const MIN_SECS_BETWEEN_REINSERTS: f64 = 0.5;
-
-// Movement operations on the location service will provide a time at which the
-// entity will need to be updated. This time will be when the entity is
-// calculated to exit the window multiplied by this safety factor
-const UPDATE_INTERVAL_SAFETY_FRACTION: f64 = 0.75;
+pub const MIN_SECS_BETWEEN_REINSERTS: f64 = 0.5;
 
 // This is the distance limit at which two points are considered coincident
 // if they are closer than this distance (for the purposes of calculating
 // offsets)
-const MINIMUM_DISTANCE: f64 = 0.001;
+pub const MINIMUM_DISTANCE: f64 = 0.001;
 
-#[derive(Debug, Copy, Clone, derive_new::new)]
-pub struct Movement {
-    pub destination: Point,
-    pub velocity: Point,
-    pub max_valid_time: f64
-}
-
-// Default
-#[derive(Debug, Copy, Clone, derive_new::new)]
-pub struct WindowedLocation {
-    pub ref_center: Point,
-    pub radius: f64,
-    pub ref_time: f64,
-    pub max_speed: f64,
-    pub movement: Option<Movement>,
-    pub entity: Entity,
-    pub window: IRect,
-}
+// If an update to movement is given that has a speed less than this value, the
+// speed is considered zero, so the targeted entity will be given no motion
+pub const MINIMUM_SPEED: f64 = 0.0001;
 
 #[derive(Debug)]
 struct WindowedLocationPointer {
@@ -121,139 +100,6 @@ impl From<WindowedLocation> for WindowedLocationPointer {
             p: Box::into_raw(Box::new(src)),
             _marker: Default::default(),
         }
-    }
-}
-
-impl WindowedLocation {
-    /// Check to see if this window contains the center it represents
-    fn check_window_contains_location(&self) -> bool {
-        self.window.contains_point(&self.ref_center.floor())
-    }
-
-    /// Move the window for this windowed pointer to be the rectangle around the
-    /// actual location
-    fn recenter_window(&mut self) {
-        let dist = self.radius + MAX_SECS_BETWEEN_REINSERTS * self.max_speed;
-
-        self.window = IRect {
-            top_left: self.ref_center.floor(),
-            size: ISize::new(1, 1),
-        };
-
-        self.window = self.window.expanded_by(dist.ceil() as usize);
-    }
-
-    /// Get the topmost and leftmost point that the center can be inside the
-    /// window.
-    fn center_limit_rect(&self) -> Rect {
-        let mut result = self.window.as_rect();
-        result.top_left.x += self.radius;
-        result.top_left.y += self.radius;
-        result.size.width -= 2. * self.radius;
-        result.size.height -= 2. * self.radius;
-        result
-    }
-
-    ///  Get the time until any part of the entity exits the window
-    fn time_until_boundary(&self) -> Option<f64> {
-
-        self.movement.map(|movement| {
-
-            let center_limit_rect = self.center_limit_rect();
-            let offset_from_limit = self.ref_center - center_limit_rect.top_left;
-
-            let ref velocity = movement.velocity;
-
-            let x_time = if velocity.x < 0. {
-                offset_from_limit.x / velocity.x
-            } else if velocity.x > 0. {
-                (center_limit_rect.size.width - offset_from_limit.x)
-                    / velocity.x
-            } else {
-                f64::MAX
-            };
-
-            let y_time = if velocity.y < 0. {
-                offset_from_limit.y / velocity.y
-            } else if velocity.y > 0. {
-                (center_limit_rect.size.width - offset_from_limit.y)
-                    / velocity.y
-            } else {
-                f64::MAX
-            };
-
-            x_time.min(y_time)
-        })
-
-    }
-
-    /// Since the location is stored at a specific time and with a fixed
-    /// velocity, we need to know the time we are measuring the position at
-    fn get_center_at_time(&self, time: f64) -> Point {
-        self.ref_center + self.movement.map(|movement| {
-            let sample_time = time.min(movement.max_valid_time);
-            movement.velocity * (sample_time - self.ref_time)
-        }).unwrap_or_default()
-    }
-
-    /// Use the center by using dead reckoning from the current center and ref
-    /// time to the given current time at the current velocity
-    fn update_center(&mut self, new_ref_time: f64) {
-        let new_center =
-            self.ref_center + self.velocity * (new_ref_time - self.ref_time);
-        self.ref_center = new_center;
-        self.ref_time = new_ref_time;
-
-        let time_to_boundary = self.time_until_boundary();
-        self.max_valid_time = new_ref_time + time_to_boundary;
-    }
-
-    /// Check to see if the entity plus radius contains the given point at the
-    /// given time
-    fn check_entity_contains(&self, point: &Point, time: f64) -> bool {
-        self.get_center_at_time(time).distance_squared_to(point) <= self.radius * self.radius
-    }
-}
-
-impl WindowedLocationPointer {
-    fn new(
-        entity: Entity,
-        ref_center: Point,
-        velocity: Point,
-        radius: f64,
-        max_speed: f64,
-        ref_time: f64,
-        max_valid_time: f64,
-        window: IRect,
-    ) -> WindowedLocationPointer {
-        WindowedLocation::new(
-            ref_center, max_valid_time, radius, ref_time, max_speed, velocity, entity, window,
-        )
-        .into()
-    }
-
-    fn new_with_centered_window(
-        entity: Entity,
-        ref_center: Point,
-        velocity: Point,
-        radius: f64,
-        max_speed: f64,
-        time: &impl TimeSource,
-    ) -> WindowedLocationPointer {
-        let mut result = WindowedLocationPointer::new(
-            entity,
-            ref_center,
-            velocity,
-            radius,
-            max_speed,
-            time.current_time(),
-            f64::MAX,
-            IRect::default(),
-        );
-
-        result.recenter_window();
-
-        result
     }
 }
 
@@ -407,32 +253,6 @@ impl<TS: TimeSource> LocationServiceInner<TS> {
             slot_keys_by_entity,
         }
     }
-
-    fn recenter_window_if_needed(&mut self, wp: &mut WindowedLocationPointer, now: f64) -> LocationWriteResponse {
-
-        let mut time_to_boundary = wp.time_until_boundary();
-
-        // We need to recenter the window if the center is too close to the
-        // boundary or it has escaped all together
-        if time_to_boundary < MIN_SECS_BETWEEN_REINSERTS
-            || !wp.check_window_contains_location()
-        {
-            let mut owned_wp = self
-                .rtree
-                .remove(wp)
-                .expect("Entity pointer should still be in rtree");
-            owned_wp.recenter_window();
-
-            time_to_boundary = owned_wp.time_until_boundary();
-
-            self.rtree.insert(owned_wp);
-        }
-
-        let next_update_time = now
-            + wp.time_until_boundary() * UPDATE_INTERVAL_SAFETY_FRACTION;
-
-        LocationWriteResponse::new(next_update_time, None)
-    }
 }
 
 // Define the functions that only require read access to the location service
@@ -474,72 +294,74 @@ with_inner! {
 // Define the functions that require write access to the location service
 with_inner_mut! {
 
-    /// Insert the entity with the given initial conditions
+    /// Insert the entity at the given position and with the given
+    /// characteristics. The entity will have no movement when inserted
     pub fn insert(
         &mut self,
         center: Point,
         radius: f64,
         max_speed: f64,
-        velocity: Point,
         entity: Entity
-    ) -> (LocationKey, LocationWriteResponse) {
-        let wp = WindowedLocationPointer::new_with_centered_window(
-            entity, center, velocity, radius, max_speed, &self.time,
-        );
-        let wp_clone = wp.clone();
+    ) -> LocationKey {
+        let wp : WindowedLocationPointer = WindowedLocation::new(
+            entity, center, radius, max_speed,
+        ).into();
 
-        let next_update_time = self.time.current_time()
-            + wp.time_until_boundary() * UPDATE_INTERVAL_SAFETY_FRACTION;
+        let wp_clone = wp.clone();
 
         self.rtree.insert(wp);
         let result = self.slot_map.insert(entity, wp_clone);
 
         self.slot_keys_by_entity.insert(entity, result);
 
-        (result, LocationWriteResponse::new(next_update_time, None))
+        result
     }
 
-    /// Update the entity with the given key to have a velocity that takes it
-    /// from its current location towards the given target at the given speed
-    pub fn update_movement_toward(
+    /// Update the entity with the given key to have movement determined by
+    /// the given request
+    pub fn update_movement(
         &mut self,
         key: &LocationKey,
-        target: &Point,
-        speed: f64
-    ) -> Option<LocationWriteResponse>
+        req: MovementRequest
+    ) -> Option<MovementResponse>
     {
         if let Some(wp) = self.slot_map.get_mut(key) {
-            let now = self.time.current_time();
+            let new_ref_time = self.time.current_time();
+            let new_ref_center = wp.get_center_at_time(new_ref_time);
 
-            let curr = wp.get_center_at_time(now);
-            let dist = curr.distance_to(target);
+            // Sanitize the movement request so that we don't have to worry
+            // about divide-by-zeros in speed or distance
+            let req = req.sanitize(&new_ref_center);
 
-            Some(self.recenter_window_if_needed(wp, now))
-        }
-        else {
-            None
-        }
-    }
+            let (reinsert, result) = match req {
+                MovementRequest::Stop => {
+                    wp.stop_movement(new_ref_time, new_ref_center)
+                }
+                MovementRequest::Maintain => {
+                    todo!()
+                }
+                MovementRequest::MoveToward { target, speed } => {
+                    let offset = &target - &new_ref_center;
+                    let distance = offset.len();
+                    let new_velocity = offset * (speed / distance);
+                    let time_to_target = distance / speed;
 
-    /// Update the location of the entity with the given key, and optionally
-    /// update the velocity
-    pub fn update_by_key(
-        &mut self,
-        key: &LocationKey,
-        new_velocity_opt: Option<Point>
-    ) -> Option<LocationWriteResponse> {
-        if let Some(wp) = self.slot_map.get_mut(key) {
-            let window = &mut **wp;
+                    wp.upsert_movement(
+                        new_ref_time,
+                        new_ref_center,
+                        target,
+                        new_velocity,
+                        time_to_target)
+                }
+            };
 
-            let now = self.time.current_time();
-
-            window.update_center(now);
-
-            if let Some(new_velocity) = new_velocity_opt {
-                window.velocity = new_velocity;
+            if reinsert {
+                // magic words to remove the entity's windowed location from the
+                // rtree and reinsert it.
+                self.rtree.remove(wp).map(|owp| self.rtree.insert(owp));
             }
 
-            Some(self.recenter_window_if_needed(wp))
+            Some(result)
         } else {
             None
         }
@@ -591,13 +413,26 @@ mod test {
     fn test_crud() {
         let mut s = create_service();
 
-        let (key, write_resp) = s.insert(
-            Point::new(1., 1.5),
-            1.5,
-            8.,
-            Point::new(2., 1.),
-            player(),
-        );
+        let start = Point::new(1., 1.5);
+
+        let key = s.insert(start, 1.5, 8., player());
+
+        let target = Point::new(2., 1.);
+        let speed = 0.5;
+        let time_to_target = target.distance_to(&start) / speed;
+
+        // Add motion
+        let resp = s.update_movement_target(&key, &target, speed);
+
+        let actual_time_to_target =
+            if let Some(LocationWriteResponse::MaintenanceNeeded { time }) =
+                resp
+            {
+                assert!((time - time_to_target).abs() < 0.00001);
+                time
+            } else {
+                panic!("Response should have been - MaintenanceNeeded");
+            };
 
         let r = s.get_by_key(&key);
 
@@ -605,7 +440,9 @@ mod test {
 
         assert_eq!(vec![player()], s.get_entities_at(&Point::new(1., 1.)));
 
-        s.time = 2.0;
+        s.time = time_to_target + 0.001;
+
+        assert_eq!(Some(target), s.get_by_key(&key));
 
         s.update_by_key(&key, Some(Point::new(0., 0.)));
 

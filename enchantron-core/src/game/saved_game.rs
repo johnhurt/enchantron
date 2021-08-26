@@ -1,6 +1,5 @@
-use super::{
-    Entity, EntityData, EntityType, LocationKey, Player, WindowedLocation,
-};
+use super::location::WindowedLocation;
+use super::{Entity, EntityData, EntityType, LocationKey, Player};
 use crate::model::{IRect, Point};
 use crate::presenter::PlayerPresenterState;
 use one_way_slot_map::SlotMap;
@@ -24,15 +23,8 @@ impl SavedGame {
             entities.insert(EntityType::Player, player_entity_data);
 
         let starting_location = Point::new(0.5, 0.5);
-        let stored_location = WindowedLocation::new(
-            starting_location,
-            0.5,
-            0.,
-            8.,
-            Point::default(),
-            player_entity,
-            IRect::new(-9, -9, 18, 18),
-        );
+        let stored_location =
+            WindowedLocation::new(player_entity, starting_location, 0.5, 8.);
 
         let location_key: LocationKey =
             locations.insert(player_entity, stored_location);

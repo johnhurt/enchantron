@@ -1,12 +1,16 @@
 use super::EntityPresenter;
-use crate::game::{
-    Direction, EntityMessage, EntityRunBundle, LocationService, Player,
-    PresenterServiceLease, Services, Time,
+use crate::game::location::{
+    LocationService, MovementRequest, MovementResponse,
 };
-use crate::model::IPoint;
+use crate::game::{
+    EntityMessage, EntityRunBundle, Player, PresenterServiceLease, Time,
+};
+use crate::model::{IPoint, Point};
 use crate::view::PlayerView;
 use tokio::select;
 use tokio::sync::mpsc::Receiver;
+
+const TILE_CENTER_SHIFT: Point = Point { x: 0.5, y: 0.5 };
 
 macro_rules! handle_interrupts {
     ($this:ident, $interruptible:expr) => {
@@ -33,17 +37,29 @@ macro_rules! wait_until_interrupted {
         if let Some(val) = $this.interrupts.recv().await {
             $this.handle_interrupt(val);
             continue;
-        }
-        else {
+        } else {
             break;
         }
-    }
+    };
 }
 
 macro_rules! interruptible {
     ($this:ident$(.$prop_or_func:ident)+($($arg:expr),*)) => {
         handle_interrupts!($this, $this$(.$prop_or_func)+($($arg),*));
     };
+}
+
+fn move_response_to_state(resp: MovementResponse) -> CoarseState {
+    match resp {
+        MovementResponse::ArrivalPredicted { time } => {
+            CoarseState::Arriving { arrival_time: time }
+        }
+        MovementResponse::MaintenanceNeeded { time } => CoarseState::Walking {
+            next_update_time: time,
+        },
+        MovementResponse::Stopped { center } => CoarseState::Idle,
+        _ => todo!(),
+    }
 }
 
 pub struct PlayerPresenter<F, V>
@@ -68,16 +84,17 @@ pub struct PlayerPresenterState {
 
 #[derive(Debug, Clone, Copy)]
 enum CoarseState {
-    Spawning(f64),
-    Idle(f64),
-    StarWalk(f64),
-    Walking(f64, f64),
+    Spawning,
+    Idle,
+    StartWalk { start_time: f64, target: Point },
+    Walking { next_update_time: f64 },
+    Arriving { arrival_time: f64 },
 }
 
 impl Default for PlayerPresenterState {
     fn default() -> Self {
         PlayerPresenterState {
-            coarse_state: CoarseState::Spawning(0.),
+            coarse_state: CoarseState::Spawning,
             move_target: None,
         }
     }
@@ -123,7 +140,10 @@ where
             }
             EntityMessage::GoalSet(target_tile) => {
                 self.state.move_target = Some(target_tile);
-                self.state.coarse_state = CoarseState::StarWalk(self.time.now());
+                self.state.coarse_state = CoarseState::StartWalk {
+                    start_time: self.time.now(),
+                    target: target_tile.as_point() + &TILE_CENTER_SHIFT,
+                };
             }
         }
     }
@@ -135,25 +155,58 @@ where
             use CoarseState::*;
 
             match self.state.coarse_state {
-                Spawning(start) => {
+                Spawning => {
                     self.view.as_ref().map(V::rest);
 
-                    interruptible!(self.time.sleep_until(start + 0.5));
+                    interruptible!(self.time.sleep_until(0.5));
 
-                    self.state.coarse_state = Idle(self.time.now());
+                    self.state.coarse_state = Idle;
                 }
-                Idle(start) => {
+                Idle => {
                     self.view.as_ref().map(V::rest);
 
                     wait_until_interrupted!(self);
                 }
-                StarWalk(start) => {
-                    let dist =
-                    self.location_service.update_by_key(self.player.location_key, new_velocity_opt)
+                StartWalk { start_time, target } => {
+                    let resp = self
+                        .location_service
+                        .update_movement(
+                            &self.player.location_key,
+                            MovementRequest::MoveToward {
+                                target: target,
+                                speed: 1.0,
+                            },
+                        )
+                        .await
+                        .expect("Player should always be present");
+
+                    self.state.coarse_state = move_response_to_state(resp);
                 }
-                Walking(start, next_update) => {
-                    interruptible!(self.time.sleep_until(start + 1.));
-                    self.state.coarse_state = Walking(self.time.now());
+                Walking { next_update_time } => {
+                    interruptible!(self.time.sleep_until(next_update_time));
+                    let resp = self
+                        .location_service
+                        .update_movement(
+                            &self.player.location_key,
+                            MovementRequest::Maintain,
+                        )
+                        .await
+                        .expect("Player should always be present");
+
+                    self.state.coarse_state = move_response_to_state(resp);
+                }
+                Arriving { arrival_time } => {
+                    interruptible!(self.time.sleep_until(arrival_time));
+                    let resp = self
+                        .location_service
+                        .update_movement(
+                            &self.player.location_key,
+                            MovementRequest::Stop,
+                        )
+                        .await
+                        .expect("Player should always be present");
+
+                    self.state.coarse_state = move_response_to_state(resp);
                 }
             }
         }

@@ -1,4 +1,5 @@
-use super::{Entity, Gor, LocationService, Services};
+use super::location::LocationService;
+use super::{Entity, Gor, Services};
 use crate::event::EventBus;
 use crate::event::*;
 use crate::presenter::{EntityPresenter, PlayerPresenter};
